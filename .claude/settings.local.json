@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Read(//c/Users/junio/Downloads/**)"
+      "Read(//c/Users/junio/Downloads/**)",
+      "Bash(gh repo:*)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\junio\\\\OneDrive\\\\Documentos\\\\proyects\\\\neo_farmacia\\\\scripts\")",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(node test-odoo.mjs)",
+      "Bash(node setup-pharmacy.mjs)",
+      "Bash(npx tsc:*)",
+      "Bash(gh api:*)",
+      "Bash(curl:*)"
     ]
   }
 }

@@ -34,4 +34,4 @@ After each session, create a log file named `YYYY-MM-DD-NN.md` (NN = session num
 | Date | Session | Stage | Summary |
 |---|---|---|---|
 | 2026-04-09 | [001](2026-04-09-01.md) | Planning | Architecture design, roadmap, documentation structure |
-| 2026-04-10 | [002](2026-04-10-01.md) | Stage 1 | VPS cleanup, Dokploy install, Odoo deployed at pos.leofarmacia.com |
+| 2026-04-10 | [002](2026-04-10-01.md) | Stage 1+2 | VPS setup, Odoo deployed, microservice scaffolded, MongoDB+Redis deployed |
