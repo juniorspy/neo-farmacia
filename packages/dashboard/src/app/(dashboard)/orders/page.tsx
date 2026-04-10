@@ -1,96 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { clsx } from "clsx";
 import {
   Search,
-  Filter,
   Package,
   Clock,
   CheckCircle2,
   Truck,
   XCircle,
-  Eye,
   Printer,
+  Loader2,
 } from "lucide-react";
+import { api } from "@/lib/api";
+import { useStore } from "@/lib/store";
 
 interface Order {
-  id: string;
+  id: number;
+  name: string;
   customer: string;
-  phone: string;
-  items: { name: string; qty: number; price: number }[];
+  customerId: number | null;
+  date: string;
   total: number;
-  status: "pending" | "ready" | "dispatched" | "cancelled";
-  source: "bot" | "manual";
-  createdAt: string;
+  status: string;
+  odooState: string;
+  lines?: { id: number; productId: number; name: string; qty: number; price: number; subtotal: number }[];
 }
-
-// Mock data
-const mockOrders: Order[] = [
-  {
-    id: "ORD-001",
-    customer: "María López",
-    phone: "+1809-555-0101",
-    items: [
-      { name: "Acetaminofén 500mg", qty: 2, price: 150 },
-      { name: "Ibuprofeno 400mg", qty: 1, price: 200 },
-      { name: "Vitamina C 1000mg", qty: 1, price: 350 },
-    ],
-    total: 850,
-    status: "pending",
-    source: "bot",
-    createdAt: "2026-04-10T10:30:00",
-  },
-  {
-    id: "ORD-002",
-    customer: "José García",
-    phone: "+1809-555-0102",
-    items: [{ name: "Amoxicilina 500mg", qty: 1, price: 450 }],
-    total: 450,
-    status: "ready",
-    source: "bot",
-    createdAt: "2026-04-10T10:15:00",
-  },
-  {
-    id: "ORD-003",
-    customer: "Ana Reyes",
-    phone: "+1809-555-0103",
-    items: [
-      { name: "Omeprazol 20mg", qty: 3, price: 180 },
-      { name: "Loratadina 10mg", qty: 2, price: 120 },
-      { name: "Ranitidina 150mg", qty: 1, price: 95 },
-      { name: "Metformina 850mg", qty: 2, price: 200 },
-      { name: "Enalapril 10mg", qty: 1, price: 175 },
-    ],
-    total: 1310,
-    status: "dispatched",
-    source: "bot",
-    createdAt: "2026-04-10T09:45:00",
-  },
-  {
-    id: "ORD-004",
-    customer: "Carlos Marte",
-    phone: "+1809-555-0104",
-    items: [
-      { name: "Diclofenac 50mg", qty: 1, price: 130 },
-      { name: "Complejo B", qty: 1, price: 250 },
-    ],
-    total: 380,
-    status: "pending",
-    source: "manual",
-    createdAt: "2026-04-10T09:30:00",
-  },
-  {
-    id: "ORD-005",
-    customer: "Laura Sánchez",
-    phone: "+1809-555-0105",
-    items: [{ name: "Cetirizina 10mg", qty: 1, price: 175 }],
-    total: 175,
-    status: "cancelled",
-    source: "bot",
-    createdAt: "2026-04-10T09:00:00",
-  },
-];
 
 const statusConfig: Record<
   string,
@@ -111,13 +46,56 @@ const tabs = [
 ];
 
 export default function OrdersPage() {
+  const { currentStore } = useStore();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
-  const filtered = mockOrders.filter((o) => {
-    if (activeTab !== "all" && o.status !== activeTab) return false;
-    if (search && !o.customer.toLowerCase().includes(search.toLowerCase()) && !o.id.toLowerCase().includes(search.toLowerCase())) return false;
+  const storeId = currentStore?.id || "store_leo";
+
+  const loadOrders = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params: Record<string, string> = {};
+      if (activeTab !== "all") params.status = activeTab;
+      const data = await api.get<Order[]>(`/api/v1/stores/${storeId}/orders`, params);
+      setOrders(data);
+    } catch {
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [storeId, activeTab]);
+
+  useEffect(() => { loadOrders(); }, [loadOrders]);
+
+  async function loadOrderDetail(order: Order) {
+    setDetailLoading(true);
+    try {
+      const detail = await api.get<Order>(`/api/v1/stores/${storeId}/orders/${order.id}`);
+      setSelectedOrder(detail);
+    } catch {
+      setSelectedOrder(order);
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+
+  async function updateStatus(orderId: number, status: string) {
+    try {
+      await api.patch(`/api/v1/stores/${storeId}/orders/${orderId}/status`, { status });
+      await loadOrders();
+      setSelectedOrder(null);
+    } catch (err) {
+      alert("Error actualizando estado");
+    }
+  }
+
+  const filtered = orders.filter((o) => {
+    if (search && !o.customer.toLowerCase().includes(search.toLowerCase()) && !o.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -133,7 +111,7 @@ export default function OrdersPage() {
         {tabs.map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => { setActiveTab(tab.key); setSelectedOrder(null); }}
             className={clsx(
               "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
               activeTab === tab.key
@@ -161,113 +139,129 @@ export default function OrdersPage() {
       <div className="flex gap-6">
         {/* Orders list */}
         <div className="flex-1 bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="divide-y divide-slate-100">
-            {filtered.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 text-sm">
-                No hay pedidos
-              </div>
-            ) : (
-              filtered.map((order) => {
-                const config = statusConfig[order.status];
-                const StatusIcon = config.icon;
-                return (
-                  <div
-                    key={order.id}
-                    onClick={() => setSelectedOrder(order)}
-                    className={clsx(
-                      "flex items-center justify-between px-5 py-4 hover:bg-slate-50 cursor-pointer transition-colors",
-                      selectedOrder?.id === order.id && "bg-primary-light"
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                        <Package className="w-5 h-5 text-slate-500" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-slate-900">{order.customer}</p>
-                          {order.source === "bot" && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-violet-50 text-violet-600 font-medium">BOT</span>
-                          )}
+          {loading ? (
+            <div className="p-8 flex justify-center">
+              <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {filtered.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-sm">
+                  No hay pedidos
+                </div>
+              ) : (
+                filtered.map((order) => {
+                  const config = statusConfig[order.status] || statusConfig.pending;
+                  const StatusIcon = config.icon;
+                  return (
+                    <div
+                      key={order.id}
+                      onClick={() => loadOrderDetail(order)}
+                      className={clsx(
+                        "flex items-center justify-between px-5 py-4 hover:bg-slate-50 cursor-pointer transition-colors",
+                        selectedOrder?.id === order.id && "bg-primary-light"
+                      )}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <Package className="w-5 h-5 text-slate-500" />
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
-                          {order.id} · {order.items.length} items · {new Date(order.createdAt).toLocaleTimeString("es-DO", { hour: "2-digit", minute: "2-digit" })}
-                        </p>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">{order.customer}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            {order.name} · {new Date(order.date).toLocaleString("es-DO", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold text-slate-700">
+                          RD${order.total.toLocaleString()}
+                        </span>
+                        <span className={`text-xs px-2.5 py-1 rounded-full border font-medium flex items-center gap-1 ${config.badge}`}>
+                          <StatusIcon className="w-3 h-3" />
+                          {config.label}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-slate-700">
-                        RD${order.total.toLocaleString()}
-                      </span>
-                      <span className={`text-xs px-2.5 py-1 rounded-full border font-medium flex items-center gap-1 ${config.badge}`}>
-                        <StatusIcon className="w-3 h-3" />
-                        {config.label}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+                  );
+                })
+              )}
+            </div>
+          )}
         </div>
 
         {/* Order detail panel */}
         {selectedOrder && (
           <div className="w-96 bg-white rounded-xl border border-slate-200 p-5 h-fit sticky top-20 hidden xl:block">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-slate-900">{selectedOrder.id}</h3>
-              <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${statusConfig[selectedOrder.status].badge}`}>
-                {statusConfig[selectedOrder.status].label}
-              </span>
-            </div>
-
-            <div className="space-y-3 text-sm">
-              <div>
-                <p className="text-slate-500">Cliente</p>
-                <p className="font-medium text-slate-900">{selectedOrder.customer}</p>
-                <p className="text-xs text-slate-400">{selectedOrder.phone}</p>
+            {detailLoading ? (
+              <div className="py-8 flex justify-center">
+                <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
               </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-slate-900">{selectedOrder.name}</h3>
+                  <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${(statusConfig[selectedOrder.status] || statusConfig.pending).badge}`}>
+                    {(statusConfig[selectedOrder.status] || statusConfig.pending).label}
+                  </span>
+                </div>
 
-              <div>
-                <p className="text-slate-500 mb-2">Productos</p>
-                <div className="space-y-2">
-                  {selectedOrder.items.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <span className="text-slate-700">
-                        {item.qty}x {item.name}
-                      </span>
-                      <span className="text-slate-500">RD${item.price * item.qty}</span>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="text-slate-500">Cliente</p>
+                    <p className="font-medium text-slate-900">{selectedOrder.customer}</p>
+                  </div>
+
+                  {selectedOrder.lines && selectedOrder.lines.length > 0 && (
+                    <div>
+                      <p className="text-slate-500 mb-2">Productos</p>
+                      <div className="space-y-2">
+                        {selectedOrder.lines.map((line) => (
+                          <div key={line.id} className="flex items-center justify-between">
+                            <span className="text-slate-700">
+                              {line.qty}x {line.name}
+                            </span>
+                            <span className="text-slate-500">RD${line.subtotal.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 font-semibold">
+                        <span>Total</span>
+                        <span>RD${selectedOrder.total.toLocaleString()}</span>
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 font-semibold">
-                  <span>Total</span>
-                  <span>RD${selectedOrder.total.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Actions */}
-            {selectedOrder.status === "pending" && (
-              <div className="mt-5 flex gap-2">
-                <button className="flex-1 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg transition-colors">
-                  Marcar listo
-                </button>
-                <button className="py-2 px-3 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg transition-colors">
-                  Cancelar
-                </button>
-              </div>
-            )}
-            {selectedOrder.status === "ready" && (
-              <div className="mt-5 flex gap-2">
-                <button className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
-                  <Truck className="w-4 h-4" />
-                  Despachar
-                </button>
-                <button className="py-2 px-3 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded-lg transition-colors">
-                  <Printer className="w-4 h-4" />
-                </button>
-              </div>
+                {/* Actions */}
+                {selectedOrder.status === "pending" && (
+                  <div className="mt-5 flex gap-2">
+                    <button
+                      onClick={() => updateStatus(selectedOrder.id, "ready")}
+                      className="flex-1 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      Marcar listo
+                    </button>
+                    <button
+                      onClick={() => updateStatus(selectedOrder.id, "cancelled")}
+                      className="py-2 px-3 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+                {selectedOrder.status === "ready" && (
+                  <div className="mt-5 flex gap-2">
+                    <button
+                      onClick={() => updateStatus(selectedOrder.id, "dispatched")}
+                      className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Truck className="w-4 h-4" />
+                      Despachar
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

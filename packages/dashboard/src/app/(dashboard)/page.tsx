@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { clsx } from "clsx";
+import { api } from "@/lib/api";
+import { useStore } from "@/lib/store";
 import {
   ShoppingCart,
   DollarSign,
@@ -19,26 +21,25 @@ import {
 } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
 
-// ── Mock data ──
+// ── Types ──
 
-const stats = {
-  totalSales: 87200,
-  totalOrders: 142,
-  completedOrders: 118,
-  avgPerOrder: 614,
-  uniqueCustomers: 67,
-  pendingOrders: 8,
-  activeChats: 12,
-  botHandled: 78,
-};
+interface Stats {
+  totalSales: number;
+  totalOrders: number;
+  completedOrders: number;
+  avgPerOrder: number;
+  uniqueCustomers: number;
+  pendingOrders: number;
+}
 
-const recentOrders = [
-  { id: "ORD-001", customer: "María López", items: 3, total: 1250, status: "pending", time: "Hace 5 min" },
-  { id: "ORD-002", customer: "José García", items: 1, total: 450, status: "ready", time: "Hace 12 min" },
-  { id: "ORD-003", customer: "Ana Reyes", items: 5, total: 3200, status: "dispatched", time: "Hace 28 min" },
-  { id: "ORD-004", customer: "Carlos Marte", items: 2, total: 890, status: "pending", time: "Hace 35 min" },
-  { id: "ORD-005", customer: "Laura Sánchez", items: 1, total: 175, status: "dispatched", time: "Hace 1 hora" },
-];
+interface RecentOrder {
+  id: number;
+  name: string;
+  customer: string;
+  total: number;
+  status: string;
+  date: string;
+}
 
 const dailySales = [
   { day: "Lun", value: 12500 },
@@ -124,7 +125,28 @@ function formatCurrency(value: number) {
 }
 
 export default function DashboardPage() {
+  const { currentStore } = useStore();
   const [dateRange, setDateRange] = useState<DateRange>("month");
+  const [stats, setStats] = useState<Stats>({ totalSales: 0, totalOrders: 0, completedOrders: 0, avgPerOrder: 0, uniqueCustomers: 0, pendingOrders: 0 });
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+
+  const storeId = currentStore?.id || "store_leo";
+
+  useEffect(() => {
+    api.get<{ totalOrders: number; pendingOrders: number; completedOrders: number; totalRevenue: number; avgPerOrder: number; totalCustomers: number }>(`/api/v1/stores/${storeId}/stats/summary`)
+      .then((data) => setStats({
+        totalSales: data.totalRevenue,
+        totalOrders: data.totalOrders,
+        completedOrders: data.completedOrders,
+        avgPerOrder: data.avgPerOrder,
+        uniqueCustomers: data.totalCustomers,
+        pendingOrders: data.pendingOrders,
+      }))
+      .catch(() => {});
+    api.get<RecentOrder[]>(`/api/v1/stores/${storeId}/orders`, { limit: "5" })
+      .then(setRecentOrders)
+      .catch(() => {});
+  }, [storeId]);
 
   const maxDaily = Math.max(...dailySales.map((d) => d.value));
   const maxHourly = Math.max(...hourlySales);
@@ -443,13 +465,13 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">{order.customer}</p>
-                    <p className="text-[11px] text-slate-400">{order.id} · {order.time}</p>
+                    <p className="text-[11px] text-slate-400">{order.name} · {new Date(order.date).toLocaleString("es-DO", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold text-slate-700">{formatCurrency(order.total)}</p>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${statusBadge[order.status]}`}>
-                    {statusLabel[order.status]}
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${statusBadge[order.status] || statusBadge.pending}`}>
+                    {statusLabel[order.status] || order.status}
                   </span>
                 </div>
               </div>

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { clsx } from "clsx";
-import { Search, Bot, User, Send } from "lucide-react";
+import { Search, Bot, User, Send, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
+import { useStore } from "@/lib/store";
 
 interface Chat {
   id: string;
@@ -10,7 +12,7 @@ interface Chat {
   phone: string;
   lastMessage: string;
   time: string;
-  unread: number;
+  sender: string;
   mode: "bot" | "manual";
 }
 
@@ -18,30 +20,65 @@ interface Message {
   id: string;
   text: string;
   sender: "customer" | "bot" | "agent";
+  direction: string;
   time: string;
 }
 
-const mockChats: Chat[] = [
-  { id: "1", customer: "María López", phone: "+1809-555-0101", lastMessage: "Tienen ibuprofeno de 400mg?", time: "10:30", unread: 2, mode: "bot" },
-  { id: "2", customer: "José García", phone: "+1809-555-0102", lastMessage: "Ok gracias, voy a pasar a buscar", time: "10:15", unread: 0, mode: "manual" },
-  { id: "3", customer: "Ana Reyes", phone: "+1809-555-0103", lastMessage: "Cuánto cuesta la amoxicilina?", time: "09:45", unread: 1, mode: "bot" },
-  { id: "4", customer: "Carlos Marte", phone: "+1809-555-0104", lastMessage: "Necesito medicamentos para la presión", time: "09:30", unread: 0, mode: "bot" },
-];
-
-const mockMessages: Message[] = [
-  { id: "1", text: "Hola buenas! Tienen ibuprofeno?", sender: "customer", time: "10:25" },
-  { id: "2", text: "¡Hola María! Sí, tenemos Ibuprofeno 400mg disponible. El precio es RD$200 por caja de 10 tabletas. ¿Le gustaría agregarlo a su pedido?", sender: "bot", time: "10:25" },
-  { id: "3", text: "Si, y también acetaminofén", sender: "customer", time: "10:28" },
-  { id: "4", text: "Perfecto! Tenemos Acetaminofén 500mg a RD$150 la caja. Le agrego ambos productos:\n\n1x Ibuprofeno 400mg - RD$200\n1x Acetaminofén 500mg - RD$150\n\nTotal: RD$350\n\n¿Confirma el pedido?", sender: "bot", time: "10:28" },
-  { id: "5", text: "Tienen ibuprofeno de 400mg?", sender: "customer", time: "10:30" },
-];
-
 export default function ChatsPage() {
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(mockChats[0]);
+  const { currentStore } = useStore();
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [sending, setSending] = useState(false);
 
-  const filteredChats = mockChats.filter(
+  const storeId = currentStore?.id || "store_leo";
+
+  const loadChats = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.get<Chat[]>(`/api/v1/stores/${storeId}/chats`);
+      setChats(data);
+    } catch {
+      setChats([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [storeId]);
+
+  useEffect(() => { loadChats(); }, [loadChats]);
+
+  async function selectChat(chat: Chat) {
+    setSelectedChat(chat);
+    setMessagesLoading(true);
+    try {
+      const data = await api.get<Message[]>(`/api/v1/stores/${storeId}/chats/${chat.id}/messages`);
+      setMessages(data);
+    } catch {
+      setMessages([]);
+    } finally {
+      setMessagesLoading(false);
+    }
+  }
+
+  async function sendMessage() {
+    if (!message.trim() || !selectedChat) return;
+    setSending(true);
+    try {
+      const sent = await api.post<Message>(`/api/v1/stores/${storeId}/chats/${selectedChat.id}/messages`, { text: message });
+      setMessages((prev) => [...prev, sent]);
+      setMessage("");
+    } catch {
+      alert("Error enviando mensaje");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const filteredChats = chats.filter(
     (c) => !search || c.customer.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -62,36 +99,41 @@ export default function ChatsPage() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto divide-y divide-slate-50">
-          {filteredChats.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => setSelectedChat(chat)}
-              className={clsx(
-                "px-4 py-3 cursor-pointer transition-colors",
-                selectedChat?.id === chat.id ? "bg-primary-light" : "hover:bg-slate-50"
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-900">{chat.customer}</p>
-                <span className="text-[11px] text-slate-400">{chat.time}</span>
-              </div>
-              <div className="flex items-center justify-between mt-1">
-                <p className="text-xs text-slate-500 truncate max-w-[180px]">{chat.lastMessage}</p>
-                <div className="flex items-center gap-1.5">
+          {loading ? (
+            <div className="p-8 flex justify-center">
+              <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+            </div>
+          ) : filteredChats.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-sm">
+              No hay chats activos
+            </div>
+          ) : (
+            filteredChats.map((chat) => (
+              <div
+                key={chat.id}
+                onClick={() => selectChat(chat)}
+                className={clsx(
+                  "px-4 py-3 cursor-pointer transition-colors",
+                  selectedChat?.id === chat.id ? "bg-primary-light" : "hover:bg-slate-50"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-slate-900">{chat.customer}</p>
+                  <span className="text-[11px] text-slate-400">
+                    {new Date(chat.time).toLocaleTimeString("es-DO", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-slate-500 truncate max-w-[180px]">{chat.lastMessage}</p>
                   {chat.mode === "bot" ? (
                     <Bot className="w-3 h-3 text-violet-500" />
                   ) : (
                     <User className="w-3 h-3 text-sky-500" />
                   )}
-                  {chat.unread > 0 && (
-                    <span className="w-5 h-5 rounded-full bg-primary text-white text-[10px] flex items-center justify-center font-bold">
-                      {chat.unread}
-                    </span>
-                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -104,41 +146,49 @@ export default function ChatsPage() {
               <p className="text-sm font-semibold text-slate-900">{selectedChat.customer}</p>
               <p className="text-xs text-slate-400">{selectedChat.phone}</p>
             </div>
-            <button
+            <span
               className={clsx(
-                "text-xs px-3 py-1.5 rounded-full font-medium border transition-colors",
+                "text-xs px-3 py-1.5 rounded-full font-medium border",
                 selectedChat.mode === "bot"
-                  ? "bg-violet-50 text-violet-600 border-violet-200 hover:bg-violet-100"
-                  : "bg-sky-50 text-sky-600 border-sky-200 hover:bg-sky-100"
+                  ? "bg-violet-50 text-violet-600 border-violet-200"
+                  : "bg-sky-50 text-sky-600 border-sky-200"
               )}
             >
-              {selectedChat.mode === "bot" ? "🤖 Bot activo" : "👤 Modo manual"}
-            </button>
+              {selectedChat.mode === "bot" ? "Bot activo" : "Modo manual"}
+            </span>
           </div>
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-5 space-y-3">
-            {mockMessages.map((msg) => (
-              <div
-                key={msg.id}
-                className={clsx(
-                  "max-w-[75%] rounded-2xl px-4 py-2.5 text-sm",
-                  msg.sender === "customer"
-                    ? "bg-white border border-slate-200 text-slate-800 ml-0"
-                    : "bg-primary text-white ml-auto"
-                )}
-              >
-                <p className="whitespace-pre-wrap">{msg.text}</p>
-                <p className={clsx(
-                  "text-[10px] mt-1",
-                  msg.sender === "customer" ? "text-slate-400" : "text-white/60"
-                )}>
-                  {msg.time}
-                  {msg.sender === "bot" && " · 🤖"}
-                  {msg.sender === "agent" && " · 👤"}
-                </p>
+            {messagesLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
               </div>
-            ))}
+            ) : messages.length === 0 ? (
+              <div className="text-center text-slate-400 text-sm py-8">Sin mensajes</div>
+            ) : (
+              messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={clsx(
+                    "max-w-[75%] rounded-2xl px-4 py-2.5 text-sm",
+                    msg.direction === "inbound"
+                      ? "bg-white border border-slate-200 text-slate-800 ml-0"
+                      : "bg-primary text-white ml-auto"
+                  )}
+                >
+                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  <p className={clsx(
+                    "text-[10px] mt-1",
+                    msg.direction === "inbound" ? "text-slate-400" : "text-white/60"
+                  )}>
+                    {new Date(msg.time).toLocaleTimeString("es-DO", { hour: "2-digit", minute: "2-digit" })}
+                    {msg.sender === "bot" && " · Bot"}
+                    {msg.sender === "agent" && " · Agente"}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Input */}
@@ -148,11 +198,16 @@ export default function ChatsPage() {
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 placeholder="Escribe un mensaje..."
                 className="flex-1 px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus-primary"
               />
-              <button className="px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors">
-                <Send className="w-4 h-4" />
+              <button
+                onClick={sendMessage}
+                disabled={sending || !message.trim()}
+                className="px-4 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
             </div>
           </div>

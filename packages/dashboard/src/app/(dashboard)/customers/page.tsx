@@ -1,32 +1,48 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Users, ShoppingCart, MessageSquare } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, ShoppingCart, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
+import { useStore } from "@/lib/store";
 
 interface Customer {
   id: string;
   name: string;
   phone: string;
-  totalOrders: number;
-  totalSpent: number;
-  lastOrder: string;
+  chatId: string;
   registered: boolean;
+  createdAt: string;
 }
 
-const mockCustomers: Customer[] = [
-  { id: "1", name: "María López", phone: "+1809-555-0101", totalOrders: 12, totalSpent: 8500, lastOrder: "Hoy", registered: true },
-  { id: "2", name: "José García", phone: "+1809-555-0102", totalOrders: 8, totalSpent: 5200, lastOrder: "Ayer", registered: true },
-  { id: "3", name: "Ana Reyes", phone: "+1809-555-0103", totalOrders: 23, totalSpent: 15800, lastOrder: "Hoy", registered: true },
-  { id: "4", name: "Carlos Marte", phone: "+1809-555-0104", totalOrders: 3, totalSpent: 1250, lastOrder: "Hace 3 días", registered: false },
-  { id: "5", name: "Laura Sánchez", phone: "+1809-555-0105", totalOrders: 6, totalSpent: 3400, lastOrder: "Hace 1 semana", registered: true },
-];
-
 export default function CustomersPage() {
+  const { currentStore } = useStore();
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const filtered = mockCustomers.filter(
-    (c) => !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search)
-  );
+  const storeId = currentStore?.id || "store_leo";
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const loadCustomers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params: Record<string, string> = {};
+      if (debouncedSearch) params.search = debouncedSearch;
+      const data = await api.get<Customer[]>(`/api/v1/stores/${storeId}/customers`, params);
+      setCustomers(data);
+    } catch {
+      setCustomers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [storeId, debouncedSearch]);
+
+  useEffect(() => { loadCustomers(); }, [loadCustomers]);
 
   return (
     <div className="space-y-4">
@@ -46,44 +62,42 @@ export default function CustomersPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map((customer) => (
-          <div key={customer.id} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-sm transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full bg-primary-light text-primary flex items-center justify-center text-sm font-bold">
-                  {customer.name.charAt(0)}
+      {loading ? (
+        <div className="p-8 flex justify-center">
+          <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+        </div>
+      ) : customers.length === 0 ? (
+        <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+          <p className="text-slate-400 text-sm">No hay clientes registrados aún</p>
+          <p className="text-slate-300 text-xs mt-1">Los clientes aparecerán cuando interactúen por WhatsApp</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {customers.map((customer) => (
+            <div key={customer.id} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-sm transition-shadow">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-primary-light text-primary flex items-center justify-center text-sm font-bold">
+                    {customer.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900">{customer.name}</p>
+                    <p className="text-xs text-slate-400">{customer.phone}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-slate-900">{customer.name}</p>
-                  <p className="text-xs text-slate-400">{customer.phone}</p>
-                </div>
+                {customer.registered && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 font-medium">
+                    Registrado
+                  </span>
+                )}
               </div>
-              {customer.registered && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 font-medium">
-                  Registrado
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100">
-              <div className="text-center">
-                <p className="text-lg font-bold text-slate-900">{customer.totalOrders}</p>
-                <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1">
-                  <ShoppingCart className="w-3 h-3" /> Pedidos
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-lg font-bold text-slate-900">RD${(customer.totalSpent / 1000).toFixed(1)}k</p>
-                <p className="text-[11px] text-slate-400">Gastado</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs font-medium text-slate-700 mt-1">{customer.lastOrder}</p>
-                <p className="text-[11px] text-slate-400">Último pedido</p>
+              <div className="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-400">
+                Desde {new Date(customer.createdAt).toLocaleDateString("es-DO")}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
