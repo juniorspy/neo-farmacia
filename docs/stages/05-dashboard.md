@@ -1,6 +1,6 @@
 # Stage 5: Dashboard (The Face)
 
-**Status**: `in_progress`
+**Status**: `done`
 **Depends on**: Stage 2 (Microservice)
 **Goal**: Web panel where pharmacy owners manage everything — orders, chats, WhatsApp numbers, inventory, multiple locations, and stats.
 
@@ -14,133 +14,85 @@ This replaces the Android app from neo colmado. The pharmacist does everything f
 
 - [x] **Project setup**: Next.js 16 + TypeScript + Tailwind CSS + App Router
 - [x] **Layout**: Sidebar nav (collapsible), header with store selector, responsive
-- [x] **Login page**: JWT auth + dev shortcut for testing
+- [x] **Login page**: JWT auth against real API
 - [x] **Auth system**: AuthProvider context, JWT token management, route protection
 - [x] **Store selector**: Multi-store support with StoreProvider context
 - [x] **Theme system**: Dynamic primary color (12 presets + custom hex picker), logo upload, persisted in localStorage, CSS custom properties propagate to all components
-- [x] **Dashboard home**: Date range filters (Hoy/Semana/Mes/Año), 5 stat cards, sales by day bar chart, donut orders by status, weekday sales, hourly activity, top 10 products, top 10 customers, categories, agent performance
-- [x] **Orders page**: Tabs by status, search, order list with badges, detail side panel, actions (marcar listo, despachar, cancelar, imprimir)
-- [x] **Chat inbox**: WhatsApp-style layout, left=conversations, right=messages, bot/manual toggle, unread badges, send message input
-- [x] **Products page**: Table with search, stock/expiry info, low stock alerts
-- [x] **Customers page**: Cards with stats (pedidos, gastado, último pedido), search, registered badge
-- [x] **WhatsApp page**: Connected numbers, status indicators (connected/disconnected/QR), connect/disconnect actions
-- [x] **Reports page**: Full statistics — date filters + AI Análisis button, 5 stat cards, sales by day, donut orders by status, weekday sales, hourly activity (24h with tooltips), top 10 products (horizontal bars with ranking), top 10 customers (ranked list), agent performance (bot vs manual cards + metrics), categories with totals
-- [x] **Settings page**: Appearance (color picker + logo upload + live preview), store info, agent config (welcome message, auto-response toggle)
+- [x] **Dashboard home**: Real data — stat cards, sales by day, donut orders by status, weekday sales, hourly activity, top 10 products, top 10 customers, agent performance
+- [x] **Orders page**: Real Odoo data — tabs by status, search, detail panel with order lines, actions (confirm, dispatch, cancel)
+- [x] **Chat inbox**: Real MongoDB data — conversations list, messages, send manual message, bot/manual indicator
+- [x] **Products page**: Real Odoo data — table with search, stock, categories, barcodes, low stock alerts
+- [x] **Customers page**: Real MongoDB data — cards with registered badge, empty state
+- [x] **WhatsApp page**: Real Evolution API — list instances, create, delete, connection status
+- [x] **Reports page**: Real data — stat cards, sales by day, donut, weekday sales, hourly activity, top 10 products, top 10 customers, agent performance (bot vs manual)
+- [x] **Settings page**: Appearance (color picker + logo upload + live preview), store info, agent config
 
-**All pages use mock data — will connect to real API endpoints next.**
+### 5A — Backend API (Fastify) ✅ DONE
 
-### 5A — Backend API (Fastify, same packages/api) — PENDING
+- [x] **Auth**
+  - [x] JWT authentication (login, validate via @fastify/jwt)
+  - [x] Admin model (email, bcrypt password, role, stores)
+  - [x] `POST /api/v1/auth/login` — returns JWT + user
+  - [x] `GET /api/v1/auth/me` — returns current user (protected)
+  - [x] Auto-seed default admin on first boot
+  - [x] `app.authenticate` decorator for protected routes
 
-- [ ] **Auth**
-  - [ ] JWT authentication (login, validate, refresh)
-  - [ ] Roles: `admin` (platform-wide) and `pharmacist` (store-scoped)
-  - [ ] Store-scoped access control (pharmacist sees only their stores)
+- [x] **Orders**
+  - [x] `GET /api/v1/stores/:storeId/orders` — list from Odoo (filterable by status)
+  - [x] `GET /api/v1/stores/:storeId/orders/:orderId` — detail with order lines
+  - [x] `PATCH /api/v1/stores/:storeId/orders/:orderId/status` — confirm, dispatch, cancel
 
-- [ ] **Orders**
-  - [ ] `GET /api/v1/stores/:store_id/orders` — list orders (filterable by status)
-  - [ ] `GET /api/v1/stores/:store_id/orders/:order_id` — order detail
-  - [ ] `PATCH /api/v1/stores/:store_id/orders/:order_id/status` — despachar, cancelar
-  - [ ] `PATCH /api/v1/stores/:store_id/orders/:order_id/items/:item_id` — edit price, mark "no hay"
+- [x] **Chats & Handover**
+  - [x] `GET /api/v1/stores/:storeId/chats` — active chats with last message + mode
+  - [x] `GET /api/v1/stores/:storeId/chats/:chatId/messages` — conversation history
+  - [x] `POST /api/v1/stores/:storeId/chats/:chatId/messages` — send manual message
 
-- [ ] **Chats & Handover**
-  - [ ] `GET /api/v1/stores/:store_id/chats` — active chats with last message
-  - [ ] `GET /api/v1/stores/:store_id/chats/:chat_id/messages` — conversation history
-  - [ ] `POST /api/v1/stores/:store_id/chats/:chat_id/messages` — send manual message
-  - [ ] `PUT /api/v1/stores/:store_id/chats/:chat_id/mode` — switch bot/manual (already exists)
+- [x] **WhatsApp Management**
+  - [x] `GET /api/v1/stores/:storeId/whatsapp/instances` — list Evolution instances
+  - [x] `POST /api/v1/stores/:storeId/whatsapp/instances` — create instance
+  - [x] `GET /api/v1/stores/:storeId/whatsapp/instances/:name/qr` — get QR code
+  - [x] `GET /api/v1/stores/:storeId/whatsapp/instances/:name/status` — connection status
+  - [x] `DELETE /api/v1/stores/:storeId/whatsapp/instances/:name` — delete instance
 
-- [ ] **WhatsApp Management**
-  - [ ] `POST /api/v1/stores/:store_id/whatsapp/numbers/connect` — add number
-  - [ ] `GET /api/v1/stores/:store_id/whatsapp/numbers` — list connected numbers
-  - [ ] `GET /api/v1/stores/:store_id/whatsapp/numbers/:id/status` — connection status + QR
-  - [ ] `DELETE /api/v1/stores/:store_id/whatsapp/numbers/:id` — disconnect number
-  - [ ] `PUT /api/v1/stores/:store_id/whatsapp/numbers/default` — set default
+- [x] **Catalog (from Odoo)**
+  - [x] `GET /api/v1/stores/:storeId/products` — list with search, categories
+  - [x] `GET /api/v1/stores/:storeId/products/:productId` — detail
 
-- [ ] **Catalog (from Odoo)**
-  - [ ] `GET /api/v1/stores/:store_id/products` — list products from Odoo
-  - [ ] `GET /api/v1/stores/:store_id/products/:id` — product detail (stock, lots, expiry)
-  - [ ] `PUT /api/v1/stores/:store_id/products/:id` — update product in Odoo
-  - [ ] `POST /api/v1/stores/:store_id/products` — create product in Odoo
+- [x] **Customers**
+  - [x] `GET /api/v1/stores/:storeId/customers` — list with search
+  - [x] `GET /api/v1/stores/:storeId/customers/:customerId` — detail
 
-- [ ] **Customers**
-  - [ ] `GET /api/v1/stores/:store_id/customers` — list customers
-  - [ ] `GET /api/v1/stores/:store_id/customers/:id` — customer detail + order history
+- [x] **Stats & Reports**
+  - [x] `GET /api/v1/stores/:storeId/stats/summary` — orders, revenue, customers
+  - [x] `GET /api/v1/stores/:storeId/stats/agent` — bot vs manual percentages
+  - [x] `GET /api/v1/stores/:storeId/stats/charts` — daily sales, weekday sales, hourly activity, orders by status, top products, top customers
 
-- [ ] **Multi-store**
-  - [ ] `GET /api/v1/owners/:owner_id/stores` — list stores for an owner
-  - [ ] Owner-to-stores mapping in MongoDB
+## Deployment
 
-- [ ] **Stats & Reports**
-  - [ ] `GET /api/v1/stores/:store_id/stats/summary` — today's orders, revenue, pending
-  - [ ] `GET /api/v1/stores/:store_id/stats/sales` — sales by period (day/week/month)
-  - [ ] `GET /api/v1/stores/:store_id/stats/products` — top products
-  - [ ] `GET /api/v1/stores/:store_id/stats/agent` — bot vs human handled
+Both services deployed on Dokploy as independent Applications connected to GitHub for auto-deploy on push:
 
-- [ ] **WebSocket**
-  - [ ] Real-time events: new_order, order_updated, new_message, handover_changed
-  - [ ] Scoped by store_id (pharmacist only receives their store's events)
-
-## Tech Stack (Frontend)
-
-| Library | Version | Purpose |
+| Service | URL | Build Path |
 |---|---|---|
-| Next.js | 16.2.3 | App Router, SSR/SSG |
-| React | 19.x | UI framework |
-| Tailwind CSS | 4.x | Styling |
-| lucide-react | latest | Icons |
-| clsx | latest | Conditional classes |
+| API | `api.leofarmacia.com` | `./packages/api` |
+| Dashboard | `app.leofarmacia.com` | `./packages/dashboard` |
+
+## Pending / Future
+
+- [ ] WebSocket for real-time updates (new_order, new_message, handover_changed)
+- [ ] Settings save to backend (currently localStorage only)
+- [ ] Date range filters actually filter API data
+- [ ] Printing (WebUSB, Bluetooth, or print dialog)
+- [ ] Store-scoped access control (pharmacist sees only their stores)
 
 ## Architecture Decisions
 
-- **CSS custom properties for theming** — instead of Tailwind theme config, we use CSS vars (`--primary`, `--sidebar-bg`, etc.) set dynamically via JS. This allows runtime color changes without rebuild.
-- **localStorage for theme/auth** — theme config and JWT token stored in localStorage. Will move to httpOnly cookies for JWT in production.
-- **Mock data first** — all pages built with mock data to validate UX before connecting API. Pattern: replace mock imports with `api.get()` calls.
-- **Route groups** — `(dashboard)` group wraps all authenticated pages with Shell/Auth/Store/Theme providers. `/login` lives outside.
-- **Collapsible sidebar** — persisted in localStorage, collapses to 72px icon-only mode.
-
-## Printing
-
-Browser-based thermal printing options:
-- **WebUSB API** — direct USB printer access (Chrome)
-- **Web Bluetooth** — Bluetooth thermal printers
-- **Print dialog** — CSS-formatted receipt via `window.print()`
-- **Print server** — local service that receives ESC/POS commands
-
-Decision on approach to be made during implementation.
-
-## File Structure
-
-```
-packages/dashboard/src/
-├── app/
-│   ├── globals.css           # Theme CSS vars + utility classes
-│   ├── layout.tsx            # Root layout (fonts, metadata)
-│   ├── login/page.tsx        # Login page (outside auth guard)
-│   └── (dashboard)/
-│       ├── layout.tsx        # Auth + Store + Theme providers + Shell
-│       ├── page.tsx          # Dashboard home (stats, charts, lists)
-│       ├── orders/page.tsx   # Orders management
-│       ├── chats/page.tsx    # Chat inbox
-│       ├── products/page.tsx # Product catalog
-│       ├── customers/page.tsx # Customer list
-│       ├── whatsapp/page.tsx # WhatsApp numbers
-│       ├── reports/page.tsx  # Full statistics
-│       └── settings/page.tsx # Theme + store + agent config
-├── components/
-│   ├── sidebar.tsx           # Collapsible nav with theme colors
-│   ├── header.tsx            # Header with store selector + avatar
-│   ├── shell.tsx             # Layout wrapper (sidebar + header + main)
-│   └── stat-card.tsx         # Reusable stat card
-└── lib/
-    ├── api.ts                # HTTP client with JWT
-    ├── auth.tsx              # Auth context + dev mode
-    ├── store.tsx             # Store selector context
-    └── theme.tsx             # Theme context (color + logo)
-```
-
-## Blockers
-
-_(none currently)_
+- **CSS custom properties for theming** — runtime color changes without rebuild
+- **Dockerfile with ARG for API URL** — `NEXT_PUBLIC_API_URL` baked at build time
+- **Dokploy Applications** — each service connected to same GitHub repo, different build paths, auto-deploy on push
+- **Odoo as SSoT for orders/products** — dashboard reads directly from Odoo via JSON-RPC
+- **MongoDB for chats/customers** — messages and user data stored locally for fast queries
 
 ## Session References
 
-- 2026-04-10: Frontend scaffold, all pages, theme system, reports page
+- 2026-04-10-02: Frontend scaffold, all pages, theme system
+- 2026-04-10-03: Auth module, backend API endpoints, real data connection, Dokploy deployment
