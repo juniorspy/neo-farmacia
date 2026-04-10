@@ -88,10 +88,10 @@ export default function ReportsPage() {
   const [charts, setCharts] = useState<ChartsData>(emptyCharts);
 
   useEffect(() => {
-    api.get<SummaryStats>(`/api/v1/stores/${storeId}/stats/summary`).then(setSummary).catch(() => {});
+    api.get<SummaryStats>(`/api/v1/stores/${storeId}/stats/summary`, { range: dateRange }).then(setSummary).catch(() => {});
     api.get<AgentStats>(`/api/v1/stores/${storeId}/stats/agent`).then(setAgent).catch(() => {});
-    api.get<ChartsData>(`/api/v1/stores/${storeId}/stats/charts`).then(setCharts).catch(() => {});
-  }, [storeId]);
+    api.get<ChartsData>(`/api/v1/stores/${storeId}/stats/charts`, { range: dateRange }).then(setCharts).catch(() => {});
+  }, [storeId, dateRange]);
 
   const totalSales = summary?.totalRevenue || 0;
   const totalOrders = summary?.totalOrders || 0;

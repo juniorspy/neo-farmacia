@@ -103,7 +103,7 @@ export default function DashboardPage() {
   const storeId = currentStore?.id || "store_leo";
 
   useEffect(() => {
-    api.get<{ totalOrders: number; pendingOrders: number; completedOrders: number; totalRevenue: number; avgPerOrder: number; totalCustomers: number }>(`/api/v1/stores/${storeId}/stats/summary`)
+    api.get<{ totalOrders: number; pendingOrders: number; completedOrders: number; totalRevenue: number; avgPerOrder: number; totalCustomers: number }>(`/api/v1/stores/${storeId}/stats/summary`, { range: dateRange })
       .then((data) => setStats({
         totalSales: data.totalRevenue,
         totalOrders: data.totalOrders,
@@ -116,10 +116,10 @@ export default function DashboardPage() {
     api.get<RecentOrder[]>(`/api/v1/stores/${storeId}/orders`, { limit: "5" })
       .then(setRecentOrders)
       .catch(() => {});
-    api.get<ChartsData>(`/api/v1/stores/${storeId}/stats/charts`)
+    api.get<ChartsData>(`/api/v1/stores/${storeId}/stats/charts`, { range: dateRange })
       .then(setCharts)
       .catch(() => {});
-  }, [storeId]);
+  }, [storeId, dateRange]);
 
   const { dailySales, weekdaySales, hourlyActivity: hourlySales, ordersByStatus, topProducts, topCustomers } = charts;
 

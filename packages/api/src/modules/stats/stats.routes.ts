@@ -15,15 +15,38 @@ export async function statsRoutes(app: FastifyInstance) {
   // GET /api/v1/stores/:storeId/stats/summary
   app.get('/api/v1/stores/:storeId/stats/summary', async (request: FastifyRequest) => {
     const { storeId } = request.params as { storeId: string };
+    const { range } = request.query as { range?: string };
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+    let rangeStart = new Date(now);
 
-    const [totalCustomers, todayMessages, orders] = await Promise.all([
+    switch (range) {
+      case 'today':
+        rangeStart.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        rangeStart.setDate(rangeStart.getDate() - rangeStart.getDay() + 1);
+        rangeStart.setHours(0, 0, 0, 0);
+        break;
+      case 'year':
+        rangeStart = new Date(now.getFullYear(), 0, 1);
+        break;
+      case 'month':
+      default:
+        rangeStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+    }
+
+    const [totalCustomers, periodMessages, allOrders] = await Promise.all([
       User.countDocuments({ store_id: storeId }),
-      Message.countDocuments({ store_id: storeId, timestamp: { $gte: today } }),
+      Message.countDocuments({ store_id: storeId, timestamp: { $gte: rangeStart } }),
       listSaleOrders(1000, 0),
     ]);
+
+    const orders = allOrders.filter((o: Record<string, unknown>) => {
+      const dateStr = (o.date_order || o.create_date) as string;
+      return new Date(dateStr) >= rangeStart;
+    });
 
     const totalOrders = orders.length;
     const pendingOrders = orders.filter((o: Record<string, unknown>) => o.state === 'draft' || o.state === 'sent').length;
@@ -38,7 +61,7 @@ export async function statsRoutes(app: FastifyInstance) {
       totalRevenue,
       avgPerOrder,
       totalCustomers,
-      todayMessages,
+      periodMessages,
     };
   });
 
@@ -67,19 +90,49 @@ export async function statsRoutes(app: FastifyInstance) {
   // GET /api/v1/stores/:storeId/stats/charts — all chart data in one call
   app.get('/api/v1/stores/:storeId/stats/charts', async (request: FastifyRequest) => {
     const { storeId } = request.params as { storeId: string };
+    const { range } = request.query as { range?: string };
 
-    const orders = await listSaleOrders(1000, 0) as Array<Record<string, unknown>>;
+    const allOrders = await listSaleOrders(1000, 0) as Array<Record<string, unknown>>;
 
-    // ── Sales by day (last 7 days) ──
+    // ── Date range filter ──
     const now = new Date();
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-    sevenDaysAgo.setHours(0, 0, 0, 0);
+    let rangeStart = new Date(now);
+
+    switch (range) {
+      case 'today':
+        rangeStart.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        rangeStart.setDate(rangeStart.getDate() - rangeStart.getDay() + 1); // Monday
+        rangeStart.setHours(0, 0, 0, 0);
+        break;
+      case 'year':
+        rangeStart = new Date(now.getFullYear(), 0, 1);
+        break;
+      case 'month':
+      default:
+        rangeStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+    }
+
+    const orders = allOrders.filter((o) => {
+      const dateStr = (o.date_order || o.create_date) as string;
+      return new Date(dateStr) >= rangeStart;
+    });
+
+    // ── Sales by day ──
+    // For "today": show hours instead; for others: show days in range
+    const daysInRange = Math.max(1, Math.ceil((now.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24)));
+    const chartDays = Math.min(daysInRange, 31); // max 31 days on chart
 
     const dayLabels: string[] = [];
     const dailySalesMap: Record<string, number> = {};
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(sevenDaysAgo);
+    const chartStart = new Date(now);
+    chartStart.setDate(chartStart.getDate() - chartDays + 1);
+    chartStart.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < chartDays; i++) {
+      const d = new Date(chartStart);
       d.setDate(d.getDate() + i);
       const key = d.toISOString().slice(0, 10);
       const label = d.toLocaleDateString('es-DO', { day: '2-digit', month: 'short' });
