@@ -86,6 +86,99 @@ export async function createSaleOrder(
   return orderId;
 }
 
+export async function listSaleOrders(limit = 50, offset = 0, status?: string) {
+  const domain: unknown[][] = [];
+  if (status) {
+    // Map dashboard status to Odoo state
+    const stateMap: Record<string, string> = {
+      pending: 'draft',
+      ready: 'sale',
+      dispatched: 'done',
+      cancelled: 'cancel',
+    };
+    const odooState = stateMap[status] || status;
+    domain.push(['state', '=', odooState]);
+  }
+
+  const orders = await odooExecute(
+    'sale.order',
+    'search_read',
+    [domain],
+    {
+      fields: [
+        'name', 'partner_id', 'date_order', 'amount_total',
+        'state', 'order_line', 'create_date',
+      ],
+      limit,
+      offset,
+      order: 'create_date desc',
+    },
+  );
+  return orders;
+}
+
+export async function getSaleOrder(orderId: number) {
+  const orders = await odooExecute(
+    'sale.order',
+    'read',
+    [[orderId]],
+    {
+      fields: [
+        'name', 'partner_id', 'date_order', 'amount_total',
+        'state', 'order_line', 'create_date', 'note',
+      ],
+    },
+  );
+  if (!orders || orders.length === 0) return null;
+
+  const order = orders[0];
+
+  // Fetch order lines
+  if (order.order_line?.length > 0) {
+    const lines = await odooExecute(
+      'sale.order.line',
+      'read',
+      [order.order_line],
+      {
+        fields: [
+          'product_id', 'name', 'product_uom_qty',
+          'price_unit', 'price_subtotal',
+        ],
+      },
+    );
+    order.lines = lines;
+  } else {
+    order.lines = [];
+  }
+
+  return order;
+}
+
+export async function updateSaleOrderState(orderId: number, action: string) {
+  // Odoo sale.order workflow actions
+  switch (action) {
+    case 'confirm':
+      // draft → sale
+      await odooExecute('sale.order', 'action_confirm', [[orderId]]);
+      break;
+    case 'done':
+      // sale → done (lock)
+      await odooExecute('sale.order', 'action_done', [[orderId]]);
+      break;
+    case 'cancel':
+      // any → cancel
+      await odooExecute('sale.order', 'action_cancel', [[orderId]]);
+      break;
+    case 'draft':
+      // cancel → draft
+      await odooExecute('sale.order', 'action_draft', [[orderId]]);
+      break;
+    default:
+      throw new Error(`Unknown action: ${action}`);
+  }
+  logger.info({ orderId, action }, 'Sale order state updated');
+}
+
 export async function findOrCreatePartner(name: string, phone: string) {
   const existing = await odooExecute(
     'res.partner',

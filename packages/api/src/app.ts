@@ -8,6 +8,11 @@ import { webhookRoutes } from './modules/webhook/webhook.routes.js';
 import { odooRoutes } from './modules/odoo/odoo.routes.js';
 import { usersRoutes } from './modules/users/users.routes.js';
 import { handoverRoutes } from './modules/handover/handover.routes.js';
+import { ordersRoutes } from './modules/orders/orders.routes.js';
+import { chatsRoutes } from './modules/chats/chats.routes.js';
+import { customersRoutes } from './modules/customers/customers.routes.js';
+import { productsRoutes } from './modules/products/products.routes.js';
+import { statsRoutes } from './modules/stats/stats.routes.js';
 
 export async function buildApp(redis: Redis, config: AppConfig) {
   const app = Fastify({
@@ -45,6 +50,27 @@ export async function buildApp(redis: Redis, config: AppConfig) {
 
   await app.register(async (instance) => {
     await handoverRoutes(instance, { redis });
+  });
+
+  // Dashboard API routes (protected)
+  await app.register(async (instance) => {
+    await ordersRoutes(instance);
+  });
+
+  await app.register(async (instance) => {
+    await chatsRoutes(instance, { redis, config });
+  });
+
+  await app.register(async (instance) => {
+    await customersRoutes(instance);
+  });
+
+  await app.register(async (instance) => {
+    await productsRoutes(instance, { redis, config });
+  });
+
+  await app.register(async (instance) => {
+    await statsRoutes(instance);
   });
 
   return app;
