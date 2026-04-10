@@ -4,6 +4,7 @@ import { connectMongo, closeMongo } from './shared/mongo.js';
 import { initOdoo } from './shared/odoo.js';
 import { initEvolution } from './modules/evolution/evolution.client.js';
 import { buildApp } from './app.js';
+import { seedDefaultAdmin } from './modules/auth/auth.service.js';
 import { logger } from './shared/logger.js';
 
 async function main() {
@@ -16,6 +17,9 @@ async function main() {
   await connectMongo(config);
   await initOdoo(config);
   initEvolution(config);
+
+  // Seed default admin if DB is empty
+  await seedDefaultAdmin();
 
   // Build and start Fastify
   const app = await buildApp(redis, config);
