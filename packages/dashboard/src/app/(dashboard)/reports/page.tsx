@@ -17,65 +17,25 @@ import { StatCard } from "@/components/stat-card";
 import { api } from "@/lib/api";
 import { useStore } from "@/lib/store";
 
-// ── Mock data ──
+// ── Types ──
 
-const dailySalesData = [
-  { date: "04-Abr", value: 8200 },
-  { date: "05-Abr", value: 12500 },
-  { date: "06-Abr", value: 9800 },
-  { date: "07-Abr", value: 15200 },
-  { date: "08-Abr", value: 11400 },
-  { date: "09-Abr", value: 18900 },
-  { date: "10-Abr", value: 14300 },
-];
+interface ChartsData {
+  dailySales: { date: string; value: number }[];
+  weekdaySales: { day: string; value: number }[];
+  hourlyActivity: number[];
+  ordersByStatus: { label: string; count: number; color: string }[];
+  topProducts: { name: string; qty: number; total: number }[];
+  topCustomers: { name: string; orders: number; total: number }[];
+}
 
-const hourlySales = [
-  0, 0, 0, 0, 0, 0, 2, 5, 12, 18, 22, 15,
-  10, 8, 14, 19, 16, 12, 9, 7, 11, 8, 4, 1,
-];
-
-const weekdaySales = [
-  { day: "Lun", value: 12500 },
-  { day: "Mar", value: 9800 },
-  { day: "Mié", value: 15200 },
-  { day: "Jue", value: 11400 },
-  { day: "Vie", value: 18900 },
-  { day: "Sáb", value: 21300 },
-  { day: "Dom", value: 8100 },
-];
-
-const ordersByStatus = [
-  { label: "Pendiente", count: 8, color: "#f59e0b", pct: 6 },
-  { label: "Impresión Pendiente", count: 16, color: "#3b82f6", pct: 11 },
-  { label: "Despachado", count: 118, color: "#22c55e", pct: 80 },
-  { label: "Cancelado", count: 4, color: "#ef4444", pct: 3 },
-];
-
-const topProducts = [
-  { name: "Acetaminofén 500mg", qty: 145, total: 21750 },
-  { name: "Ibuprofeno 400mg", qty: 98, total: 19600 },
-  { name: "Amoxicilina 500mg", qty: 67, total: 30150 },
-  { name: "Omeprazol 20mg", qty: 54, total: 9720 },
-  { name: "Loratadina 10mg", qty: 48, total: 5760 },
-  { name: "Metformina 850mg", qty: 42, total: 8400 },
-  { name: "Enalapril 10mg", qty: 38, total: 6650 },
-  { name: "Diclofenac 50mg", qty: 35, total: 4550 },
-  { name: "Complejo B", qty: 31, total: 7750 },
-  { name: "Cetirizina 10mg", qty: 28, total: 4900 },
-];
-
-const topCustomers = [
-  { name: "Ana Reyes", orders: 23, total: 15800 },
-  { name: "María López", orders: 18, total: 12400 },
-  { name: "Pedro Almonte", orders: 15, total: 9800 },
-  { name: "Rosa Méndez", orders: 12, total: 8500 },
-  { name: "José García", orders: 11, total: 7200 },
-  { name: "Carmen Díaz", orders: 9, total: 6100 },
-  { name: "Luis Batista", orders: 8, total: 5400 },
-  { name: "Laura Sánchez", orders: 7, total: 4900 },
-  { name: "Miguel Torres", orders: 6, total: 3800 },
-  { name: "Carlos Marte", orders: 5, total: 3200 },
-];
+const emptyCharts: ChartsData = {
+  dailySales: [],
+  weekdaySales: [],
+  hourlyActivity: new Array(24).fill(0),
+  ordersByStatus: [],
+  topProducts: [],
+  topCustomers: [],
+};
 
 type DateRange = "today" | "week" | "month" | "year";
 
@@ -125,9 +85,12 @@ export default function ReportsPage() {
 
   const storeId = currentStore?.id || "store_leo";
 
+  const [charts, setCharts] = useState<ChartsData>(emptyCharts);
+
   useEffect(() => {
     api.get<SummaryStats>(`/api/v1/stores/${storeId}/stats/summary`).then(setSummary).catch(() => {});
     api.get<AgentStats>(`/api/v1/stores/${storeId}/stats/agent`).then(setAgent).catch(() => {});
+    api.get<ChartsData>(`/api/v1/stores/${storeId}/stats/charts`).then(setCharts).catch(() => {});
   }, [storeId]);
 
   const totalSales = summary?.totalRevenue || 0;
@@ -136,9 +99,11 @@ export default function ReportsPage() {
   const avgPerOrder = summary?.avgPerOrder || 0;
   const uniqueCustomers = summary?.totalCustomers || 0;
 
-  const maxDaily = Math.max(...dailySalesData.map((d) => d.value));
-  const maxHourly = Math.max(...hourlySales);
-  const maxWeekday = Math.max(...weekdaySales.map((d) => d.value));
+  const { dailySales: dailySalesData, weekdaySales, hourlyActivity: hourlySales, ordersByStatus, topProducts, topCustomers } = charts;
+
+  const maxDaily = Math.max(...(dailySalesData.length > 0 ? dailySalesData.map((d) => d.value) : [1]));
+  const maxHourly = Math.max(...hourlySales, 1);
+  const maxWeekday = Math.max(...(weekdaySales.length > 0 ? weekdaySales.map((d) => d.value) : [1]));
   const maxProductTotal = topProducts[0]?.total || 1;
 
   return (
@@ -247,8 +212,9 @@ export default function ReportsPage() {
             <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
               {(() => {
                 let offset = 0;
+                const total = ordersByStatus.reduce((sum, x) => sum + x.count, 0) || 1;
                 return ordersByStatus.map((s) => {
-                  const dash = s.pct;
+                  const dash = (s.count / total) * 100;
                   const el = (
                     <circle
                       key={s.label}
@@ -280,7 +246,7 @@ export default function ReportsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-slate-900">{s.count}</span>
-                  <span className="text-slate-400 text-xs">({s.pct}%)</span>
+                  <span className="text-slate-400 text-xs">({Math.round((s.count / (ordersByStatus.reduce((sum, x) => sum + x.count, 0) || 1)) * 100)}%)</span>
                 </div>
               </div>
             ))}
