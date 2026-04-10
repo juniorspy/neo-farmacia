@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #0ea5e9;
+  --primary-h: 199;
+  --primary-s: 89%;
+  --primary-l: 48%;
+  --primary-dark: hsl(199, 89%, 38%);
+  --primary-light: hsl(199, 89%, 95%);
+  --primary-muted: hsl(199, 89%, 90%);
+  --primary-alpha15: hsla(199, 89%, 48%, 0.15);
+  --sidebar-bg: hsl(199, 100%, 12%);
+  --sidebar-border: hsl(199, 100%, 18%);
+  --sidebar-width: 260px;
+  --header-height: 64px;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-bg-main: #f8fafc;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-bg-main);
+  color: #1e293b;
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+/* Utility classes for the dynamic theme */
+.bg-primary { background-color: var(--primary); }
+.bg-primary-dark { background-color: var(--primary-dark); }
+.bg-primary-light { background-color: var(--primary-light); }
+.bg-primary-muted { background-color: var(--primary-muted); }
+.bg-primary-alpha15 { background-color: var(--primary-alpha15); }
+.bg-sidebar { background-color: var(--sidebar-bg); }
+.border-sidebar { border-color: var(--sidebar-border); }
+.text-primary { color: var(--primary); }
+.text-primary-dark { color: var(--primary-dark); }
+.border-primary { border-color: var(--primary); }
+.ring-primary { --tw-ring-color: var(--primary); }
+.hover\:bg-primary-dark:hover { background-color: var(--primary-dark); }
+
+/* Focus ring using theme */
+.focus-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.2);
+  border-color: var(--primary);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}

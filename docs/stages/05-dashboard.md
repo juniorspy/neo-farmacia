@@ -1,7 +1,7 @@
 # Stage 5: Dashboard (The Face)
 
-**Status**: `pending`
-**Depends on**: Stage 2 (Microservice), Stage 4 (WhatsApp)
+**Status**: `in_progress`
+**Depends on**: Stage 2 (Microservice)
 **Goal**: Web panel where pharmacy owners manage everything — orders, chats, WhatsApp numbers, inventory, multiple locations, and stats.
 
 ## Why
@@ -10,7 +10,26 @@ This replaces the Android app from neo colmado. The pharmacist does everything f
 
 ## Deliverables
 
-### 5A — Backend API (Fastify, same packages/api)
+### 5B — Frontend (Next.js) ✅ DONE
+
+- [x] **Project setup**: Next.js 16 + TypeScript + Tailwind CSS + App Router
+- [x] **Layout**: Sidebar nav (collapsible), header with store selector, responsive
+- [x] **Login page**: JWT auth + dev shortcut for testing
+- [x] **Auth system**: AuthProvider context, JWT token management, route protection
+- [x] **Store selector**: Multi-store support with StoreProvider context
+- [x] **Theme system**: Dynamic primary color (12 presets + custom hex picker), logo upload, persisted in localStorage, CSS custom properties propagate to all components
+- [x] **Dashboard home**: Date range filters (Hoy/Semana/Mes/Año), 5 stat cards, sales by day bar chart, donut orders by status, weekday sales, hourly activity, top 10 products, top 10 customers, categories, agent performance
+- [x] **Orders page**: Tabs by status, search, order list with badges, detail side panel, actions (marcar listo, despachar, cancelar, imprimir)
+- [x] **Chat inbox**: WhatsApp-style layout, left=conversations, right=messages, bot/manual toggle, unread badges, send message input
+- [x] **Products page**: Table with search, stock/expiry info, low stock alerts
+- [x] **Customers page**: Cards with stats (pedidos, gastado, último pedido), search, registered badge
+- [x] **WhatsApp page**: Connected numbers, status indicators (connected/disconnected/QR), connect/disconnect actions
+- [x] **Reports page**: Full statistics — date filters + AI Análisis button, 5 stat cards, sales by day, donut orders by status, weekday sales, hourly activity (24h with tooltips), top 10 products (horizontal bars with ranking), top 10 customers (ranked list), agent performance (bot vs manual cards + metrics), categories with totals
+- [x] **Settings page**: Appearance (color picker + logo upload + live preview), store info, agent config (welcome message, auto-response toggle)
+
+**All pages use mock data — will connect to real API endpoints next.**
+
+### 5A — Backend API (Fastify, same packages/api) — PENDING
 
 - [ ] **Auth**
   - [ ] JWT authentication (login, validate, refresh)
@@ -27,7 +46,7 @@ This replaces the Android app from neo colmado. The pharmacist does everything f
   - [ ] `GET /api/v1/stores/:store_id/chats` — active chats with last message
   - [ ] `GET /api/v1/stores/:store_id/chats/:chat_id/messages` — conversation history
   - [ ] `POST /api/v1/stores/:store_id/chats/:chat_id/messages` — send manual message
-  - [ ] `PUT /api/v1/stores/:store_id/chats/:chat_id/mode` — switch bot/manual
+  - [ ] `PUT /api/v1/stores/:store_id/chats/:chat_id/mode` — switch bot/manual (already exists)
 
 - [ ] **WhatsApp Management**
   - [ ] `POST /api/v1/stores/:store_id/whatsapp/numbers/connect` — add number
@@ -60,20 +79,23 @@ This replaces the Android app from neo colmado. The pharmacist does everything f
   - [ ] Real-time events: new_order, order_updated, new_message, handover_changed
   - [ ] Scoped by store_id (pharmacist only receives their store's events)
 
-### 5B — Frontend (Next.js)
+## Tech Stack (Frontend)
 
-- [ ] **Layout**: Sidebar nav, header with store selector, responsive
-- [ ] **Login page**: JWT auth
-- [ ] **Orders page**: Real-time list, status badges, despachar/cancelar actions
-- [ ] **Order detail**: Items, totals, customer info, print receipt button
-- [ ] **Chat inbox**: WhatsApp-style, left panel = conversations, right panel = messages
-- [ ] **Handover toggle**: Switch bot/manual per chat
-- [ ] **WhatsApp page**: Connected numbers, QR scanner, status indicators
-- [ ] **Store selector**: Dropdown for multi-location owners
-- [ ] **Products page**: Table with search, inline edit, stock/expiry info
-- [ ] **Customers page**: List with search, click to see profile + history
-- [ ] **Reports page**: Charts — sales trends, top products, agent performance
-- [ ] **Settings page**: Store info, agent config
+| Library | Version | Purpose |
+|---|---|---|
+| Next.js | 16.2.3 | App Router, SSR/SSG |
+| React | 19.x | UI framework |
+| Tailwind CSS | 4.x | Styling |
+| lucide-react | latest | Icons |
+| clsx | latest | Conditional classes |
+
+## Architecture Decisions
+
+- **CSS custom properties for theming** — instead of Tailwind theme config, we use CSS vars (`--primary`, `--sidebar-bg`, etc.) set dynamically via JS. This allows runtime color changes without rebuild.
+- **localStorage for theme/auth** — theme config and JWT token stored in localStorage. Will move to httpOnly cookies for JWT in production.
+- **Mock data first** — all pages built with mock data to validate UX before connecting API. Pattern: replace mock imports with `api.get()` calls.
+- **Route groups** — `(dashboard)` group wraps all authenticated pages with Shell/Auth/Store/Theme providers. `/login` lives outside.
+- **Collapsible sidebar** — persisted in localStorage, collapses to 72px icon-only mode.
 
 ## Printing
 
@@ -85,14 +107,40 @@ Browser-based thermal printing options:
 
 Decision on approach to be made during implementation.
 
-## Decisions
+## File Structure
 
-_(Record any decisions made during this stage)_
+```
+packages/dashboard/src/
+├── app/
+│   ├── globals.css           # Theme CSS vars + utility classes
+│   ├── layout.tsx            # Root layout (fonts, metadata)
+│   ├── login/page.tsx        # Login page (outside auth guard)
+│   └── (dashboard)/
+│       ├── layout.tsx        # Auth + Store + Theme providers + Shell
+│       ├── page.tsx          # Dashboard home (stats, charts, lists)
+│       ├── orders/page.tsx   # Orders management
+│       ├── chats/page.tsx    # Chat inbox
+│       ├── products/page.tsx # Product catalog
+│       ├── customers/page.tsx # Customer list
+│       ├── whatsapp/page.tsx # WhatsApp numbers
+│       ├── reports/page.tsx  # Full statistics
+│       └── settings/page.tsx # Theme + store + agent config
+├── components/
+│   ├── sidebar.tsx           # Collapsible nav with theme colors
+│   ├── header.tsx            # Header with store selector + avatar
+│   ├── shell.tsx             # Layout wrapper (sidebar + header + main)
+│   └── stat-card.tsx         # Reusable stat card
+└── lib/
+    ├── api.ts                # HTTP client with JWT
+    ├── auth.tsx              # Auth context + dev mode
+    ├── store.tsx             # Store selector context
+    └── theme.tsx             # Theme context (color + logo)
+```
 
 ## Blockers
 
-_(Record any blockers encountered)_
+_(none currently)_
 
 ## Session References
 
-_(Link to session logs where work on this stage was done)_
+- 2026-04-10: Frontend scaffold, all pages, theme system, reports page
