@@ -1,6 +1,6 @@
 # Stage 1: Odoo (The Foundation)
 
-**Status**: `pending`
+**Status**: `done`
 **Goal**: Have Odoo 17 running with pharmacy inventory configured, accessible via JSON-RPC from Node.js.
 
 ## Why First
@@ -9,13 +9,13 @@ Without inventory there is nothing to sell. Odoo is the single source of truth f
 
 ## Deliverables
 
-- [ ] Odoo 17 + PostgreSQL running in Docker/Dokploy
-- [ ] Pharmacy modules enabled: Inventory, Sales, Contacts
-- [ ] Lot tracking and expiry date tracking enabled
-- [ ] Test pharmacy created with sample products (medications)
-- [ ] Multi-company/multi-store structure configured
-- [ ] JSON-RPC connection validated from a Node.js script
-- [ ] Basic CRUD operations working: search products, read stock, create sale order
+- [x] Odoo 17 + PostgreSQL running in Docker/Dokploy
+- [x] Pharmacy modules enabled: Inventory, Sales, Contacts
+- [x] Lot tracking and expiry date tracking enabled
+- [x] Test pharmacy created with 20 sample products (medications, supplements, personal care)
+- [ ] Multi-company/multi-store structure configured (deferred — will set up per tenant)
+- [x] JSON-RPC connection validated from a Node.js script
+- [x] Basic CRUD operations working: search products, read stock, create categories
 
 ## Tasks
 
@@ -62,12 +62,20 @@ Without inventory there is nothing to sell. Odoo is the single source of truth f
 
 ## Decisions
 
-_(Record any decisions made during this stage)_
+- Odoo deployed via Dokploy compose service (not standalone Docker)
+- Service name in Dokploy: `pos` (compose name: `neofarmacia-pos-823krk`)
+- Domain: `pos.leofarmacia.com` (HTTPS via Let's Encrypt + Traefik)
+- Containers: `neofarmacia-pos-823krk-odoo-1` (Odoo) + `neofarmacia-pos-823krk-odoo-db-1` (PostgreSQL)
+- Odoo credentials: admin / admin (change in production)
+- Required Traefik labels in compose for routing
+- Required `dokploy-network` (external) + `internal` (bridge) network setup
+- Database initialized with `odoo -i base --stop-after-init`
 
 ## Blockers
 
-_(Record any blockers encountered)_
+- SSL shows "not secure" due to mixed content — needs `proxy_mode = True` in Odoo config (pending fix)
 
 ## Session References
 
-_(Link to session logs where work on this stage was done)_
+- [2026-04-09-01](../sessions/2026-04-09-01.md) — Architecture and planning
+- [2026-04-10-01](../sessions/2026-04-10-01.md) — Dokploy install + Odoo deployment

@@ -1,0 +1,48 @@
+version: "3.8"
+services:
+  odoo-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: odoo
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo_farmacia_2026
+    volumes:
+      - odoo_db_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    restart: always
+  odoo:
+    image: odoo:17
+    depends_on:
+      - odoo-db
+    command: -- --proxy-mode --db_host=odoo-db --db_port=5432 --db_user=odoo --db_password=odoo_farmacia_2026
+    environment:
+      HOST: odoo-db
+      PORT: 5432
+      USER: odoo
+      PASSWORD: odoo_farmacia_2026
+    volumes:
+      - odoo_data:/var/lib/odoo
+      - odoo_addons:/mnt/extra-addons
+    networks:
+      - dokploy-network
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.neofarmacia-pos-odoo.rule=Host(`pos.leofarmacia.com`)"
+      - "traefik.http.routers.neofarmacia-pos-odoo.entrypoints=websecure"
+      - "traefik.http.routers.neofarmacia-pos-odoo.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.neofarmacia-pos-odoo-http.rule=Host(`pos.leofarmacia.com`)"
+      - "traefik.http.routers.neofarmacia-pos-odoo-http.entrypoints=web"
+      - "traefik.http.routers.neofarmacia-pos-odoo-http.middlewares=redirect-to-https@file"
+      - "traefik.http.services.neofarmacia-pos-odoo.loadbalancer.server.port=8069"
+    restart: always
+volumes:
+  odoo_db_data:
+  odoo_data:
+  odoo_addons:
+networks:
+  dokploy-network:
+    external: true
+  internal:
+    driver: bridge

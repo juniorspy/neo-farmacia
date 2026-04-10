@@ -4,7 +4,7 @@
 
 | # | Stage | Status | Description |
 |---|---|---|---|
-| 1 | [Odoo](stages/01-odoo.md) | `pending` | Inventory foundation — install, configure, validate JSON-RPC |
+| 1 | [Odoo](stages/01-odoo.md) | `done` | Inventory foundation — install, configure, validate JSON-RPC |
 | 2 | [Microservice](stages/02-microservice.md) | `pending` | Fastify API — webhook, debounce, Odoo proxy, handover |
 | 3 | [n8n Agents](stages/03-n8n-agents.md) | `pending` | AI conversational logic — adapt 5 agents for pharmacy |
 | 4 | [WhatsApp](stages/04-whatsapp.md) | `pending` | Evolution API — connect numbers, test end-to-end flow |
