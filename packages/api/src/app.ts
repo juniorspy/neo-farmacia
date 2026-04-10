@@ -13,6 +13,7 @@ import { chatsRoutes } from './modules/chats/chats.routes.js';
 import { customersRoutes } from './modules/customers/customers.routes.js';
 import { productsRoutes } from './modules/products/products.routes.js';
 import { statsRoutes } from './modules/stats/stats.routes.js';
+import { whatsappRoutes } from './modules/whatsapp/whatsapp.routes.js';
 
 export async function buildApp(redis: Redis, config: AppConfig) {
   const app = Fastify({
@@ -71,6 +72,10 @@ export async function buildApp(redis: Redis, config: AppConfig) {
 
   await app.register(async (instance) => {
     await statsRoutes(instance);
+  });
+
+  await app.register(async (instance) => {
+    await whatsappRoutes(instance);
   });
 
   return app;

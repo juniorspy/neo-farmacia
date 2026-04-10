@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import {
   DollarSign,
@@ -14,6 +14,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
+import { api } from "@/lib/api";
+import { useStore } from "@/lib/store";
 
 // ── Mock data ──
 
@@ -98,14 +100,41 @@ function rankBadge(i: number) {
   );
 }
 
-export default function ReportsPage() {
-  const [dateRange, setDateRange] = useState<DateRange>("month");
+interface SummaryStats {
+  totalOrders: number;
+  pendingOrders: number;
+  completedOrders: number;
+  totalRevenue: number;
+  avgPerOrder: number;
+  totalCustomers: number;
+}
 
-  const totalSales = 97200;
-  const totalOrders = 146;
-  const completedOrders = 118;
-  const avgPerOrder = Math.round(totalSales / totalOrders);
-  const uniqueCustomers = 67;
+interface AgentStats {
+  botMessages: number;
+  agentMessages: number;
+  totalMessages: number;
+  botPct: number;
+  agentPct: number;
+}
+
+export default function ReportsPage() {
+  const { currentStore } = useStore();
+  const [dateRange, setDateRange] = useState<DateRange>("month");
+  const [summary, setSummary] = useState<SummaryStats | null>(null);
+  const [agent, setAgent] = useState<AgentStats | null>(null);
+
+  const storeId = currentStore?.id || "store_leo";
+
+  useEffect(() => {
+    api.get<SummaryStats>(`/api/v1/stores/${storeId}/stats/summary`).then(setSummary).catch(() => {});
+    api.get<AgentStats>(`/api/v1/stores/${storeId}/stats/agent`).then(setAgent).catch(() => {});
+  }, [storeId]);
+
+  const totalSales = summary?.totalRevenue || 0;
+  const totalOrders = summary?.totalOrders || 0;
+  const completedOrders = summary?.completedOrders || 0;
+  const avgPerOrder = summary?.avgPerOrder || 0;
+  const uniqueCustomers = summary?.totalCustomers || 0;
 
   const maxDaily = Math.max(...dailySalesData.map((d) => d.value));
   const maxHourly = Math.max(...hourlySales);
@@ -376,12 +405,12 @@ export default function ReportsPage() {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-violet-50 rounded-xl p-4 text-center">
                 <Bot className="w-6 h-6 text-violet-600 mx-auto mb-1" />
-                <p className="text-2xl font-bold text-violet-700">78%</p>
+                <p className="text-2xl font-bold text-violet-700">{agent?.botPct || 0}%</p>
                 <p className="text-xs text-violet-500">Resueltos por bot</p>
               </div>
               <div className="bg-sky-50 rounded-xl p-4 text-center">
                 <User className="w-6 h-6 text-sky-600 mx-auto mb-1" />
-                <p className="text-2xl font-bold text-sky-700">22%</p>
+                <p className="text-2xl font-bold text-sky-700">{agent?.agentPct || 0}%</p>
                 <p className="text-xs text-sky-500">Manual</p>
               </div>
             </div>

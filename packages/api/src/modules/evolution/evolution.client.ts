@@ -51,3 +51,58 @@ export async function getConnectionState(instanceName: string, apiKey: string) {
   );
   return res.data;
 }
+
+export async function fetchInstances() {
+  if (!config) throw new Error('Evolution not initialized');
+
+  const res = await axios.get(
+    `${config.apiUrl}/instance/fetchInstances`,
+    { headers: { apikey: config.masterKey }, timeout: 10000 },
+  );
+  return res.data;
+}
+
+export async function getInstanceQr(instanceName: string) {
+  if (!config) throw new Error('Evolution not initialized');
+
+  const res = await axios.get(
+    `${config.apiUrl}/instance/connect/${instanceName}`,
+    { headers: { apikey: config.masterKey }, timeout: 10000 },
+  );
+  return res.data;
+}
+
+export async function createInstance(instanceName: string) {
+  if (!config) throw new Error('Evolution not initialized');
+
+  const res = await axios.post(
+    `${config.apiUrl}/instance/create`,
+    {
+      instanceName,
+      integration: 'WHATSAPP-BAILEYS',
+      qrcode: true,
+    },
+    { headers: { apikey: config.masterKey }, timeout: 10000 },
+  );
+  return res.data;
+}
+
+export async function deleteInstance(instanceName: string) {
+  if (!config) throw new Error('Evolution not initialized');
+
+  const res = await axios.delete(
+    `${config.apiUrl}/instance/delete/${instanceName}`,
+    { headers: { apikey: config.masterKey }, timeout: 10000 },
+  );
+  return res.data;
+}
+
+export async function logoutInstance(instanceName: string) {
+  if (!config) throw new Error('Evolution not initialized');
+
+  const res = await axios.delete(
+    `${config.apiUrl}/instance/logout/${instanceName}`,
+    { headers: { apikey: config.masterKey }, timeout: 10000 },
+  );
+  return res.data;
+}
