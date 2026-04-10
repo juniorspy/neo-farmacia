@@ -2,8 +2,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type Redis from 'ioredis';
 import { Message } from '../messages/message.model.js';
 import { User } from '../users/user.model.js';
-import { getSessionMode, setSessionMode } from '../handover/handover.service.js';
-import { sendText } from '../evolution/evolution.client.js';
+import { getSessionMode } from '../handover/handover.service.js';
 import { logger } from '../../shared/logger.js';
 import type { AppConfig } from '../../config/env.js';
 
@@ -111,18 +110,4 @@ export async function chatsRoutes(
     };
   });
 
-  // PUT /api/v1/stores/:storeId/chats/:chatId/mode — switch bot/manual
-  app.put('/api/v1/stores/:storeId/chats/:chatId/mode', async (request: FastifyRequest, reply: FastifyReply) => {
-    const { storeId, chatId } = request.params as { storeId: string; chatId: string };
-    const { mode } = request.body as { mode: string };
-
-    if (mode !== 'bot' && mode !== 'manual') {
-      return reply.status(400).send({ error: 'mode must be "bot" or "manual"' });
-    }
-
-    await setSessionMode(redis, storeId, chatId, mode as 'bot' | 'manual');
-    logger.info({ storeId, chatId, mode }, 'Chat mode changed via dashboard');
-
-    return { storeId, chatId, mode };
-  });
 }
