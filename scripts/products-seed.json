@@ -7,7 +7,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000102.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/telekast-10-mg-30-tabletas-details.aspx",
     "slug": "telekast-10-mg-30-tabletas",
-    "localImagePath": "/products/1000102.jpg"
+    "localImagePath": "/products/1000102.jpg",
+    "odooProductId": 62
   },
   {
     "sku": "1000103",
@@ -17,7 +18,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000103.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/telekast-l-10-5mg-30tabls-details.aspx",
     "slug": "telekast-l-10-5mg-30tabls",
-    "localImagePath": "/products/1000103.jpg"
+    "localImagePath": "/products/1000103.jpg",
+    "odooProductId": 63
   },
   {
     "sku": "1000104",
@@ -27,7 +29,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000104.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/bilaxten-20-mg-10-comprimidos-details.aspx",
     "slug": "bilaxten-20-mg-10-comprimidos",
-    "localImagePath": "/products/1000104.jpg"
+    "localImagePath": "/products/1000104.jpg",
+    "odooProductId": 64
   },
   {
     "sku": "1000105",
@@ -37,7 +40,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000105.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/rowatinex-100-capsulas--al-detalle-tiras-de-10-unids-details.aspx",
     "slug": "rowatinex-100-capsulas--al-detalle-tiras-de-10-unids",
-    "localImagePath": "/products/1000105.jpg"
+    "localImagePath": "/products/1000105.jpg",
+    "odooProductId": 65
   },
   {
     "sku": "1000106",
@@ -47,7 +51,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000106.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/rowachol-caps-tr10-----10x10-details.aspx",
     "slug": "rowachol-caps-tr10-----10x10",
-    "localImagePath": "/products/1000106.jpg"
+    "localImagePath": "/products/1000106.jpg",
+    "odooProductId": 66
   },
   {
     "sku": "1000302",
@@ -57,7 +62,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000302.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/florelix-jbe-120ml-details.aspx",
     "slug": "florelix-jbe-120ml",
-    "localImagePath": "/products/1000302.jpg"
+    "localImagePath": "/products/1000302.jpg",
+    "odooProductId": 67
   },
   {
     "sku": "1000304",
@@ -67,7 +73,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000304.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pomona-90-mg-6-ovulos-details.aspx",
     "slug": "pomona-90-mg-6-ovulos",
-    "localImagePath": "/products/1000304.jpg"
+    "localImagePath": "/products/1000304.jpg",
+    "odooProductId": 68
   },
   {
     "sku": "1000307",
@@ -77,7 +84,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000307.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/clopidogrel-lam-75-mg-30-comprimidos-details.aspx",
     "slug": "clopidogrel-lam-75-mg-30-comprimidos",
-    "localImagePath": "/products/1000307.jpg"
+    "localImagePath": "/products/1000307.jpg",
+    "odooProductId": 69
   },
   {
     "sku": "1000309",
@@ -87,7 +95,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000309.png",
     "productUrl": "https://tienda.farmaciacarol.com/metiom-20mg-30caps-details.aspx",
     "slug": "metiom-20mg-30caps",
-    "localImagePath": "/products/1000309.png"
+    "localImagePath": "/products/1000309.png",
+    "odooProductId": 70
   },
   {
     "sku": "1000314",
@@ -97,7 +106,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000314.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/cross-pvp-susp-al-2--60ml-d-details.aspx",
     "slug": "cross-pvp-susp-al-2--60ml-d",
-    "localImagePath": "/products/1000314.jpg"
+    "localImagePath": "/products/1000314.jpg",
+    "odooProductId": 71
   },
   {
     "sku": "1000315",
@@ -107,7 +117,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000315.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/co-plavix-75mg-100mg-28tabls-details.aspx",
     "slug": "co-plavix-75mg-100mg-28tabls",
-    "localImagePath": "/products/1000315.jpg"
+    "localImagePath": "/products/1000315.jpg",
+    "odooProductId": 72
   },
   {
     "sku": "1000321",
@@ -117,7 +128,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000321.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/fixem-forte-200mg-30ml-susp-details.aspx",
     "slug": "fixem-forte-200mg-30ml-susp",
-    "localImagePath": "/products/1000321.jpg"
+    "localImagePath": "/products/1000321.jpg",
+    "odooProductId": 73
   },
   {
     "sku": "1000328",
@@ -127,7 +139,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000328.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/kalara-15mg-sobre----det-10sobres-details.aspx",
     "slug": "kalara-15mg-sobre----det-10sobres",
-    "localImagePath": "/products/1000328.jpg"
+    "localImagePath": "/products/1000328.jpg",
+    "odooProductId": 74
   },
   {
     "sku": "1000329",
@@ -137,7 +150,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000329.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/tadal-5-mg-30-comprimidos--al-detalle-1-unid-details.aspx",
     "slug": "tadal-5-mg-30-comprimidos--al-detalle-1-unid",
-    "localImagePath": "/products/1000329.jpg"
+    "localImagePath": "/products/1000329.jpg",
+    "odooProductId": 75
   },
   {
     "sku": "1000330",
@@ -147,7 +161,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000330.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/nitrenol-20-50-12-5-mg-30-comprimidos-details.aspx",
     "slug": "nitrenol-20-50-12-5-mg-30-comprimidos",
-    "localImagePath": "/products/1000330.jpg"
+    "localImagePath": "/products/1000330.jpg",
+    "odooProductId": 76
   },
   {
     "sku": "1000331",
@@ -157,7 +172,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000331.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/levo-hp-pack--48x10x20-tabls-details.aspx",
     "slug": "levo-hp-pack--48x10x20-tabls",
-    "localImagePath": "/products/1000331.jpg"
+    "localImagePath": "/products/1000331.jpg",
+    "odooProductId": 77
   },
   {
     "sku": "1000340",
@@ -167,7 +183,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000340.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/adrenor-4mg-2ml-2amps-d-details.aspx",
     "slug": "adrenor-4mg-2ml-2amps-d",
-    "localImagePath": "/products/1000340.jpg"
+    "localImagePath": "/products/1000340.jpg",
+    "odooProductId": 78
   },
   {
     "sku": "1000341",
@@ -177,7 +194,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000341.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pregagesic-75mg-30caps-details.aspx",
     "slug": "pregagesic-75mg-30caps",
-    "localImagePath": "/products/1000341.jpg"
+    "localImagePath": "/products/1000341.jpg",
+    "odooProductId": 79
   },
   {
     "sku": "1000342",
@@ -187,7 +205,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000342.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pregagesic-150mg-30caps-d-details.aspx",
     "slug": "pregagesic-150mg-30caps-d",
-    "localImagePath": "/products/1000342.jpg"
+    "localImagePath": "/products/1000342.jpg",
+    "odooProductId": 80
   },
   {
     "sku": "1000344",
@@ -197,7 +216,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000344.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/lorcef-1gr--iv--vial-details.aspx",
     "slug": "lorcef-1gr--iv--vial",
-    "localImagePath": "/products/1000344.jpg"
+    "localImagePath": "/products/1000344.jpg",
+    "odooProductId": 81
   },
   {
     "sku": "1000345",
@@ -207,7 +227,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000345.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/kuotal-50-g-crema-vaginal-details.aspx",
     "slug": "kuotal-50-g-crema-vaginal",
-    "localImagePath": "/products/1000345.jpg"
+    "localImagePath": "/products/1000345.jpg",
+    "odooProductId": 82
   },
   {
     "sku": "1000346",
@@ -217,7 +238,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000346.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/fexionel-500mg-30comps-details.aspx",
     "slug": "fexionel-500mg-30comps",
-    "localImagePath": "/products/1000346.jpg"
+    "localImagePath": "/products/1000346.jpg",
+    "odooProductId": 83
   },
   {
     "sku": "1000352",
@@ -227,7 +249,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000352.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/prokinetic-25mg-30tabls-details.aspx",
     "slug": "prokinetic-25mg-30tabls",
-    "localImagePath": "/products/1000352.jpg"
+    "localImagePath": "/products/1000352.jpg",
+    "odooProductId": 84
   },
   {
     "sku": "1000353",
@@ -237,7 +260,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000353.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/gynobiotic-100mg-7-ovulos-d-details.aspx",
     "slug": "gynobiotic-100mg-7-ovulos-d",
-    "localImagePath": "/products/1000353.jpg"
+    "localImagePath": "/products/1000353.jpg",
+    "odooProductId": 85
   },
   {
     "sku": "1000355",
@@ -247,7 +271,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000355.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/biovit-natal-nf-gotas-30ml-details.aspx",
     "slug": "biovit-natal-nf-gotas-30ml",
-    "localImagePath": "/products/1000355.jpg"
+    "localImagePath": "/products/1000355.jpg",
+    "odooProductId": 86
   },
   {
     "sku": "1000359",
@@ -257,7 +282,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000359.png",
     "productUrl": "https://tienda.farmaciacarol.com/mesygest-5-mg-1-ml-1-ampolla-details.aspx",
     "slug": "mesygest-5-mg-1-ml-1-ampolla",
-    "localImagePath": "/products/1000359.png"
+    "localImagePath": "/products/1000359.png",
+    "odooProductId": 87
   },
   {
     "sku": "1000360",
@@ -267,7 +293,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000360.png",
     "productUrl": "https://tienda.farmaciacarol.com/progestin-100mg-2ml-d-details.aspx",
     "slug": "progestin-100mg-2ml-d",
-    "localImagePath": "/products/1000360.png"
+    "localImagePath": "/products/1000360.png",
+    "odooProductId": 88
   },
   {
     "sku": "1000361",
@@ -277,7 +304,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000361.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/nomestrol-50-5mg-amp-2ml-details.aspx",
     "slug": "nomestrol-50-5mg-amp-2ml",
-    "localImagePath": "/products/1000361.jpg"
+    "localImagePath": "/products/1000361.jpg",
+    "odooProductId": 89
   },
   {
     "sku": "1000362",
@@ -287,7 +315,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000362.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/rocefort-igr-im-3-5ml-d-details.aspx",
     "slug": "rocefort-igr-im-3-5ml-d",
-    "localImagePath": "/products/1000362.jpg"
+    "localImagePath": "/products/1000362.jpg",
+    "odooProductId": 90
   },
   {
     "sku": "45971228",
@@ -297,7 +326,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45971228.png",
     "productUrl": "https://tienda.farmaciacarol.com/sticker-alerta-roja-2023-details.aspx",
     "slug": "sticker-alerta-roja-2023",
-    "localImagePath": "/products/45971228.png"
+    "localImagePath": "/products/45971228.png",
+    "odooProductId": 91
   },
   {
     "sku": "45959090",
@@ -307,7 +337,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45959090.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/amino-x-30-servicios-435-grs--fruit-punch-details.aspx",
     "slug": "amino-x-30-servicios-435-grs--fruit-punch",
-    "localImagePath": "/products/45959090.jpg"
+    "localImagePath": "/products/45959090.jpg",
+    "odooProductId": 92
   },
   {
     "sku": "45959089",
@@ -317,7 +348,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45959089.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/amino-energy-270-grs--fruit-fusion-details.aspx",
     "slug": "amino-energy-270-grs--fruit-fusion",
-    "localImagePath": "/products/45959089.jpg"
+    "localImagePath": "/products/45959089.jpg",
+    "odooProductId": 93
   },
   {
     "sku": "45957387",
@@ -327,7 +359,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45957387.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/bcaa-2200-180-tabletas-details.aspx",
     "slug": "bcaa-2200-180-tabletas",
-    "localImagePath": "/products/45957387.jpg"
+    "localImagePath": "/products/45957387.jpg",
+    "odooProductId": 94
   },
   {
     "sku": "45969470",
@@ -337,7 +370,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45969470.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/boarding-pss-pouch-rfid-673-bolso-de-viaje-bloqueador-d-details.aspx",
     "slug": "boarding-pss-pouch-rfid-673-bolso-de-viaje-bloqueador-d",
-    "localImagePath": "/products/45969470.jpg"
+    "localImagePath": "/products/45969470.jpg",
+    "odooProductId": 95
   },
   {
     "sku": "45969468",
@@ -347,7 +381,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45969468.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/body-pocket-599-bolso-para-cuerpo-de-viaje-d-details.aspx",
     "slug": "body-pocket-599-bolso-para-cuerpo-de-viaje-d",
-    "localImagePath": "/products/45969468.jpg"
+    "localImagePath": "/products/45969468.jpg",
+    "odooProductId": 96
   },
   {
     "sku": "5031300",
@@ -357,7 +392,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5031300.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/equal-230-sobres-azucar-230gr-d-details.aspx",
     "slug": "equal-230-sobres-azucar-230gr-d",
-    "localImagePath": "/products/5031300.jpg"
+    "localImagePath": "/products/5031300.jpg",
+    "odooProductId": 97
   },
   {
     "sku": "5011700",
@@ -367,7 +403,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5011700.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/equal-50-s-sobres-1-75oz-azucar-details.aspx",
     "slug": "equal-50-s-sobres-1-75oz-azucar",
-    "localImagePath": "/products/5011700.jpg"
+    "localImagePath": "/products/5011700.jpg",
+    "odooProductId": 98
   },
   {
     "sku": "5011701",
@@ -377,7 +414,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5011701.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/equal-azucar-115-packets-4-1oz--115g-details.aspx",
     "slug": "equal-azucar-115-packets-4-1oz--115g",
-    "localImagePath": "/products/5011701.jpg"
+    "localImagePath": "/products/5011701.jpg",
+    "odooProductId": 99
   },
   {
     "sku": "5031600",
@@ -387,7 +425,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5031600.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/equal-sucralosa-100sobres-3-5oz-d-details.aspx",
     "slug": "equal-sucralosa-100sobres-3-5oz-d",
-    "localImagePath": "/products/5031600.jpg"
+    "localImagePath": "/products/5031600.jpg",
+    "odooProductId": 100
   },
   {
     "sku": "1000808",
@@ -397,7 +436,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000808.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/aloe-vera-gel-2grs-100caps---solaray-details.aspx",
     "slug": "aloe-vera-gel-2grs-100caps---solaray",
-    "localImagePath": "/products/1000808.jpg"
+    "localImagePath": "/products/1000808.jpg",
+    "odooProductId": 101
   },
   {
     "sku": "1000860",
@@ -407,7 +447,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000860.png",
     "productUrl": "https://tienda.farmaciacarol.com/acidophilus-probiotic-4-100caps---kal-details.aspx",
     "slug": "acidophilus-probiotic-4-100caps---kal",
-    "localImagePath": "/products/1000860.png"
+    "localImagePath": "/products/1000860.png",
+    "odooProductId": 102
   },
   {
     "sku": "1000863",
@@ -417,7 +458,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000863.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/colon-cleanse-200caps---original-details.aspx",
     "slug": "colon-cleanse-200caps---original",
-    "localImagePath": "/products/1000863.jpg"
+    "localImagePath": "/products/1000863.jpg",
+    "odooProductId": 103
   },
   {
     "sku": "4230600",
@@ -427,7 +469,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/4230600.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/cascara-sagrada-450-mg-x-100-caps--mason-details.aspx",
     "slug": "cascara-sagrada-450-mg-x-100-caps--mason",
-    "localImagePath": "/products/4230600.jpg"
+    "localImagePath": "/products/4230600.jpg",
+    "odooProductId": 104
   },
   {
     "sku": "4233003",
@@ -437,7 +480,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/4233003.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/horsetail-440-mg-capsulasulas-100--s-d-details.aspx",
     "slug": "horsetail-440-mg-capsulasulas-100--s-d",
-    "localImagePath": "/products/4233003.jpg"
+    "localImagePath": "/products/4233003.jpg",
+    "odooProductId": 105
   },
   {
     "sku": "1663600",
@@ -447,7 +491,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1663600.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/splenda-sugar-50-sobre-details.aspx",
     "slug": "splenda-sugar-50-sobre",
-    "localImagePath": "/products/1663600.jpg"
+    "localImagePath": "/products/1663600.jpg",
+    "odooProductId": 106
   },
   {
     "sku": "1663603",
@@ -457,7 +502,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1663603.png",
     "productUrl": "https://tienda.farmaciacarol.com/splenda-sugar-100-sobre-details.aspx",
     "slug": "splenda-sugar-100-sobre",
-    "localImagePath": "/products/1663603.png"
+    "localImagePath": "/products/1663603.png",
+    "odooProductId": 107
   },
   {
     "sku": "1663604",
@@ -467,7 +513,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1663604.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/splenda-sugar-200-sobres-details.aspx",
     "slug": "splenda-sugar-200-sobres",
-    "localImagePath": "/products/1663604.jpg"
+    "localImagePath": "/products/1663604.jpg",
+    "odooProductId": 108
   },
   {
     "sku": "5011717",
@@ -477,7 +524,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5011717.png",
     "productUrl": "https://tienda.farmaciacarol.com/sukal-100-sobres-3-52oz--100g-d-details.aspx",
     "slug": "sukal-100-sobres-3-52oz--100g-d",
-    "localImagePath": "/products/5011717.png"
+    "localImagePath": "/products/5011717.png",
+    "odooProductId": 109
   },
   {
     "sku": "5031601",
@@ -487,7 +535,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5031601.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/equal-sucralosa-50sobres-1-75oz-details.aspx",
     "slug": "equal-sucralosa-50sobres-1-75oz",
-    "localImagePath": "/products/5031601.jpg"
+    "localImagePath": "/products/5031601.jpg",
+    "odooProductId": 110
   },
   {
     "sku": "1001867",
@@ -497,7 +546,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001867.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/gum-1314-proxabrush-trav-ler-p-viaje-details.aspx",
     "slug": "gum-1314-proxabrush-trav-ler-p-viaje",
-    "localImagePath": "/products/1001867.jpg"
+    "localImagePath": "/products/1001867.jpg",
+    "odooProductId": 111
   },
   {
     "sku": "1002228",
@@ -507,7 +557,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002228.png",
     "productUrl": "https://tienda.farmaciacarol.com/colgate-sens-pro-alivio-110gr-white--pasta-details.aspx",
     "slug": "colgate-sens-pro-alivio-110gr-white--pasta",
-    "localImagePath": "/products/1002228.png"
+    "localImagePath": "/products/1002228.png",
+    "odooProductId": 112
   },
   {
     "sku": "1002285",
@@ -517,7 +568,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002285.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/corega-ultra-20gr--sin-sabor-details.aspx",
     "slug": "corega-ultra-20gr--sin-sabor",
-    "localImagePath": "/products/1002285.jpg"
+    "localImagePath": "/products/1002285.jpg",
+    "odooProductId": 113
   },
   {
     "sku": "1003837",
@@ -527,7 +579,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1003837.png",
     "productUrl": "https://tienda.farmaciacarol.com/sensodyne-pasta-dental-rapido-alivio-100-g-details.aspx",
     "slug": "sensodyne-pasta-dental-rapido-alivio-100-g",
-    "localImagePath": "/products/1003837.png"
+    "localImagePath": "/products/1003837.png",
+    "odooProductId": 114
   },
   {
     "sku": "1004015",
@@ -537,7 +590,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1004015.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/gum-1500-supreme-max-2x1-cepillo-suave-details.aspx",
     "slug": "gum-1500-supreme-max-2x1-cepillo-suave",
-    "localImagePath": "/products/1004015.jpg"
+    "localImagePath": "/products/1004015.jpg",
+    "odooProductId": 115
   },
   {
     "sku": "1004053",
@@ -547,7 +601,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1004053.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/sensodyne-precision-cepillo-dental-details.aspx",
     "slug": "sensodyne-precision-cepillo-dental",
-    "localImagePath": "/products/1004053.jpg"
+    "localImagePath": "/products/1004053.jpg",
+    "odooProductId": 116
   },
   {
     "sku": "1000671",
@@ -557,7 +612,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000671.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/organix-shampoo-13oz-ren-moroccan-argan-oil-details.aspx",
     "slug": "organix-shampoo-13oz-ren-moroccan-argan-oil",
-    "localImagePath": "/products/1000671.jpg"
+    "localImagePath": "/products/1000671.jpg",
+    "odooProductId": 117
   },
   {
     "sku": "1000672",
@@ -567,7 +623,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000672.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/organix-conditioner-argan-oil-morocco-13oz-details.aspx",
     "slug": "organix-conditioner-argan-oil-morocco-13oz",
-    "localImagePath": "/products/1000672.jpg"
+    "localImagePath": "/products/1000672.jpg",
+    "odooProductId": 118
   },
   {
     "sku": "1000673",
@@ -577,7 +634,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000673.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/organix-mask-237ml-ren-moroccan-argan-oi-details.aspx",
     "slug": "organix-mask-237ml-ren-moroccan-argan-oi",
-    "localImagePath": "/products/1000673.jpg"
+    "localImagePath": "/products/1000673.jpg",
+    "odooProductId": 119
   },
   {
     "sku": "1002268",
@@ -587,7 +645,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002268.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pantene-sh--control-caida-12-400ml-details.aspx",
     "slug": "pantene-sh--control-caida-12-400ml",
-    "localImagePath": "/products/1002268.jpg"
+    "localImagePath": "/products/1002268.jpg",
+    "odooProductId": 120
   },
   {
     "sku": "1002723",
@@ -597,7 +656,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002723.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/organix-cond-coconut-water-13oz-details.aspx",
     "slug": "organix-cond-coconut-water-13oz",
-    "localImagePath": "/products/1002723.jpg"
+    "localImagePath": "/products/1002723.jpg",
+    "odooProductId": 121
   },
   {
     "sku": "1002967",
@@ -607,7 +667,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002967.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/nioxin-kit-sistema-1-p-cabello-fino-apariencia-n-d-details.aspx",
     "slug": "nioxin-kit-sistema-1-p-cabello-fino-apariencia-n-d",
-    "localImagePath": "/products/1002967.jpg"
+    "localImagePath": "/products/1002967.jpg",
+    "odooProductId": 122
   },
   {
     "sku": "45952790",
@@ -617,7 +678,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45952790.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/familia-panuelos-fresc-extrema-4x10-unid-details.aspx",
     "slug": "familia-panuelos-fresc-extrema-4x10-unid",
-    "localImagePath": "/products/45952790.jpg"
+    "localImagePath": "/products/45952790.jpg",
+    "odooProductId": 123
   },
   {
     "sku": "45953280",
@@ -627,7 +689,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45953280.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/kleenex-essential-toallitas-desmaq--2x2-15-d-details.aspx",
     "slug": "kleenex-essential-toallitas-desmaq--2x2-15-d",
-    "localImagePath": "/products/45953280.jpg"
+    "localImagePath": "/products/45953280.jpg",
+    "odooProductId": 124
   },
   {
     "sku": "16035512",
@@ -637,7 +700,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16035512.png",
     "productUrl": "https://tienda.farmaciacarol.com/wet-ones-citrus-scent-40-antiba-4672-details.aspx",
     "slug": "wet-ones-citrus-scent-40-antiba-4672",
-    "localImagePath": "/products/16035512.png"
+    "localImagePath": "/products/16035512.png",
+    "odooProductId": 125
   },
   {
     "sku": "45957559",
@@ -647,7 +711,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45957559.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/wet-ones-citrus-scent-anti-bact--20wipes-details.aspx",
     "slug": "wet-ones-citrus-scent-anti-bact--20wipes",
-    "localImagePath": "/products/45957559.jpg"
+    "localImagePath": "/products/45957559.jpg",
+    "odooProductId": 126
   },
   {
     "sku": "45957561",
@@ -657,7 +722,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45957561.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/wet-ones-fresh-scent-anti-bact--20wipes-details.aspx",
     "slug": "wet-ones-fresh-scent-anti-bact--20wipes",
-    "localImagePath": "/products/45957561.jpg"
+    "localImagePath": "/products/45957561.jpg",
+    "odooProductId": 127
   },
   {
     "sku": "1003657",
@@ -667,7 +733,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1003657.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/manitas-limpias-wipes-10-toallitas-details.aspx",
     "slug": "manitas-limpias-wipes-10-toallitas",
-    "localImagePath": "/products/1003657.jpg"
+    "localImagePath": "/products/1003657.jpg",
+    "odooProductId": 128
   },
   {
     "sku": "1003661",
@@ -677,7 +744,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1003661.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/manitas-limpias-fresh-for-men-8oz-details.aspx",
     "slug": "manitas-limpias-fresh-for-men-8oz",
-    "localImagePath": "/products/1003661.jpg"
+    "localImagePath": "/products/1003661.jpg",
+    "odooProductId": 129
   },
   {
     "sku": "16035800",
@@ -687,7 +755,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16035800.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/manitas-limpias-2onz-details.aspx",
     "slug": "manitas-limpias-2onz",
-    "localImagePath": "/products/16035800.jpg"
+    "localImagePath": "/products/16035800.jpg",
+    "odooProductId": 130
   },
   {
     "sku": "16035806",
@@ -697,7 +766,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16035806.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/manitas-limpias-8onz-details.aspx",
     "slug": "manitas-limpias-8onz",
-    "localImagePath": "/products/16035806.jpg"
+    "localImagePath": "/products/16035806.jpg",
+    "odooProductId": 131
   },
   {
     "sku": "16820900",
@@ -707,7 +777,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16820900.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/manitas-limpias-spray-0-35oz--24unds-details.aspx",
     "slug": "manitas-limpias-spray-0-35oz--24unds",
-    "localImagePath": "/products/16820900.jpg"
+    "localImagePath": "/products/16820900.jpg",
+    "odooProductId": 132
   },
   {
     "sku": "3007000",
@@ -717,7 +788,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3007000.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/algodon-planchado-4-details.aspx",
     "slug": "algodon-planchado-4",
-    "localImagePath": "/products/3007000.jpg"
+    "localImagePath": "/products/3007000.jpg",
+    "odooProductId": 133
   },
   {
     "sku": "45954916",
@@ -727,7 +799,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45954916.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/bolitas-de-algodon-absorbente-100pzas---collado-details.aspx",
     "slug": "bolitas-de-algodon-absorbente-100pzas---collado",
-    "localImagePath": "/products/45954916.jpg"
+    "localImagePath": "/products/45954916.jpg",
+    "odooProductId": 134
   },
   {
     "sku": "8016802",
@@ -737,7 +810,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/8016802.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/premier-v-flex-fabric-3-4-30ct-details.aspx",
     "slug": "premier-v-flex-fabric-3-4-30ct",
-    "localImagePath": "/products/8016802.jpg"
+    "localImagePath": "/products/8016802.jpg",
+    "odooProductId": 135
   },
   {
     "sku": "3016801",
@@ -747,7 +821,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016801.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/premier-v-clear-plast-asst--45-d-details.aspx",
     "slug": "premier-v-clear-plast-asst--45-d",
-    "localImagePath": "/products/3016801.jpg"
+    "localImagePath": "/products/3016801.jpg",
+    "odooProductId": 136
   },
   {
     "sku": "3016811",
@@ -757,7 +832,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016811.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/premier-v-sheer-plast-asst-60c-d-details.aspx",
     "slug": "premier-v-sheer-plast-asst-60c-d",
-    "localImagePath": "/products/3016811.jpg"
+    "localImagePath": "/products/3016811.jpg",
+    "odooProductId": 137
   },
   {
     "sku": "3016669",
@@ -767,7 +843,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016669.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/gauze-bandage-3--1155-gasas-details.aspx",
     "slug": "gauze-bandage-3--1155-gasas",
-    "localImagePath": "/products/3016669.jpg"
+    "localImagePath": "/products/3016669.jpg",
+    "odooProductId": 138
   },
   {
     "sku": "3016670",
@@ -777,7 +854,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016670.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/gauze-bandage-4--1156-gasas-details.aspx",
     "slug": "gauze-bandage-4--1156-gasas",
-    "localImagePath": "/products/3016670.jpg"
+    "localImagePath": "/products/3016670.jpg",
+    "odooProductId": 139
   },
   {
     "sku": "45954377",
@@ -787,7 +865,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45954377.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/site-pad-5-x-9-cdc21450n--gaza-de-algodon-details.aspx",
     "slug": "site-pad-5-x-9-cdc21450n--gaza-de-algodon",
-    "localImagePath": "/products/45954377.jpg"
+    "localImagePath": "/products/45954377.jpg",
+    "odooProductId": 140
   },
   {
     "sku": "45954424",
@@ -797,7 +876,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45954424.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/premier-v-2872-gauze-pads-3x3-25-count-latex-free-c-p-12--gasa-details.aspx",
     "slug": "premier-v-2872-gauze-pads-3x3-25-count-latex-free-c-p-12--gasa",
-    "localImagePath": "/products/45954424.jpg"
+    "localImagePath": "/products/45954424.jpg",
+    "odooProductId": 141
   },
   {
     "sku": "1003241",
@@ -807,7 +887,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1003241.png",
     "productUrl": "https://tienda.farmaciacarol.com/nexcare-soft--n-flex-nat-bandages-30-one-size-details.aspx",
     "slug": "nexcare-soft--n-flex-nat-bandages-30-one-size",
-    "localImagePath": "/products/1003241.png"
+    "localImagePath": "/products/1003241.png",
+    "odooProductId": 142
   },
   {
     "sku": "3029900",
@@ -817,7 +898,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3029900.png",
     "productUrl": "https://tienda.farmaciacarol.com/vendas-elasticas-6x5-yardas-tensolastic-details.aspx",
     "slug": "vendas-elasticas-6x5-yardas-tensolastic",
-    "localImagePath": "/products/3029900.png"
+    "localImagePath": "/products/3029900.png",
+    "odooProductId": 143
   },
   {
     "sku": "3016662",
@@ -827,7 +909,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016662.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/elastic-bandage-3--1149-vendas-details.aspx",
     "slug": "elastic-bandage-3--1149-vendas",
-    "localImagePath": "/products/3016662.jpg"
+    "localImagePath": "/products/3016662.jpg",
+    "odooProductId": 144
   },
   {
     "sku": "1004347",
@@ -837,7 +920,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1004347.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/safety-pacifier-medicine-dispenser-49925-details.aspx",
     "slug": "safety-pacifier-medicine-dispenser-49925",
-    "localImagePath": "/products/1004347.jpg"
+    "localImagePath": "/products/1004347.jpg",
+    "odooProductId": 145
   },
   {
     "sku": "1001770",
@@ -847,7 +931,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001770.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pampers-baby-dry--5-jumbo-details.aspx",
     "slug": "pampers-baby-dry--5-jumbo",
-    "localImagePath": "/products/1001770.jpg"
+    "localImagePath": "/products/1001770.jpg",
+    "odooProductId": 146
   },
   {
     "sku": "1001771",
@@ -857,7 +942,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001771.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pampers-baby-dry--3-jumbo-pk-4--32-panales-details.aspx",
     "slug": "pampers-baby-dry--3-jumbo-pk-4--32-panales",
-    "localImagePath": "/products/1001771.jpg"
+    "localImagePath": "/products/1001771.jpg",
+    "odooProductId": 147
   },
   {
     "sku": "1001772",
@@ -867,7 +953,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001772.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pampers-bd-s1-jumbo-pk-2-44-details.aspx",
     "slug": "pampers-bd-s1-jumbo-pk-2-44",
-    "localImagePath": "/products/1001772.jpg"
+    "localImagePath": "/products/1001772.jpg",
+    "odooProductId": 148
   },
   {
     "sku": "1001779",
@@ -877,7 +964,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001779.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pampers-baby-dry--2-jumbo-pk-4-37-panales-details.aspx",
     "slug": "pampers-baby-dry--2-jumbo-pk-4-37-panales",
-    "localImagePath": "/products/1001779.jpg"
+    "localImagePath": "/products/1001779.jpg",
+    "odooProductId": 149
   },
   {
     "sku": "1001781",
@@ -887,7 +975,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001781.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pampers-baby-dry--4-jumbo-pk-4-28--pa%C3%B1ales-details.aspx",
     "slug": "pampers-baby-dry--4-jumbo-pk-4-28--pa%C3%B1ales",
-    "localImagePath": "/products/1001781.jpg"
+    "localImagePath": "/products/1001781.jpg",
+    "odooProductId": 150
   },
   {
     "sku": "1001421",
@@ -897,7 +986,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001421.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/avent-biberon-260ml-9oz-natural-azul-1m--scf695-17-details.aspx",
     "slug": "avent-biberon-260ml-9oz-natural-azul-1m--scf695-17",
-    "localImagePath": "/products/1001421.jpg"
+    "localImagePath": "/products/1001421.jpg",
+    "odooProductId": 151
   },
   {
     "sku": "1001424",
@@ -907,7 +997,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001424.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/avent-set-cubiertos-para-viajes-12m--scf718-00-d-details.aspx",
     "slug": "avent-set-cubiertos-para-viajes-12m--scf718-00-d",
-    "localImagePath": "/products/1001424.jpg"
+    "localImagePath": "/products/1001424.jpg",
+    "odooProductId": 152
   },
   {
     "sku": "1002130",
@@ -917,7 +1008,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002130.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/avent-biberon-9oz-260ml-natural-rosado-scf634-17-details.aspx",
     "slug": "avent-biberon-9oz-260ml-natural-rosado-scf634-17",
-    "localImagePath": "/products/1002130.jpg"
+    "localImagePath": "/products/1002130.jpg",
+    "odooProductId": 153
   },
   {
     "sku": "1002482",
@@ -927,7 +1019,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002482.png",
     "productUrl": "https://tienda.farmaciacarol.com/nivea-vis--cellular-anti-age-cr-facial-dia-50ml-details.aspx",
     "slug": "nivea-vis--cellular-anti-age-cr-facial-dia-50ml",
-    "localImagePath": "/products/1002482.png"
+    "localImagePath": "/products/1002482.png",
+    "odooProductId": 154
   },
   {
     "sku": "1002483",
@@ -937,7 +1030,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002483.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/nivea-vis--cellular-anti-age-crem-facial-noche-50ml-details.aspx",
     "slug": "nivea-vis--cellular-anti-age-crem-facial-noche-50ml",
-    "localImagePath": "/products/1002483.jpg"
+    "localImagePath": "/products/1002483.jpg",
+    "odooProductId": 155
   },
   {
     "sku": "15021502",
@@ -947,7 +1041,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/15021502.png",
     "productUrl": "https://tienda.farmaciacarol.com/sesderma-c--vit-50-ml-crema-facial-hidratante-details.aspx",
     "slug": "sesderma-c--vit-50-ml-crema-facial-hidratante",
-    "localImagePath": "/products/15021502.png"
+    "localImagePath": "/products/15021502.png",
+    "odooProductId": 156
   },
   {
     "sku": "16098032",
@@ -957,7 +1052,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16098032.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pond-s-clarant-50ml-b3-p-grasa-details.aspx",
     "slug": "pond-s-clarant-50ml-b3-p-grasa",
-    "localImagePath": "/products/16098032.jpg"
+    "localImagePath": "/products/16098032.jpg",
+    "odooProductId": 157
   },
   {
     "sku": "16098035",
@@ -967,7 +1063,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16098035.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/pond-s-clarant-100ml-b3-details.aspx",
     "slug": "pond-s-clarant-100ml-b3",
-    "localImagePath": "/products/16098035.jpg"
+    "localImagePath": "/products/16098035.jpg",
+    "odooProductId": 158
   },
   {
     "sku": "1000622",
@@ -977,7 +1074,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000622.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/hawaiian-tropic-ozono-bloqueador-solar-spf50-240-ml-details.aspx",
     "slug": "hawaiian-tropic-ozono-bloqueador-solar-spf50-240-ml",
-    "localImagePath": "/products/1000622.jpg"
+    "localImagePath": "/products/1000622.jpg",
+    "odooProductId": 159
   },
   {
     "sku": "1001457",
@@ -987,7 +1085,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001457.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/camay-clasico-3pk-32-120grs--jabon-tocador-details.aspx",
     "slug": "camay-clasico-3pk-32-120grs--jabon-tocador",
-    "localImagePath": "/products/1001457.jpg"
+    "localImagePath": "/products/1001457.jpg",
+    "odooProductId": 160
   },
   {
     "sku": "1001877",
@@ -997,7 +1096,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001877.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/nivea-bajo-la-ducha-acondicionador-corporal-250-ml-details.aspx",
     "slug": "nivea-bajo-la-ducha-acondicionador-corporal-250-ml",
-    "localImagePath": "/products/1001877.jpg"
+    "localImagePath": "/products/1001877.jpg",
+    "odooProductId": 161
   },
   {
     "sku": "1001878",
@@ -1007,7 +1107,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001878.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/nivea-sun-protect---refresh-fps50-200ml-details.aspx",
     "slug": "nivea-sun-protect---refresh-fps50-200ml",
-    "localImagePath": "/products/1001878.jpg"
+    "localImagePath": "/products/1001878.jpg",
+    "odooProductId": 162
   },
   {
     "sku": "1001934",
@@ -1017,7 +1118,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001934.png",
     "productUrl": "https://tienda.farmaciacarol.com/hawaiian-t-silk-hydration-spf50--180ml-details.aspx",
     "slug": "hawaiian-t-silk-hydration-spf50--180ml",
-    "localImagePath": "/products/1001934.png"
+    "localImagePath": "/products/1001934.png",
+    "odooProductId": 163
   },
   {
     "sku": "1732104",
@@ -1027,7 +1129,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1732104.png",
     "productUrl": "https://tienda.farmaciacarol.com/multi-solution-oxi-60ml-details.aspx",
     "slug": "multi-solution-oxi-60ml",
-    "localImagePath": "/products/1732104.png"
+    "localImagePath": "/products/1732104.png",
+    "odooProductId": 164
   },
   {
     "sku": "33028800",
@@ -1037,7 +1140,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/33028800.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/cotonetes-75-hisopos-7438-details.aspx",
     "slug": "cotonetes-75-hisopos-7438",
-    "localImagePath": "/products/33028800.jpg"
+    "localImagePath": "/products/33028800.jpg",
+    "odooProductId": 165
   },
   {
     "sku": "33028801",
@@ -1047,7 +1151,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/33028801.PNG",
     "productUrl": "https://tienda.farmaciacarol.com/cotonetes-hisopos-150-unidades-2937-details.aspx",
     "slug": "cotonetes-hisopos-150-unidades-2937",
-    "localImagePath": "/products/33028801.png"
+    "localImagePath": "/products/33028801.png",
+    "odooProductId": 166
   },
   {
     "sku": "17000612",
@@ -1057,7 +1162,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/17000612.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/renu-fresh-sol--multiproposito-355ml-details.aspx",
     "slug": "renu-fresh-sol--multiproposito-355ml",
-    "localImagePath": "/products/17000612.jpg"
+    "localImagePath": "/products/17000612.jpg",
+    "odooProductId": 167
   },
   {
     "sku": "3016556",
@@ -1067,7 +1173,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016556.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/flents-temple-pads-peach-d-details.aspx",
     "slug": "flents-temple-pads-peach-d",
-    "localImagePath": "/products/3016556.jpg"
+    "localImagePath": "/products/3016556.jpg",
+    "odooProductId": 168
   },
   {
     "sku": "30000311",
@@ -1077,7 +1184,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/30000311.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/baygon-aerosol-400ml-details.aspx",
     "slug": "baygon-aerosol-400ml",
-    "localImagePath": "/products/30000311.jpg"
+    "localImagePath": "/products/30000311.jpg",
+    "odooProductId": 169
   },
   {
     "sku": "31049300",
@@ -1087,7 +1195,8 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/31049300.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/acar-klean-aerosol-antiacaros-400ml-details.aspx",
     "slug": "acar-klean-aerosol-antiacaros-400ml",
-    "localImagePath": "/products/31049300.jpg"
+    "localImagePath": "/products/31049300.jpg",
+    "odooProductId": 170
   },
   {
     "sku": "31049600",
@@ -1097,6 +1206,7 @@
     "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/31049600.jpg",
     "productUrl": "https://tienda.farmaciacarol.com/velon-citronella-repelente-details.aspx",
     "slug": "velon-citronella-repelente",
-    "localImagePath": "/products/31049600.jpg"
+    "localImagePath": "/products/31049600.jpg",
+    "odooProductId": 171
   }
 ]
