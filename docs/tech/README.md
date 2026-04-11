@@ -13,6 +13,7 @@ Technical reference for Neo Farmacia. Explains how the system works, what's used
 7. [Deployment](./07-deployment.md) — Dokploy setup, environment variables
 8. [Development](./08-development.md) — Local setup, commands, workflow
 9. [WhatsApp Integration](./09-whatsapp-integration.md) — Evolution API, webhook pipeline, debounce, handover, mutex
+10. [n8n Agents](./10-n8n-agents.md) — Adaptation guide: command router endpoints, agent prompts, webhook format
 
 ## Quick Reference
 
