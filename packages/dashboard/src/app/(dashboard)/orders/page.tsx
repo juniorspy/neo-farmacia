@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useStore } from "@/lib/store";
+import { printOrderReceipt, getPrinterInfo } from "@/lib/printer";
 
 interface Order {
   id: number;
@@ -89,10 +90,34 @@ export default function OrdersPage() {
       await api.patch(`/api/v1/stores/${storeId}/orders/${orderId}/status`, { status });
       await loadOrders();
       setSelectedOrder(null);
-    } catch (err) {
+    } catch {
       alert("Error actualizando estado");
     }
   }
+
+  async function printReceipt(order: Order) {
+    if (!getPrinterInfo()) {
+      alert("No hay impresora emparejada. Ve a Configuración para emparejar.");
+      return;
+    }
+    try {
+      await printOrderReceipt({
+        orderName: order.name,
+        customer: order.customer,
+        date: order.date,
+        lines: (order.lines || []).map((l) => ({
+          name: l.name,
+          qty: l.qty,
+          subtotal: l.subtotal,
+        })),
+        total: order.total,
+        storeName: currentStore?.name || "Neo Farmacia",
+      });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error imprimiendo");
+    }
+  }
+
 
   const filtered = orders.filter((o) => {
     if (search && !o.customer.toLowerCase().includes(search.toLowerCase()) && !o.name.toLowerCase().includes(search.toLowerCase())) return false;
@@ -258,6 +283,13 @@ export default function OrdersPage() {
                     >
                       <Truck className="w-4 h-4" />
                       Despachar
+                    </button>
+                    <button
+                      onClick={() => printReceipt(selectedOrder)}
+                      className="py-2 px-3 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded-lg transition-colors"
+                      title="Imprimir recibo"
+                    >
+                      <Printer className="w-4 h-4" />
                     </button>
                   </div>
                 )}

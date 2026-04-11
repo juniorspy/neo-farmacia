@@ -1,14 +1,71 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { Save, Upload, X, Check, Palette, Pill } from "lucide-react";
+import { Save, Upload, X, Check, Palette, Pill, Printer, Bluetooth, AlertCircle } from "lucide-react";
 import { useTheme, themePresets } from "@/lib/theme";
+import {
+  pairPrinter,
+  getPrinterInfo,
+  clearPrinter,
+  isBluetoothSupported,
+  printOrderReceipt,
+} from "@/lib/printer";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const [customColor, setCustomColor] = useState(theme.primaryColor);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Printer state
+  const [printerInfo, setPrinterInfo] = useState<{ name: string; id: string } | null>(null);
+  const [pairing, setPairing] = useState(false);
+  const [printerError, setPrinterError] = useState("");
+  const [bluetoothSupported, setBluetoothSupported] = useState(true);
+
+  useEffect(() => {
+    setPrinterInfo(getPrinterInfo());
+    setBluetoothSupported(isBluetoothSupported());
+  }, []);
+
+  async function handlePairPrinter() {
+    setPrinterError("");
+    setPairing(true);
+    try {
+      const name = await pairPrinter();
+      setPrinterInfo({ name, id: localStorage.getItem("printer-id") || "" });
+    } catch (err) {
+      setPrinterError(err instanceof Error ? err.message : "Error emparejando impresora");
+    } finally {
+      setPairing(false);
+    }
+  }
+
+  function handleUnpairPrinter() {
+    clearPrinter();
+    setPrinterInfo(null);
+  }
+
+  async function handleTestPrint() {
+    setPrinterError("");
+    try {
+      await printOrderReceipt({
+        orderName: "TEST-001",
+        customer: "Cliente de prueba",
+        date: new Date().toISOString(),
+        lines: [
+          { name: "Producto de prueba 1", qty: 2, subtotal: 200 },
+          { name: "Producto de prueba 2", qty: 1, subtotal: 150 },
+        ],
+        total: 350,
+        storeName: "Neo Farmacia",
+        storePhone: "+1809-555-1000",
+        storeAddress: "Calle Principal #45",
+      });
+    } catch (err) {
+      setPrinterError(err instanceof Error ? err.message : "Error imprimiendo");
+    }
+  }
 
   function handleColorSelect(color: string) {
     setCustomColor(color);
@@ -246,6 +303,80 @@ export default function SettingsPage() {
             <div className="w-5 h-5 bg-white rounded-full shadow-sm transform translate-x-5 transition-transform" />
           </div>
         </div>
+      </div>
+
+      {/* Printer */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Printer className="w-5 h-5 text-slate-700" />
+          <h2 className="font-semibold text-slate-900">Impresora Bluetooth</h2>
+        </div>
+
+        {!bluetoothSupported ? (
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-amber-900">Web Bluetooth no soportado</p>
+              <p className="text-amber-700 mt-1">Usa Chrome o Edge en una computadora con Bluetooth.</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {printerInfo ? (
+              <div className="flex items-center justify-between p-4 rounded-lg bg-emerald-50 border border-emerald-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <Bluetooth className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-900">{printerInfo.name}</p>
+                    <p className="text-xs text-emerald-600">Impresora emparejada</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleTestPrint}
+                    className="px-3 py-1.5 text-xs font-medium text-emerald-700 border border-emerald-300 hover:bg-emerald-100 rounded-lg transition-colors"
+                  >
+                    Prueba
+                  </button>
+                  <button
+                    onClick={handleUnpairPrinter}
+                    className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    Desconectar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-slate-500">
+                No hay impresora emparejada. Conecta una impresora Bluetooth térmica (58mm) para imprimir recibos.
+              </div>
+            )}
+
+            {printerError && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                {printerError}
+              </div>
+            )}
+
+            {!printerInfo && (
+              <button
+                onClick={handlePairPrinter}
+                disabled={pairing}
+                className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              >
+                <Bluetooth className="w-4 h-4" />
+                {pairing ? "Emparejando..." : "Emparejar impresora"}
+              </button>
+            )}
+
+            <p className="text-xs text-slate-400">
+              Compatible con la mayoría de impresoras Bluetooth térmicas 58mm (ESC/POS).
+              La conexión persiste en este navegador.
+            </p>
+          </>
+        )}
       </div>
 
       <button
