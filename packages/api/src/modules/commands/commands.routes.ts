@@ -4,6 +4,8 @@ import type { AppConfig } from '../../config/env.js';
 import { logger } from '../../shared/logger.js';
 import { ProcessedCommand } from './processed.model.js';
 import type { CommandRequest, CommandContext, CommandResult } from './types.js';
+import { Store, type IStore } from '../provisioning/store.model.js';
+import { getScopedOdoo } from '../../shared/odoo-scoped-cache.js';
 
 import { usuarioLookupCombined, usuarioEnsure } from './handlers/usuario.handler.js';
 import { catalogoSearch } from './handlers/catalogo.handler.js';
@@ -50,6 +52,18 @@ export async function commandsRoutes(
       return { ok: true, commandId, result: existing.result, message: 'already-processed' };
     }
 
+    // Resolve the store and attach a scoped Odoo client for this command.
+    const store = await Store.findOne({ store_id: storeId }).lean<IStore>();
+    if (!store) {
+      return reply.status(404).send({ ok: false, error: `store ${storeId} not found` });
+    }
+    if (store.status !== 'active') {
+      return reply
+        .status(409)
+        .send({ ok: false, error: `store ${storeId} is ${store.status}, not active` });
+    }
+    const odoo = getScopedOdoo(config, store.odoo_db);
+
     const ctx: CommandContext = {
       command,
       commandId,
@@ -57,6 +71,8 @@ export async function commandsRoutes(
       chatId,
       usuarioId,
       payload: payload || {},
+      store,
+      odoo,
     };
 
     logger.info({ command, commandId, storeId, chatId }, 'Command received');

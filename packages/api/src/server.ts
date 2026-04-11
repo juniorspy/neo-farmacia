@@ -35,8 +35,8 @@ async function main() {
   await app.listen({ port: config.port, host: '0.0.0.0' });
   logger.info({ port: config.port }, 'Neo Farmacia API running');
 
-  // Start periodic catalog sync (every 10 min)
-  startPeriodicSync();
+  // Start periodic catalog sync (every 10 min, iterates all active stores)
+  startPeriodicSync(config);
 
   // Start pharmacy provisioning worker
   startProvisioningWorker(config);

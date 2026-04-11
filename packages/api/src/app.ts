@@ -18,6 +18,7 @@ import { commandsRoutes } from './modules/commands/commands.routes.js';
 import { catalogSyncRoutes } from './modules/catalog-sync/catalog-sync.routes.js';
 import { adminRoutes } from './modules/provisioning/admin.routes.js';
 import { registerStoreContext } from './modules/store-context/store-context.plugin.js';
+import { storesRoutes } from './modules/stores/stores.routes.js';
 
 export async function buildApp(redis: Redis, config: AppConfig) {
   const app = Fastify({
@@ -98,6 +99,11 @@ export async function buildApp(redis: Redis, config: AppConfig) {
   // Super-admin: pharmacy provisioning (JWT + role=admin)
   await app.register(async (instance) => {
     await adminRoutes(instance, { config });
+  });
+
+  // Per-store config (agent persona, etc.) — scoped by resolveStore
+  await app.register(async (instance) => {
+    await storesRoutes(instance);
   });
 
   return app;

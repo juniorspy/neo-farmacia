@@ -19,6 +19,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Building2,
+  Bot,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
@@ -30,6 +31,7 @@ const nav = [
   { href: "/products", label: "Productos", icon: Package },
   { href: "/customers", label: "Clientes", icon: Users },
   { href: "/whatsapp", label: "WhatsApp", icon: Smartphone },
+  { href: "/agent", label: "Mi Agente", icon: Bot },
   { href: "/reports", label: "Reportes", icon: BarChart3 },
   { href: "/settings", label: "Configuración", icon: Settings },
 ];
