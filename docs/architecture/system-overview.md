@@ -110,8 +110,10 @@
 ## Multi-Tenant Isolation
 
 Every piece of data is scoped by `store_id`:
-- MongoDB: compound indexes always start with `store_id`
-- Redis: keys prefixed with `{store_id}:`
-- Odoo: multi-company, each store = company
-- API: every route includes `store_id`, validated against JWT
-- WebSocket: events filtered by `store_id`
+- **MongoDB**: compound indexes always start with `store_id`; `stores` collection holds the Store + config docs
+- **Redis**: keys prefixed with `{store_id}:`
+- **Odoo**: **one database per store** (not multi-company). Each pharmacy has its own dedicated Odoo database (`pharmacy_<slug>` or the adopted `odoo` DB for the default tenant). `shared/odoo-scoped-cache.ts` holds an in-process cache of authenticated `ScopedOdoo` clients keyed by `(url, db, user)`.
+- **API**: every dashboard route resolves `store_id` once via the `resolveStore` preHandler (`modules/store-context/store-context.plugin.ts`), attaches `request.store` + `request.odoo`, and every downstream helper takes the scoped client as its first argument. The n8n command router does the same at dispatch time.
+- **Access control**: `role=pharmacist` users can only access stores listed in their JWT `stores[]`; `role=admin` (super-admin) can access any store.
+
+See [ADR-004](../decisions/004-odoo-ssot.md) for why Odoo is SSoT, and [stages/08-multi-tenant-provisioning.md](../stages/08-multi-tenant-provisioning.md) for the provisioning pipeline that creates each tenant's isolated DB.

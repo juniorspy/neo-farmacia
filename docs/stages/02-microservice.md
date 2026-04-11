@@ -1,8 +1,10 @@
 # Stage 2: Microservice (The Brain)
 
-**Status**: `in_progress`
+**Status**: `done`
 **Depends on**: Stage 1 (Odoo)
 **Goal**: Fastify API running that handles webhooks, debounce, Odoo proxy, handover, and message logging.
+
+**Update 2026-04-11**: Stage 2 was marked done. Multi-tenant routing was layered on top via Stage 8 (see [stages/08-multi-tenant-provisioning.md](08-multi-tenant-provisioning.md)). Dashboard routes now resolve a `request.store` + `request.odoo` per request through a Fastify preHandler, and the n8n command router does the same at dispatch time. The legacy single-DB `shared/odoo.ts` is kept as a fallback for non-HTTP callers that haven't been refactored yet.
 
 ## Why
 
