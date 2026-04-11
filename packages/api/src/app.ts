@@ -83,7 +83,7 @@ export async function buildApp(redis: Redis, config: AppConfig) {
   });
 
   await app.register(async (instance) => {
-    await whatsappRoutes(instance);
+    await whatsappRoutes(instance, { config });
   });
 
   // n8n command router (public, bearer-auth via config.n8n.apiKey)

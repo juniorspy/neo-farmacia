@@ -8,6 +8,7 @@ import {
   extractText,
   extractPhone,
 } from '../evolution/evolution.types.js';
+import { sendText } from '../evolution/evolution.client.js';
 import { debounceMessage } from './debounce.service.js';
 import { isDuplicate } from './idempotency.service.js';
 import { acquireMutex, releaseMutex } from './mutex.service.js';
@@ -162,7 +163,7 @@ export function createWebhookHandler(deps: WebhookDeps) {
         return;
       }
 
-      // 9. Handle n8n response
+      // 9. Handle n8n response — actually send it via Evolution
       const replyText = response.data?.text || response.data?.content;
       if (replyText) {
         await Message.create({
@@ -176,8 +177,23 @@ export function createWebhookHandler(deps: WebhookDeps) {
           meta: { source: 'n8n', instanceName },
         });
 
-        // TODO: Send via Evolution API (needs apiKey from store's WhatsApp instance)
-        logger.info({ storeId, chatId, replyLength: replyText.length }, 'Bot reply ready');
+        const instanceApiKey = store.whatsapp_instance_api_key;
+        if (!instanceApiKey) {
+          logger.warn(
+            { storeId, instanceName },
+            'No whatsapp_instance_api_key on store — cannot send reply',
+          );
+        } else {
+          try {
+            await sendText(instanceName, instanceApiKey, remoteJid, replyText);
+            logger.info(
+              { storeId, chatId, replyLength: replyText.length },
+              'Bot reply sent via Evolution',
+            );
+          } catch (err) {
+            logger.error({ err, storeId, chatId }, 'Failed to send reply via Evolution');
+          }
+        }
       }
     } catch (err) {
       logger.error({ err, storeId, chatId }, 'Error in n8n pipeline');

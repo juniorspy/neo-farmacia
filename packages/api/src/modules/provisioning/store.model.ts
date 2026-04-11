@@ -23,6 +23,8 @@ export interface IStore extends Document {
     custom_notes: string;
   };
   whatsapp_instance_id: string | null;
+  whatsapp_instance_api_key: string | null; // per-instance Evolution apiKey (for sending replies)
+  whatsapp_number: string | null; // the phone number once connected (e.g. "18091234567")
   odoo_admin_password_hash: string | null; // bcrypt hash of the initial admin pw, for reference
   status: StoreStatus;
   created_at: Date;
@@ -49,7 +51,9 @@ const storeSchema = new Schema<IStore>({
     delivery_info: { type: String, default: '' },
     custom_notes: { type: String, default: '', maxlength: 500 },
   },
-  whatsapp_instance_id: { type: String, default: null },
+  whatsapp_instance_id: { type: String, default: null, index: true },
+  whatsapp_instance_api_key: { type: String, default: null },
+  whatsapp_number: { type: String, default: null },
   odoo_admin_password_hash: { type: String, default: null },
   status: {
     type: String,

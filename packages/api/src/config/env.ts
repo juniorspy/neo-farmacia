@@ -13,6 +13,9 @@ export function loadConfig() {
     nodeEnv: optional('NODE_ENV', 'development'),
     port: parseInt(optional('PORT', '3000')),
     logLevel: optional('LOG_LEVEL', 'info'),
+    // Public-facing URL where the API is reachable. Used when telling
+    // external services (Evolution API) where to send webhooks.
+    apiPublicUrl: optional('API_PUBLIC_URL', 'https://api.leofarmacia.com'),
 
     mongo: {
       uri: optional('MONGODB_URI', 'mongodb://localhost:27017/neo_farmacia'),
