@@ -7,9 +7,7 @@ import {
   WifiOff,
   QrCode,
   Plus,
-  Trash2,
   Loader2,
-  RefreshCw,
   CheckCircle2,
   X,
   Power,
@@ -142,35 +140,12 @@ export default function WhatsAppPage() {
   }
 
   async function handleDisconnect(conn: Connection) {
-    if (!confirm(`¿Desconectar "${conn.label}"? La sesión terminará pero podrás reconectarla después.`)) return;
-    try {
-      await api.post(
-        `/api/v1/stores/${storeId}/whatsapp/connections/${conn.id}/disconnect`,
-      );
-      await load();
-    } catch {
-      alert("Error al desconectar");
-    }
-  }
-
-  async function handleReconnect(conn: Connection) {
-    try {
-      const res = await api.post<{ qr_base64: string | null }>(
-        `/api/v1/stores/${storeId}/whatsapp/connections/${conn.id}/reconnect`,
-      );
-      openQr(conn.id, res.qr_base64, conn.label);
-    } catch {
-      alert("Error al reconectar");
-    }
-  }
-
-  async function handleDelete(conn: Connection) {
-    if (!confirm(`¿Eliminar "${conn.label}" permanentemente? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(`¿Desconectar "${conn.label}"? Si quieres volver, tendrás que crear una nueva conexión y escanear otro código QR.`)) return;
     try {
       await api.delete(`/api/v1/stores/${storeId}/whatsapp/connections/${conn.id}`);
       await load();
     } catch {
-      alert("Error al eliminar");
+      alert("Error al desconectar");
     }
   }
 
@@ -274,31 +249,14 @@ export default function WhatsAppPage() {
                       Mostrar QR
                     </button>
                   )}
-                  {isDisconnected && (
-                    <button
-                      onClick={() => handleReconnect(conn)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-50 text-sky-700 text-xs font-medium hover:bg-sky-100"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      Reconectar
-                    </button>
-                  )}
-                  {isConnected && (
-                    <button
-                      onClick={() => handleDisconnect(conn)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium hover:bg-slate-200"
-                    >
-                      <Power className="w-3.5 h-3.5" />
-                      Desconectar
-                    </button>
-                  )}
                   <div className="flex-1" />
                   <button
-                    onClick={() => handleDelete(conn)}
-                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Eliminar"
+                    onClick={() => handleDisconnect(conn)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 text-red-600 text-xs font-medium hover:bg-red-100"
+                    title="Desconectar y eliminar"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Power className="w-3.5 h-3.5" />
+                    Desconectar
                   </button>
                 </div>
               </div>

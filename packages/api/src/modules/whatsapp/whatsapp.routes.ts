@@ -196,55 +196,9 @@ export async function whatsappRoutes(
     },
   );
 
-  // ── DISCONNECT (logout, keep record) ──
-  app.post(
-    '/api/v1/stores/:storeId/whatsapp/connections/:id/disconnect',
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const { id } = request.params as { id: string };
-      const conn = await WhatsappConnection.findOne({
-        _id: id,
-        store_id: request.store.store_id,
-      });
-      if (!conn) return reply.status(404).send({ error: 'connection not found' });
-
-      try {
-        await logoutInstance(conn.instance_name);
-      } catch (err) {
-        logger.warn({ err, instanceName: conn.instance_name }, 'Evolution logout failed');
-      }
-      conn.state = 'close';
-      conn.disconnected_at = new Date();
-      await conn.save();
-      invalidateStoreResolverCache(conn.instance_name);
-
-      return { id: String(conn._id), state: conn.state };
-    },
-  );
-
-  // ── RECONNECT (get a fresh QR after disconnect) ──
-  app.post(
-    '/api/v1/stores/:storeId/whatsapp/connections/:id/reconnect',
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const { id } = request.params as { id: string };
-      const conn = await WhatsappConnection.findOne({
-        _id: id,
-        store_id: request.store.store_id,
-      });
-      if (!conn) return reply.status(404).send({ error: 'connection not found' });
-
-      const qr = await getInstanceQrBase64(
-        conn.instance_name,
-        conn.instance_api_key || undefined,
-      );
-      conn.state = 'qr';
-      await conn.save();
-      invalidateStoreResolverCache(conn.instance_name);
-
-      return { id: String(conn._id), qr_base64: qr, state: 'qr' };
-    },
-  );
-
-  // ── DELETE (full removal) ──
+  // ── DELETE (full removal: logout + Evolution delete + Mongo delete) ──
+  //    This is the single destructive action. No reconnect — if the user
+  //    wants to come back, they create a new connection and scan again.
   app.delete(
     '/api/v1/stores/:storeId/whatsapp/connections/:id',
     async (request: FastifyRequest, reply: FastifyReply) => {
