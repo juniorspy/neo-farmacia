@@ -27,6 +27,11 @@ export function loadConfig() {
       db: optional('ODOO_DB', 'odoo'),
       user: optional('ODOO_USER', 'admin'),
       password: optional('ODOO_PASSWORD', 'admin'),
+      masterPassword: optional('ODOO_MASTER_PASSWORD', 'admin'),
+      defaultAdminEmail: optional('ODOO_DEFAULT_ADMIN_EMAIL', 'admin@example.com'),
+      defaultAdminPassword: optional('ODOO_DEFAULT_ADMIN_PASSWORD', 'admin'),
+      defaultCountryCode: optional('ODOO_DEFAULT_COUNTRY_CODE', 'DO'),
+      defaultLang: optional('ODOO_DEFAULT_LANG', 'es_DO'),
     },
 
     evolution: {

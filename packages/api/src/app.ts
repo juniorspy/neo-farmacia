@@ -16,6 +16,7 @@ import { statsRoutes } from './modules/stats/stats.routes.js';
 import { whatsappRoutes } from './modules/whatsapp/whatsapp.routes.js';
 import { commandsRoutes } from './modules/commands/commands.routes.js';
 import { catalogSyncRoutes } from './modules/catalog-sync/catalog-sync.routes.js';
+import { adminRoutes } from './modules/provisioning/admin.routes.js';
 
 export async function buildApp(redis: Redis, config: AppConfig) {
   const app = Fastify({
@@ -88,6 +89,11 @@ export async function buildApp(redis: Redis, config: AppConfig) {
   // Catalog sync endpoints (JWT protected)
   await app.register(async (instance) => {
     await catalogSyncRoutes(instance);
+  });
+
+  // Super-admin: pharmacy provisioning (JWT + role=admin)
+  await app.register(async (instance) => {
+    await adminRoutes(instance, { config });
   });
 
   return app;

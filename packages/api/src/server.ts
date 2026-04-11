@@ -7,6 +7,7 @@ import { buildApp } from './app.js';
 import { seedDefaultAdmin } from './modules/auth/auth.service.js';
 import { initMeilisearch } from './shared/meilisearch.js';
 import { startPeriodicSync } from './modules/catalog-sync/catalog-sync.service.js';
+import { startProvisioningWorker } from './modules/provisioning/provisioning.worker.js';
 import { logger } from './shared/logger.js';
 
 async function main() {
@@ -32,6 +33,9 @@ async function main() {
 
   // Start periodic catalog sync (every 10 min)
   startPeriodicSync();
+
+  // Start pharmacy provisioning worker
+  startProvisioningWorker(config);
 
   // Graceful shutdown
   const shutdown = async () => {
