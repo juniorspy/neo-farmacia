@@ -15,7 +15,12 @@ services:
     image: odoo:17
     depends_on:
       - odoo-db
-    command: -- --proxy-mode --db_host=odoo-db --db_port=5432 --db_user=odoo --db_password=odoo_farmacia_2026 --admin-passwd=${ODOO_ADMIN_PASSWD:?ODOO_ADMIN_PASSWD must be set} --no-database-list
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        printf '\nadmin_passwd = %s\n' '${ODOO_ADMIN_PASSWD:?ODOO_ADMIN_PASSWD must be set}' >> /etc/odoo/odoo.conf
+        exec /entrypoint.sh odoo --proxy-mode --db_host=odoo-db --db_port=5432 --db_user=odoo --db_password=odoo_farmacia_2026
     environment:
       HOST: odoo-db
       PORT: 5432
