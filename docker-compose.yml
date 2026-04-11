@@ -15,7 +15,7 @@ services:
     image: odoo:17
     depends_on:
       - odoo-db
-    command: -- --proxy-mode --db_host=odoo-db --db_port=5432 --db_user=odoo --db_password=odoo_farmacia_2026
+    command: -- --proxy-mode --db_host=odoo-db --db_port=5432 --db_user=odoo --db_password=odoo_farmacia_2026 --admin-passwd=${ODOO_ADMIN_PASSWD:?ODOO_ADMIN_PASSWD must be set} --no-database-list
     environment:
       HOST: odoo-db
       PORT: 5432
