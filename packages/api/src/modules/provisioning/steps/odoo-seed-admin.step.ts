@@ -11,8 +11,9 @@ import { logger } from '../../../shared/logger.js';
 export const odooSeedAdminStep: ProvisioningStep = {
   name: 'odoo_seed_admin',
   async run(ctx: StepContext): Promise<void> {
-    const { config, store } = ctx;
-    const client = makeScopedOdoo(config, store.odoo_db, store.owner_email, config.odoo.defaultAdminPassword);
+    const { config, store, step } = ctx;
+    const adminPassword = (step.data?.admin_password as string) || config.odoo.defaultAdminPassword;
+    const client = makeScopedOdoo(config, store.odoo_db, store.owner_email, adminPassword);
 
     // Find admin user (login = owner_email)
     const users = (await client.execute(

@@ -57,3 +57,14 @@ Identified during architecture review. Track resolution status here.
 **Risk**: WhatsApp sessions can disconnect requiring QR re-scan. Known Evolution API behavior.
 **Mitigation**: Connection status monitoring. Dashboard alerts when a number disconnects.
 **Status**: `pending` — addressed in Stage 5
+
+### 11. Walk-in oversell while WhatsApp sells low-stock items
+**Risk**: WhatsApp agent sells a product that the physical POS still thinks is in stock. The pharmacist, looking at their POS screen, then sells the same unit to a walk-in customer. Only one unit physically exists. Double-sell → customer complaint, refund, reputational damage.
+**Why the original "accept eventual consistency" design is not enough**: Risk #7 only addresses the reverse direction (POS sold first, WhatsApp tries to sell). This one is the mirror image and requires active intervention, not just detection at fulfillment.
+**Mitigation**: Tiered strategy based on stock level at time of WhatsApp sale (see ADR-007):
+- **Stock < 5**: Human-in-the-loop. Agent tells customer "let me confirm availability", dashboard alerts pharmacist, sale holds until confirmed from physical shelf.
+- **Stock 5-10**: Real-time push to POS immediately after Odoo commits the sale.
+- **Stock > 10**: Nightly reconciliation job batch-pushes Odoo-origin sales to POS.
+The nightly job also serves as safety net for failed real-time pushes.
+**Requires**: POS adapter write capability (`pushSale`, `upsertStock`) in addition to read. Adds write-credential requirement to onboarding.
+**Status**: `designed` — pending validation with first real customer, implemented in Stage 6

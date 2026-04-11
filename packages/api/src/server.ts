@@ -8,6 +8,7 @@ import { seedDefaultAdmin } from './modules/auth/auth.service.js';
 import { initMeilisearch } from './shared/meilisearch.js';
 import { startPeriodicSync } from './modules/catalog-sync/catalog-sync.service.js';
 import { startProvisioningWorker } from './modules/provisioning/provisioning.worker.js';
+import { seedDefaultStore } from './modules/provisioning/provisioning.service.js';
 import { logger } from './shared/logger.js';
 
 async function main() {
@@ -24,6 +25,9 @@ async function main() {
 
   // Seed default admin if DB is empty
   await seedDefaultAdmin();
+
+  // Seed default store (adopts existing Odoo DB as Farmacia Leo, idempotent)
+  await seedDefaultStore(config);
 
   // Build and start Fastify
   const app = await buildApp(redis, config);

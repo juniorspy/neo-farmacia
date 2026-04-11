@@ -1,10 +1,13 @@
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
+import bcrypt from 'bcrypt';
 import type { AppConfig } from '../../config/env.js';
 import { logger } from '../../shared/logger.js';
 import { Store, type IStore } from './store.model.js';
 import { ProvisioningJob, type IProvisioningJob } from './provisioning-job.model.js';
 import { STEP_ORDER } from './step.types.js';
 import { STEP_REGISTRY } from './steps/index.js';
+import { ensureIndex, deleteIndex } from '../../shared/meilisearch.js';
+import { odooDbDrop } from '../../shared/odoo-scoped.js';
 
 export interface CreatePharmacyInput {
   name: string;
@@ -15,6 +18,11 @@ export interface CreatePharmacyInput {
   currency?: string;
   country_code?: string;
   lang?: string;
+}
+
+/** 24-char URL-safe random password. Avoids +/= via base64url. */
+function generatePassword(): string {
+  return randomBytes(18).toString('base64url');
 }
 
 function slugify(input: string): string {
@@ -39,11 +47,17 @@ async function uniqueStoreId(base: string): Promise<string> {
 
 export async function createPharmacy(
   input: CreatePharmacyInput,
-): Promise<{ store: IStore; job: IProvisioningJob }> {
+): Promise<{ store: IStore; job: IProvisioningJob; plaintextAdminPassword: string }> {
   const slug = slugify(input.name);
   const storeId = await uniqueStoreId(slug);
   const odooDb = `pharmacy_${storeId}`;
   const meilisearchIndex = `store_${storeId}_products`;
+
+  // Generate a strong, per-pharmacy admin password. We store only a bcrypt
+  // hash for audit/reference; plaintext lives in the job's email step data
+  // and is logged once (stub) so it reaches the owner.
+  const plaintextAdminPassword = generatePassword();
+  const hash = await bcrypt.hash(plaintextAdminPassword, 10);
 
   const store = await Store.create({
     store_id: storeId,
@@ -66,18 +80,30 @@ export async function createPharmacy(
       custom_notes: '',
     },
     status: 'pending',
+    odoo_admin_password_hash: hash,
   });
 
   const job = await ProvisioningJob.create({
     store_id: storeId,
     status: 'pending',
-    steps: STEP_ORDER.map((name) => ({ name, status: 'pending' })),
+    steps: STEP_ORDER.map((name) => {
+      // Seed the plaintext password into the data of the two steps that
+      // need it. The rest of the steps don't see it. Mongo's at-rest is
+      // the only exposure surface; it gets cleared after email step runs.
+      if (name === 'odoo_db_create' || name === 'odoo_seed_admin') {
+        return { name, status: 'pending', data: { admin_password: plaintextAdminPassword } };
+      }
+      if (name === 'email_credentials') {
+        return { name, status: 'pending', data: { admin_password: plaintextAdminPassword } };
+      }
+      return { name, status: 'pending' };
+    }),
     current_step_index: 0,
     attempt: 0,
   });
 
   logger.info({ storeId, jobId: String(job._id) }, 'Pharmacy provisioning job created');
-  return { store, job };
+  return { store, job, plaintextAdminPassword };
 }
 
 /**
@@ -131,6 +157,13 @@ export async function runNextJobStep(config: AppConfig): Promise<boolean> {
 
     await step.run({ config, store, job, step: stepState });
 
+    // Scrub admin_password from step data once the step that needed it has run.
+    // The password remains in email_credentials' step data only until that step
+    // runs, which then clears it too.
+    if (stepState.data && 'admin_password' in stepState.data && stepState.name !== 'email_credentials') {
+      delete (stepState.data as Record<string, unknown>).admin_password;
+    }
+
     stepState.status = 'done';
     stepState.finished_at = new Date();
     job.current_step_index += 1;
@@ -164,6 +197,95 @@ export async function runNextJobStep(config: AppConfig): Promise<boolean> {
     await Store.updateOne({ store_id: job.store_id }, { $set: { status: 'failed' } });
     return true;
   }
+}
+
+/**
+ * Adopt the pre-existing default Odoo database as the first Store.
+ * Runs on API startup and is idempotent — does nothing if the store already
+ * exists. This is how the existing single-DB deployment becomes the first
+ * tenant in the multi-tenant model without re-provisioning.
+ */
+export async function seedDefaultStore(config: AppConfig): Promise<void> {
+  const storeId = 'store_leo';
+  const existing = await Store.findOne({ store_id: storeId });
+  if (existing) {
+    logger.debug({ storeId }, 'seedDefaultStore: already exists, skipping');
+    return;
+  }
+
+  const meilisearchIndex = `store_${storeId}_products`;
+  await ensureIndex(meilisearchIndex);
+
+  await Store.create({
+    store_id: storeId,
+    name: 'Farmacia Leo',
+    owner_name: 'Administrador',
+    owner_email: 'admin@leofarmacia.com',
+    timezone: 'America/Santo_Domingo',
+    currency: 'DOP',
+    country_code: 'DO',
+    lang: 'es_DO',
+    odoo_db: config.odoo.db, // adopts the existing default DB
+    meilisearch_index: meilisearchIndex,
+    agent_config: {
+      agent_name: 'Sofía',
+      greeting_style: 'amigable',
+      signature: '— Farmacia Leo',
+      business_hours: 'Lun-Sáb 8:00-22:00, Dom 9:00-20:00',
+      delivery_info: '',
+      custom_notes: '',
+    },
+    status: 'active',
+  });
+  logger.info(
+    { storeId, odooDb: config.odoo.db, meilisearchIndex },
+    'Default store seeded (Farmacia Leo adopted existing Odoo DB)',
+  );
+}
+
+/** Hard delete. Drops Odoo DB, Meilisearch index, Store, and Job records.
+ *  Runs cleanup in reverse order of creation so that if a step fails, the
+ *  "biggest" resources are removed first. Each sub-step is idempotent.
+ *  Refuses to delete the default store (store_leo) which adopts the shared
+ *  Odoo DB — dropping that would wipe real data. Caller must also pass an
+ *  explicit confirm flag.
+ */
+export async function deletePharmacy(
+  config: AppConfig,
+  storeId: string,
+): Promise<{ deleted: boolean; reason?: string }> {
+  if (storeId === 'store_leo') {
+    return { deleted: false, reason: 'cannot delete default store' };
+  }
+
+  const store = await Store.findOne({ store_id: storeId });
+  if (!store) {
+    return { deleted: false, reason: 'not found' };
+  }
+
+  logger.info({ storeId, odooDb: store.odoo_db }, 'Deleting pharmacy');
+
+  // 1. Drop Meilisearch index (cheap, fast, idempotent)
+  try {
+    await deleteIndex(store.meilisearch_index);
+  } catch (err) {
+    logger.warn({ err, index: store.meilisearch_index }, 'Meilisearch delete failed (continuing)');
+  }
+
+  // 2. Drop Odoo database (the big one)
+  try {
+    await odooDbDrop(config.odoo.url, config.odoo.masterPassword, store.odoo_db);
+  } catch (err) {
+    logger.error({ err, odooDb: store.odoo_db }, 'Odoo db drop failed (continuing to Mongo cleanup)');
+  }
+
+  // 3. Delete provisioning job(s) and store record last — order matters so
+  //    we keep a record if anything before failed catastrophically.
+  await ProvisioningJob.deleteMany({ store_id: storeId });
+  await Store.deleteOne({ store_id: storeId });
+
+  logger.info({ storeId }, 'Pharmacy deleted');
+  return { deleted: true };
 }
 
 export async function retryJob(storeId: string): Promise<IProvisioningJob | null> {

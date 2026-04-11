@@ -12,6 +12,7 @@ Record significant technical decisions here using the format below. Number them 
 | 004 | [Odoo as SSoT for inventory](004-odoo-ssot.md) | 2026-04-09 | accepted |
 | 005 | [Next.js for dashboard frontend](005-nextjs-dashboard.md) | 2026-04-09 | accepted |
 | 006 | [Web-only, no native app](006-web-only.md) | 2026-04-09 | accepted |
+| 007 | [Tiered POS sync-back strategy](007-tiered-pos-sync.md) | 2026-04-11 | designed |
 
 ## ADR Template
 

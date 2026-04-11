@@ -75,6 +75,7 @@ export async function deleteDocuments(indexName: string, ids: number[]): Promise
   logger.info({ indexName, count: ids.length }, 'Meilisearch delete documents');
 }
 
+// Kept signature as-is; this is the idempotent delete already handling 404.
 export async function deleteIndex(indexName: string): Promise<void> {
   const c = ensureClient();
   try {

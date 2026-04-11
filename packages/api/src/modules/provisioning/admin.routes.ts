@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { AppConfig } from '../../config/env.js';
 import { Store } from './store.model.js';
 import { ProvisioningJob } from './provisioning-job.model.js';
-import { createPharmacy, retryJob } from './provisioning.service.js';
+import { createPharmacy, retryJob, deletePharmacy } from './provisioning.service.js';
 
 function requireSuperAdmin(request: FastifyRequest, reply: FastifyReply) {
   const user = request.user as { role: string } | undefined;
@@ -15,8 +15,9 @@ function requireSuperAdmin(request: FastifyRequest, reply: FastifyReply) {
 
 export async function adminRoutes(
   app: FastifyInstance,
-  _opts: { config: AppConfig },
+  opts: { config: AppConfig },
 ) {
+  const { config } = opts;
   // List pharmacies with their provisioning state
   app.get(
     '/api/v1/admin/pharmacies',
@@ -105,6 +106,31 @@ export async function adminRoutes(
         status: store.status,
         job_id: String(job._id),
       });
+      // Note: plaintextAdminPassword intentionally NOT returned. It goes to
+      // the owner via the email_credentials step (stubbed today).
+    },
+  );
+
+  // Delete a pharmacy (drops odoo db + meili index + mongo records)
+  // Requires ?confirm=yes as a second safeguard against accidental deletes.
+  app.delete(
+    '/api/v1/admin/pharmacies/:storeId',
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      if (!requireSuperAdmin(request, reply)) return;
+      const { storeId } = request.params as { storeId: string };
+      const { confirm } = request.query as { confirm?: string };
+      if (confirm !== 'yes') {
+        return reply.status(400).send({
+          error: 'confirmation required',
+          hint: 'append ?confirm=yes to actually delete',
+        });
+      }
+      const result = await deletePharmacy(config, storeId);
+      if (!result.deleted) {
+        return reply.status(result.reason === 'not found' ? 404 : 400).send(result);
+      }
+      return result;
     },
   );
 

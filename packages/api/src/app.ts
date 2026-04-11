@@ -17,6 +17,7 @@ import { whatsappRoutes } from './modules/whatsapp/whatsapp.routes.js';
 import { commandsRoutes } from './modules/commands/commands.routes.js';
 import { catalogSyncRoutes } from './modules/catalog-sync/catalog-sync.routes.js';
 import { adminRoutes } from './modules/provisioning/admin.routes.js';
+import { registerStoreContext } from './modules/store-context/store-context.plugin.js';
 
 export async function buildApp(redis: Redis, config: AppConfig) {
   const app = Fastify({
@@ -33,6 +34,9 @@ export async function buildApp(redis: Redis, config: AppConfig) {
 
   // JWT plugin — must register before routes that use app.authenticate
   await registerJwt(app, config);
+
+  // Store context — adds app.resolveStore preHandler, request.store, request.odoo
+  await registerStoreContext(app, config);
 
   // Auth routes (login, me)
   await app.register(async (instance) => {

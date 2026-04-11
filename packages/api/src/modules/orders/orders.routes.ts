@@ -1,8 +1,11 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { listSaleOrders, getSaleOrder, updateSaleOrderState } from '../../shared/odoo.js';
+import {
+  listSaleOrdersScoped,
+  getSaleOrderScoped,
+  updateSaleOrderStateScoped,
+} from '../../shared/odoo-store-ops.js';
 import { logger } from '../../shared/logger.js';
 
-// Map Odoo states to dashboard statuses
 function mapOdooState(state: string): string {
   const map: Record<string, string> = {
     draft: 'pending',
@@ -14,7 +17,6 @@ function mapOdooState(state: string): string {
   return map[state] || state;
 }
 
-// Map dashboard action to Odoo action
 function mapDashboardAction(status: string): string {
   const map: Record<string, string> = {
     ready: 'confirm',
@@ -39,73 +41,68 @@ function formatOrder(order: Record<string, unknown>) {
 }
 
 export async function ordersRoutes(app: FastifyInstance) {
-  // All dashboard order routes require auth
   app.addHook('preHandler', app.authenticate);
+  app.addHook('preHandler', app.resolveStore);
 
-  // GET /api/v1/stores/:storeId/orders
-  app.get('/api/v1/stores/:storeId/orders', async (request: FastifyRequest, reply: FastifyReply) => {
-    const { storeId } = request.params as { storeId: string };
-    const { status, limit, offset } = request.query as {
-      status?: string;
-      limit?: string;
-      offset?: string;
-    };
+  app.get(
+    '/api/v1/stores/:storeId/orders',
+    async (request: FastifyRequest) => {
+      const { status, limit, offset } = request.query as {
+        status?: string;
+        limit?: string;
+        offset?: string;
+      };
+      const orders = await listSaleOrdersScoped(
+        request.odoo,
+        parseInt(limit || '50'),
+        parseInt(offset || '0'),
+        status,
+      );
+      return orders.map(formatOrder);
+    },
+  );
 
-    const orders = await listSaleOrders(
-      parseInt(limit || '50'),
-      parseInt(offset || '0'),
-      status,
-    );
+  app.get(
+    '/api/v1/stores/:storeId/orders/:orderId',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { orderId } = request.params as { storeId: string; orderId: string };
+      const order = await getSaleOrderScoped(request.odoo, parseInt(orderId));
+      if (!order) return reply.status(404).send({ error: 'Order not found' });
+      return {
+        ...formatOrder(order),
+        lines: ((order.lines as Array<Record<string, unknown>>) || []).map((line) => ({
+          id: line.id,
+          productId: (line.product_id as [number, string])?.[0],
+          name: (line.product_id as [number, string])?.[1] || line.name,
+          qty: line.product_uom_qty,
+          price: line.price_unit,
+          subtotal: line.price_subtotal,
+        })),
+        note: order.note || null,
+      };
+    },
+  );
 
-    return orders.map(formatOrder);
-  });
-
-  // GET /api/v1/stores/:storeId/orders/:orderId
-  app.get('/api/v1/stores/:storeId/orders/:orderId', async (request: FastifyRequest, reply: FastifyReply) => {
-    const { orderId } = request.params as { storeId: string; orderId: string };
-
-    const order = await getSaleOrder(parseInt(orderId));
-    if (!order) {
-      return reply.status(404).send({ error: 'Order not found' });
-    }
-
-    return {
-      ...formatOrder(order),
-      lines: (order.lines || []).map((line: Record<string, unknown>) => ({
-        id: line.id,
-        productId: (line.product_id as [number, string])?.[0],
-        name: (line.product_id as [number, string])?.[1] || line.name,
-        qty: line.product_uom_qty,
-        price: line.price_unit,
-        subtotal: line.price_subtotal,
-      })),
-      note: order.note || null,
-    };
-  });
-
-  // PATCH /api/v1/stores/:storeId/orders/:orderId/status
-  app.patch('/api/v1/stores/:storeId/orders/:orderId/status', async (request: FastifyRequest, reply: FastifyReply) => {
-    const { orderId } = request.params as { storeId: string; orderId: string };
-    const { status } = request.body as { status: string };
-
-    if (!status) {
-      return reply.status(400).send({ error: 'status required' });
-    }
-
-    const validStatuses = ['pending', 'ready', 'dispatched', 'cancelled'];
-    if (!validStatuses.includes(status)) {
-      return reply.status(400).send({ error: `status must be one of: ${validStatuses.join(', ')}` });
-    }
-
-    const action = mapDashboardAction(status);
-
-    try {
-      await updateSaleOrderState(parseInt(orderId), action);
-    } catch (err) {
-      logger.error({ err, orderId, status }, 'Failed to update order status');
-      return reply.status(500).send({ error: 'Failed to update order status in Odoo' });
-    }
-
-    return { success: true, orderId: parseInt(orderId), status };
-  });
+  app.patch(
+    '/api/v1/stores/:storeId/orders/:orderId/status',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { orderId } = request.params as { storeId: string; orderId: string };
+      const { status } = request.body as { status: string };
+      if (!status) return reply.status(400).send({ error: 'status required' });
+      const validStatuses = ['pending', 'ready', 'dispatched', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return reply
+          .status(400)
+          .send({ error: `status must be one of: ${validStatuses.join(', ')}` });
+      }
+      const action = mapDashboardAction(status);
+      try {
+        await updateSaleOrderStateScoped(request.odoo, parseInt(orderId), action);
+      } catch (err) {
+        logger.error({ err, orderId, status }, 'Failed to update order status');
+        return reply.status(500).send({ error: 'Failed to update order status in Odoo' });
+      }
+      return { success: true, orderId: parseInt(orderId), status };
+    },
+  );
 }

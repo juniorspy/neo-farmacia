@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { Message } from '../messages/message.model.js';
 import { User } from '../users/user.model.js';
-import { listSaleOrders, odooExecute } from '../../shared/odoo.js';
+import { listSaleOrdersScoped } from '../../shared/odoo-store-ops.js';
 
 // Map Odoo state to dashboard status
 function mapState(state: string): string {
@@ -11,6 +11,7 @@ function mapState(state: string): string {
 
 export async function statsRoutes(app: FastifyInstance) {
   app.addHook('preHandler', app.authenticate);
+  app.addHook('preHandler', app.resolveStore);
 
   // GET /api/v1/stores/:storeId/stats/summary
   app.get('/api/v1/stores/:storeId/stats/summary', async (request: FastifyRequest) => {
@@ -40,7 +41,7 @@ export async function statsRoutes(app: FastifyInstance) {
     const [totalCustomers, periodMessages, allOrders] = await Promise.all([
       User.countDocuments({ store_id: storeId }),
       Message.countDocuments({ store_id: storeId, timestamp: { $gte: rangeStart } }),
-      listSaleOrders(1000, 0),
+      listSaleOrdersScoped(request.odoo, 1000, 0),
     ]);
 
     const orders = allOrders.filter((o: Record<string, unknown>) => {
@@ -92,7 +93,7 @@ export async function statsRoutes(app: FastifyInstance) {
     const { storeId } = request.params as { storeId: string };
     const { range } = request.query as { range?: string };
 
-    const allOrders = await listSaleOrders(1000, 0) as Array<Record<string, unknown>>;
+    const allOrders = (await listSaleOrdersScoped(request.odoo, 1000, 0)) as Array<Record<string, unknown>>;
 
     // ── Date range filter ──
     const now = new Date();
@@ -163,12 +164,12 @@ export async function statsRoutes(app: FastifyInstance) {
 
     let allLines: Array<Record<string, unknown>> = [];
     if (allLineIds.length > 0) {
-      allLines = await odooExecute(
+      allLines = (await request.odoo.execute(
         'sale.order.line',
         'read',
         [allLineIds],
         { fields: ['product_id', 'product_uom_qty', 'price_subtotal', 'order_id'] },
-      ) as Array<Record<string, unknown>>;
+      )) as Array<Record<string, unknown>>;
     }
 
     // Build product map from lines

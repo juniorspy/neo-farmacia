@@ -113,6 +113,12 @@ export async function odooDbCreate(
 }
 
 export async function odooDbDrop(url: string, masterPassword: string, dbName: string): Promise<void> {
+  // Idempotent: don't fail if the DB is already gone
+  const exists = await odooDbExists(url, dbName);
+  if (!exists) {
+    logger.info({ dbName }, 'Odoo database already gone, skipping drop');
+    return;
+  }
   await jsonRpc(`${url}/jsonrpc`, {
     service: 'db',
     method: 'drop',
