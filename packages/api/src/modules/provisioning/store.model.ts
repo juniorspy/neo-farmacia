@@ -22,9 +22,12 @@ export interface IStore extends Document {
     delivery_info: string;
     custom_notes: string;
   };
+  // Deprecated single-connection fields — migrated into the WhatsappConnection
+  // collection on api startup. Kept on the schema as nullable so existing docs
+  // don't fail validation; will be removed in a future cleanup.
   whatsapp_instance_id: string | null;
-  whatsapp_instance_api_key: string | null; // per-instance Evolution apiKey (for sending replies)
-  whatsapp_number: string | null; // the phone number once connected (e.g. "18091234567")
+  whatsapp_instance_api_key: string | null;
+  whatsapp_number: string | null;
   odoo_admin_password_hash: string | null; // bcrypt hash of the initial admin pw, for reference
   status: StoreStatus;
   created_at: Date;

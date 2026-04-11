@@ -44,14 +44,15 @@ export function createWebhookHandler(deps: WebhookDeps) {
     const pushName = payload.data.pushName || '';
 
     // Resolve which pharmacy this message belongs to via the Evolution instance
-    const store = await resolveStoreByInstance(instanceName);
-    if (!store) {
+    const resolved = await resolveStoreByInstance(instanceName);
+    if (!resolved) {
       logger.warn(
         { instanceName, messageId },
-        'Unknown Evolution instance — no store mapped, dropping message',
+        'Unknown Evolution instance — no connection mapped, dropping message',
       );
       return;
     }
+    const { store, connection } = resolved;
     const storeId = store.store_id;
 
     logger.info(
@@ -177,11 +178,11 @@ export function createWebhookHandler(deps: WebhookDeps) {
           meta: { source: 'n8n', instanceName },
         });
 
-        const instanceApiKey = store.whatsapp_instance_api_key;
+        const instanceApiKey = connection.instance_api_key;
         if (!instanceApiKey) {
           logger.warn(
             { storeId, instanceName },
-            'No whatsapp_instance_api_key on store — cannot send reply',
+            'Connection has no instance_api_key — cannot send reply',
           );
         } else {
           try {

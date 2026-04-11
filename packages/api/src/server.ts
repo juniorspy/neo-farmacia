@@ -9,6 +9,7 @@ import { initMeilisearch } from './shared/meilisearch.js';
 import { startPeriodicSync } from './modules/catalog-sync/catalog-sync.service.js';
 import { startProvisioningWorker } from './modules/provisioning/provisioning.worker.js';
 import { seedDefaultStore } from './modules/provisioning/provisioning.service.js';
+import { migrateLegacyConnections } from './modules/whatsapp/connection.service.js';
 import { logger } from './shared/logger.js';
 
 async function main() {
@@ -28,6 +29,9 @@ async function main() {
 
   // Seed default store (adopts existing Odoo DB as Farmacia Leo, idempotent)
   await seedDefaultStore(config);
+
+  // Migrate any legacy single-connection Store fields into WhatsappConnection docs
+  await migrateLegacyConnections();
 
   // Build and start Fastify
   const app = await buildApp(redis, config);

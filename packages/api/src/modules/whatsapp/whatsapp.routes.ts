@@ -7,23 +7,56 @@ import {
   getConnectionState,
   getInstanceQrBase64,
 } from '../evolution/evolution.client.js';
-import { Store } from '../provisioning/store.model.js';
+import { WhatsappConnection } from './connection.model.js';
+import {
+  makeInstanceName,
+  listConnectionsForStore,
+} from './connection.service.js';
 import { invalidateStoreResolverCache } from '../webhook/store-resolver.js';
 import { logger } from '../../shared/logger.js';
 
 /**
- * One primary WhatsApp connection per store. The store's instance name is
- * derived from store_id to keep it stable and human-readable. The per-instance
- * apiKey from Evolution is persisted on the Store so the webhook handler can
- * send replies back through it.
- *
- * Legacy note: old code used "instancia"; UI and responses now use "conexion".
+ * Multi-connection WhatsApp per store. Each pharmacy can have many lines
+ * (e.g. "Caja", "Delivery", "Farmacéutico de guardia"). Each connection is
+ * an independent Evolution instance with its own apiKey and state.
  */
 
-function instanceNameForStore(storeId: string): string {
-  // Evolution accepts alphanumeric + dash + underscore. Our store_ids already
-  // conform. Prefix to make it obvious this belongs to us in the Evolution UI.
-  return `nf_${storeId}`;
+function mapEvolutionState(state: string | undefined): 'qr' | 'connecting' | 'open' | 'close' | 'unknown' {
+  switch (state) {
+    case 'open':
+    case 'connected':
+      return 'open';
+    case 'close':
+    case 'disconnected':
+    case 'logout':
+      return 'close';
+    case 'qr':
+    case 'qrReadSuccess':
+      return 'qr';
+    case 'connecting':
+      return 'connecting';
+    default:
+      return 'unknown';
+  }
+}
+
+async function refreshConnectionState(
+  instanceName: string,
+  apiKey: string | null,
+): Promise<{ state: ReturnType<typeof mapEvolutionState>; number: string | null }> {
+  try {
+    const res = await getConnectionState(instanceName, apiKey || '');
+    const state = mapEvolutionState(
+      ((res as Record<string, unknown>)?.instance as Record<string, unknown>)?.state as string,
+    );
+    const wuid =
+      (((res as Record<string, unknown>)?.instance as Record<string, unknown>)?.wuid as string) || '';
+    const number = wuid ? wuid.split('@')[0] : null;
+    return { state, number };
+  } catch (err) {
+    logger.warn({ err, instanceName }, 'getConnectionState failed');
+    return { state: 'unknown', number: null };
+  }
 }
 
 export async function whatsappRoutes(
@@ -35,106 +68,67 @@ export async function whatsappRoutes(
   app.addHook('preHandler', app.authenticate);
   app.addHook('preHandler', app.resolveStore);
 
-  /**
-   * GET /api/v1/stores/:storeId/whatsapp/connection
-   * Returns the store's current WhatsApp binding + connection state.
-   * If no connection is bound yet, returns { bound: false }.
-   */
+  // ── LIST ──
   app.get(
-    '/api/v1/stores/:storeId/whatsapp/connection',
+    '/api/v1/stores/:storeId/whatsapp/connections',
     async (request: FastifyRequest) => {
       const store = request.store;
-      if (!store.whatsapp_instance_id) {
-        return { bound: false };
-      }
-
-      let state: string = 'unknown';
-      let number: string | null = store.whatsapp_number;
-      try {
-        const res = await getConnectionState(
-          store.whatsapp_instance_id,
-          store.whatsapp_instance_api_key || '',
-        );
-        state =
-          (res?.instance?.state as string) ||
-          (res?.state as string) ||
-          'unknown';
-        // Some Evolution versions return the connected number here
-        const maybeNumber = (res?.instance?.wuid as string) || '';
-        if (maybeNumber && !number) {
-          number = maybeNumber.split('@')[0] || null;
-        }
-      } catch (err) {
-        logger.warn({ err, storeId: store.store_id }, 'getConnectionState failed');
-      }
-
-      // Persist any newly detected number
-      if (number && number !== store.whatsapp_number) {
-        await Store.updateOne(
-          { store_id: store.store_id },
-          { $set: { whatsapp_number: number } },
-        );
-      }
-
-      return {
-        bound: true,
-        instance_name: store.whatsapp_instance_id,
-        number,
-        state,
-      };
+      const list = await listConnectionsForStore(store.store_id);
+      return list.map((c) => ({
+        id: String(c._id),
+        label: c.label,
+        instance_name: c.instance_name,
+        number: c.number,
+        state: c.state,
+        created_at: c.created_at,
+        connected_at: c.connected_at,
+        disconnected_at: c.disconnected_at,
+      }));
     },
   );
 
-  /**
-   * POST /api/v1/stores/:storeId/whatsapp/connection
-   * Create a new Evolution instance for this store. Returns the QR code
-   * base64 so the UI can display it. If the store already has a connection,
-   * returns 409 — caller must disconnect first.
-   */
+  // ── CREATE ──
   app.post(
-    '/api/v1/stores/:storeId/whatsapp/connection',
+    '/api/v1/stores/:storeId/whatsapp/connections',
     async (request: FastifyRequest, reply: FastifyReply) => {
       const store = request.store;
-
-      if (store.whatsapp_instance_id) {
-        return reply.status(409).send({
-          error: 'already bound',
-          hint: 'DELETE /connection first to create a new one',
-          instance_name: store.whatsapp_instance_id,
-        });
+      const body = request.body as { label?: string };
+      const label = (body?.label || '').trim();
+      if (!label) {
+        return reply.status(400).send({ error: 'label required' });
+      }
+      if (label.length > 60) {
+        return reply.status(400).send({ error: 'label too long (max 60)' });
       }
 
-      const instanceName = instanceNameForStore(store.store_id);
+      const instanceName = makeInstanceName(store.store_id);
       const webhookUrl = `${config.apiPublicUrl}/webhook/evolution`;
 
       try {
         const created = await createInstance(instanceName, webhookUrl);
 
-        // Persist on the Store so the webhook can route back here and so the
-        // reply sender has the apiKey.
-        await Store.updateOne(
-          { store_id: store.store_id },
-          {
-            $set: {
-              whatsapp_instance_id: instanceName,
-              whatsapp_instance_api_key: created.apiKey,
-              whatsapp_number: null,
-            },
-          },
-        );
+        const conn = await WhatsappConnection.create({
+          store_id: store.store_id,
+          label,
+          instance_name: instanceName,
+          instance_api_key: created.apiKey,
+          state: 'qr',
+        });
+
         invalidateStoreResolverCache(instanceName);
 
-        // If the create response didn't include a QR, fetch one separately.
         let qr = created.qrCodeBase64;
         if (!qr) {
           qr = await getInstanceQrBase64(instanceName, created.apiKey || undefined);
         }
 
         return reply.status(201).send({
-          bound: true,
-          instance_name: instanceName,
-          qr_base64: qr,
+          id: String(conn._id),
+          label: conn.label,
+          instance_name: conn.instance_name,
+          number: null,
           state: 'qr',
+          qr_base64: qr,
         });
       } catch (err) {
         logger.error(
@@ -146,59 +140,130 @@ export async function whatsappRoutes(
     },
   );
 
-  /**
-   * GET /api/v1/stores/:storeId/whatsapp/connection/qr
-   * Refresh the QR code for a connection that hasn't been scanned yet.
-   * Evolution QR codes expire after ~60 seconds; the UI polls this while
-   * the scan flow is active.
-   */
+  // ── REFRESH QR ──
   app.get(
-    '/api/v1/stores/:storeId/whatsapp/connection/qr',
+    '/api/v1/stores/:storeId/whatsapp/connections/:id/qr',
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const store = request.store;
-      if (!store.whatsapp_instance_id) {
-        return reply.status(404).send({ error: 'no connection bound' });
-      }
+      const { id } = request.params as { id: string };
+      const conn = await WhatsappConnection.findOne({
+        _id: id,
+        store_id: request.store.store_id,
+      });
+      if (!conn) return reply.status(404).send({ error: 'connection not found' });
+
       const qr = await getInstanceQrBase64(
-        store.whatsapp_instance_id,
-        store.whatsapp_instance_api_key || undefined,
+        conn.instance_name,
+        conn.instance_api_key || undefined,
       );
       return { qr_base64: qr };
     },
   );
 
-  /**
-   * DELETE /api/v1/stores/:storeId/whatsapp/connection
-   * Logout + delete the Evolution instance, clear the Store binding.
-   */
-  app.delete(
-    '/api/v1/stores/:storeId/whatsapp/connection',
+  // ── REFRESH STATE ──
+  app.get(
+    '/api/v1/stores/:storeId/whatsapp/connections/:id',
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const store = request.store;
-      if (!store.whatsapp_instance_id) {
-        return reply.status(404).send({ error: 'no connection to delete' });
+      const { id } = request.params as { id: string };
+      const conn = await WhatsappConnection.findOne({
+        _id: id,
+        store_id: request.store.store_id,
+      });
+      if (!conn) return reply.status(404).send({ error: 'connection not found' });
+
+      const { state, number } = await refreshConnectionState(
+        conn.instance_name,
+        conn.instance_api_key,
+      );
+      const changed = state !== conn.state || (number && number !== conn.number);
+      if (changed) {
+        conn.state = state;
+        if (number) conn.number = number;
+        if (state === 'open' && !conn.connected_at) conn.connected_at = new Date();
+        if (state === 'close') conn.disconnected_at = new Date();
+        await conn.save();
+        invalidateStoreResolverCache(conn.instance_name);
       }
-      const instanceName = store.whatsapp_instance_id;
+
+      return {
+        id: String(conn._id),
+        label: conn.label,
+        instance_name: conn.instance_name,
+        number: conn.number,
+        state: conn.state,
+        connected_at: conn.connected_at,
+        disconnected_at: conn.disconnected_at,
+      };
+    },
+  );
+
+  // ── DISCONNECT (logout, keep record) ──
+  app.post(
+    '/api/v1/stores/:storeId/whatsapp/connections/:id/disconnect',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { id } = request.params as { id: string };
+      const conn = await WhatsappConnection.findOne({
+        _id: id,
+        store_id: request.store.store_id,
+      });
+      if (!conn) return reply.status(404).send({ error: 'connection not found' });
+
       try {
-        await logoutInstance(instanceName).catch(() => {
-          /* may already be disconnected */
-        });
-        await deleteInstance(instanceName).catch((err) => {
-          logger.warn({ err, instanceName }, 'Evolution delete failed, clearing binding anyway');
-        });
-      } finally {
-        await Store.updateOne(
-          { store_id: store.store_id },
-          {
-            $set: {
-              whatsapp_instance_id: null,
-              whatsapp_instance_api_key: null,
-              whatsapp_number: null,
-            },
-          },
-        );
-        invalidateStoreResolverCache(instanceName);
+        await logoutInstance(conn.instance_name);
+      } catch (err) {
+        logger.warn({ err, instanceName: conn.instance_name }, 'Evolution logout failed');
       }
+      conn.state = 'close';
+      conn.disconnected_at = new Date();
+      await conn.save();
+      invalidateStoreResolverCache(conn.instance_name);
+
+      return { id: String(conn._id), state: conn.state };
+    },
+  );
+
+  // ── RECONNECT (get a fresh QR after disconnect) ──
+  app.post(
+    '/api/v1/stores/:storeId/whatsapp/connections/:id/reconnect',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { id } = request.params as { id: string };
+      const conn = await WhatsappConnection.findOne({
+        _id: id,
+        store_id: request.store.store_id,
+      });
+      if (!conn) return reply.status(404).send({ error: 'connection not found' });
+
+      const qr = await getInstanceQrBase64(
+        conn.instance_name,
+        conn.instance_api_key || undefined,
+      );
+      conn.state = 'qr';
+      await conn.save();
+      invalidateStoreResolverCache(conn.instance_name);
+
+      return { id: String(conn._id), qr_base64: qr, state: 'qr' };
+    },
+  );
+
+  // ── DELETE (full removal) ──
+  app.delete(
+    '/api/v1/stores/:storeId/whatsapp/connections/:id',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { id } = request.params as { id: string };
+      const conn = await WhatsappConnection.findOne({
+        _id: id,
+        store_id: request.store.store_id,
+      });
+      if (!conn) return reply.status(404).send({ error: 'connection not found' });
+
+      const instanceName = conn.instance_name;
+      try {
+        await logoutInstance(instanceName).catch(() => {});
+        await deleteInstance(instanceName);
+      } catch (err) {
+        logger.warn({ err, instanceName }, 'Evolution delete failed, removing record anyway');
+      }
+      await WhatsappConnection.deleteOne({ _id: conn._id });
+      invalidateStoreResolverCache(instanceName);
       return { deleted: true };
     },
   );
