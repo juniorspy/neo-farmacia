@@ -15,10 +15,14 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
+  // Only set Content-Type when we actually have a body. Otherwise Fastify
+  // rejects empty-body + application/json with "Body cannot be empty".
+  const hasBody = init.body !== undefined && init.body !== null;
+
   const res = await fetch(url, {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...(hasBody ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init.headers,
     },
@@ -43,13 +47,22 @@ export const api = {
     request<T>(path, { params }),
 
   post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "POST", body: JSON.stringify(body) }),
+    request<T>(path, {
+      method: "POST",
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    }),
 
   put: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "PUT", body: JSON.stringify(body) }),
+    request<T>(path, {
+      method: "PUT",
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    }),
 
   patch: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "PATCH", body: JSON.stringify(body) }),
+    request<T>(path, {
+      method: "PATCH",
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    }),
 
   delete: <T>(path: string, params?: Record<string, string>) =>
     request<T>(path, { method: "DELETE", params }),
