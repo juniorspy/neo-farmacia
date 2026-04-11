@@ -12,6 +12,7 @@ Technical reference for Neo Farmacia. Explains how the system works, what's used
 6. [Printing](./06-printing.md) — Bluetooth thermal printer, ESC/POS
 7. [Deployment](./07-deployment.md) — Dokploy setup, environment variables
 8. [Development](./08-development.md) — Local setup, commands, workflow
+9. [WhatsApp Integration](./09-whatsapp-integration.md) — Evolution API, webhook pipeline, debounce, handover, mutex
 
 ## Quick Reference
 
