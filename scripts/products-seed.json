@@ -1,0 +1,1102 @@
+[
+  {
+    "sku": "1000102",
+    "name": "TELEKAST 10 MG 30 TABLETAS",
+    "price": 1384,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000102.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/telekast-10-mg-30-tabletas-details.aspx",
+    "slug": "telekast-10-mg-30-tabletas",
+    "localImagePath": "/products/1000102.jpg"
+  },
+  {
+    "sku": "1000103",
+    "name": "TELEKAST-L 10/5 MG 30 TABLETAS",
+    "price": 1384,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000103.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/telekast-l-10-5mg-30tabls-details.aspx",
+    "slug": "telekast-l-10-5mg-30tabls",
+    "localImagePath": "/products/1000103.jpg"
+  },
+  {
+    "sku": "1000104",
+    "name": "BILAXTEN 20 MG 10 COMPRIMIDOS",
+    "price": 1313.46,
+    "category": "Antialérgicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000104.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/bilaxten-20-mg-10-comprimidos-details.aspx",
+    "slug": "bilaxten-20-mg-10-comprimidos",
+    "localImagePath": "/products/1000104.jpg"
+  },
+  {
+    "sku": "1000105",
+    "name": "ROWATINEX 100 CAPSULAS (AL DETALLE TIRAS DE 10 UNIDS)",
+    "price": 190,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000105.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/rowatinex-100-capsulas--al-detalle-tiras-de-10-unids-details.aspx",
+    "slug": "rowatinex-100-capsulas--al-detalle-tiras-de-10-unids",
+    "localImagePath": "/products/1000105.jpg"
+  },
+  {
+    "sku": "1000106",
+    "name": "ROWACHOL 100 CAPSULAS (AL DETALLE TIRAS 10 UNIDS)",
+    "price": 130,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000106.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/rowachol-caps-tr10-----10x10-details.aspx",
+    "slug": "rowachol-caps-tr10-----10x10",
+    "localImagePath": "/products/1000106.jpg"
+  },
+  {
+    "sku": "1000302",
+    "name": "FLORELIX 120 ML JARABE",
+    "price": 586.1,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000302.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/florelix-jbe-120ml-details.aspx",
+    "slug": "florelix-jbe-120ml",
+    "localImagePath": "/products/1000302.jpg"
+  },
+  {
+    "sku": "1000304",
+    "name": "POMONA 90 MG 6 OVULOS",
+    "price": 1007.5,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000304.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pomona-90-mg-6-ovulos-details.aspx",
+    "slug": "pomona-90-mg-6-ovulos",
+    "localImagePath": "/products/1000304.jpg"
+  },
+  {
+    "sku": "1000307",
+    "name": "CLOPIDOGREL LAM 75 MG 30 COMPRIMIDOS",
+    "price": 1643.41,
+    "category": "Cardiovascular / Crónicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000307.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/clopidogrel-lam-75-mg-30-comprimidos-details.aspx",
+    "slug": "clopidogrel-lam-75-mg-30-comprimidos",
+    "localImagePath": "/products/1000307.jpg"
+  },
+  {
+    "sku": "1000309",
+    "name": "METIOM 20 MG 30 CAPSULAS",
+    "price": 2531.39,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000309.png",
+    "productUrl": "https://tienda.farmaciacarol.com/metiom-20mg-30caps-details.aspx",
+    "slug": "metiom-20mg-30caps",
+    "localImagePath": "/products/1000309.png"
+  },
+  {
+    "sku": "1000314",
+    "name": "CROSS-PVP 2% 60 ML SUSPENSION",
+    "price": 948.47,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000314.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/cross-pvp-susp-al-2--60ml-d-details.aspx",
+    "slug": "cross-pvp-susp-al-2--60ml-d",
+    "localImagePath": "/products/1000314.jpg"
+  },
+  {
+    "sku": "1000315",
+    "name": "CO-PLAVIX 75/100 MG 28 TABLETAS",
+    "price": 3215.68,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000315.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/co-plavix-75mg-100mg-28tabls-details.aspx",
+    "slug": "co-plavix-75mg-100mg-28tabls",
+    "localImagePath": "/products/1000315.jpg"
+  },
+  {
+    "sku": "1000321",
+    "name": "FIXEM FORTE 200 MG 30 ML POLVO PARA SUSPENSION",
+    "price": 1550,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000321.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/fixem-forte-200mg-30ml-susp-details.aspx",
+    "slug": "fixem-forte-200mg-30ml-susp",
+    "localImagePath": "/products/1000321.jpg"
+  },
+  {
+    "sku": "1000328",
+    "name": "KALARA 15 MG 10 SOBRES (AL DETALLE 1 UNID)",
+    "price": 208,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000328.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/kalara-15mg-sobre----det-10sobres-details.aspx",
+    "slug": "kalara-15mg-sobre----det-10sobres",
+    "localImagePath": "/products/1000328.jpg"
+  },
+  {
+    "sku": "1000329",
+    "name": "TADAL 5 MG 30 COMPRIMIDOS (AL DETALLE 1 UNID)",
+    "price": 73,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000329.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/tadal-5-mg-30-comprimidos--al-detalle-1-unid-details.aspx",
+    "slug": "tadal-5-mg-30-comprimidos--al-detalle-1-unid",
+    "localImagePath": "/products/1000329.jpg"
+  },
+  {
+    "sku": "1000330",
+    "name": "NITRENOL 20/50/12.5 MG 30 COMPRIMIDOS",
+    "price": 792,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000330.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/nitrenol-20-50-12-5-mg-30-comprimidos-details.aspx",
+    "slug": "nitrenol-20-50-12-5-mg-30-comprimidos",
+    "localImagePath": "/products/1000330.jpg"
+  },
+  {
+    "sku": "1000331",
+    "name": "LEVO HP PACK 750/20/1 MG 78 CAPSULAS",
+    "price": 4950,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000331.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/levo-hp-pack--48x10x20-tabls-details.aspx",
+    "slug": "levo-hp-pack--48x10x20-tabls",
+    "localImagePath": "/products/1000331.jpg"
+  },
+  {
+    "sku": "1000340",
+    "name": "ADRENOR 4 MG 2 AMPOLLAS",
+    "price": 1034.8,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000340.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/adrenor-4mg-2ml-2amps-d-details.aspx",
+    "slug": "adrenor-4mg-2ml-2amps-d",
+    "localImagePath": "/products/1000340.jpg"
+  },
+  {
+    "sku": "1000341",
+    "name": "PREGAGESIC 75 MG 30 CAPSULAS",
+    "price": 1415.81,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000341.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pregagesic-75mg-30caps-details.aspx",
+    "slug": "pregagesic-75mg-30caps",
+    "localImagePath": "/products/1000341.jpg"
+  },
+  {
+    "sku": "1000342",
+    "name": "PREGAGESIC 150 MG 30 CAPSULAS",
+    "price": 2079.92,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000342.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pregagesic-150mg-30caps-d-details.aspx",
+    "slug": "pregagesic-150mg-30caps-d",
+    "localImagePath": "/products/1000342.jpg"
+  },
+  {
+    "sku": "1000344",
+    "name": "LORCEF 1GR./IV VIAL",
+    "price": 619.52,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000344.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/lorcef-1gr--iv--vial-details.aspx",
+    "slug": "lorcef-1gr--iv--vial",
+    "localImagePath": "/products/1000344.jpg"
+  },
+  {
+    "sku": "1000345",
+    "name": "KUOTAL 50 G CREMA VAGINAL",
+    "price": 1207.51,
+    "category": "Dermocosmética",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000345.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/kuotal-50-g-crema-vaginal-details.aspx",
+    "slug": "kuotal-50-g-crema-vaginal",
+    "localImagePath": "/products/1000345.jpg"
+  },
+  {
+    "sku": "1000346",
+    "name": "FEXIONEL 500 MG 30 COMPRIMIDOS",
+    "price": 1448,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000346.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/fexionel-500mg-30comps-details.aspx",
+    "slug": "fexionel-500mg-30comps",
+    "localImagePath": "/products/1000346.jpg"
+  },
+  {
+    "sku": "1000352",
+    "name": "PROKINETIC 25 MG 30 TABLETAS",
+    "price": 2544.2,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000352.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/prokinetic-25mg-30tabls-details.aspx",
+    "slug": "prokinetic-25mg-30tabls",
+    "localImagePath": "/products/1000352.jpg"
+  },
+  {
+    "sku": "1000353",
+    "name": "GYNOBIOTIC 100 MG 7 OVULOS",
+    "price": 1166.59,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000353.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/gynobiotic-100mg-7-ovulos-d-details.aspx",
+    "slug": "gynobiotic-100mg-7-ovulos-d",
+    "localImagePath": "/products/1000353.jpg"
+  },
+  {
+    "sku": "1000355",
+    "name": "BIOVIT NATAL NF 30 ML GOTAS",
+    "price": 715,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000355.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/biovit-natal-nf-gotas-30ml-details.aspx",
+    "slug": "biovit-natal-nf-gotas-30ml",
+    "localImagePath": "/products/1000355.jpg"
+  },
+  {
+    "sku": "1000359",
+    "name": "MESYGEST 5 MG 1 ML 1 AMPOLLA",
+    "price": 695.5,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000359.png",
+    "productUrl": "https://tienda.farmaciacarol.com/mesygest-5-mg-1-ml-1-ampolla-details.aspx",
+    "slug": "mesygest-5-mg-1-ml-1-ampolla",
+    "localImagePath": "/products/1000359.png"
+  },
+  {
+    "sku": "1000360",
+    "name": "PROGESTIN 100 MG 2 ML AMPOLLA",
+    "price": 1118,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000360.png",
+    "productUrl": "https://tienda.farmaciacarol.com/progestin-100mg-2ml-d-details.aspx",
+    "slug": "progestin-100mg-2ml-d",
+    "localImagePath": "/products/1000360.png"
+  },
+  {
+    "sku": "1000361",
+    "name": "NOMESTROL 50/5 MG 2 ML AMPOLLA SOLUCION INYECTABLE",
+    "price": 899.6,
+    "category": "Medicamentos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000361.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/nomestrol-50-5mg-amp-2ml-details.aspx",
+    "slug": "nomestrol-50-5mg-amp-2ml",
+    "localImagePath": "/products/1000361.jpg"
+  },
+  {
+    "sku": "1000362",
+    "name": "ROCEFORT (CEFTRIAXONA) 1 G 3.5 ML AMPOLLA INYECTABLE I.M.",
+    "price": 650,
+    "category": "Antibióticos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000362.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/rocefort-igr-im-3-5ml-d-details.aspx",
+    "slug": "rocefort-igr-im-3-5ml-d",
+    "localImagePath": "/products/1000362.jpg"
+  },
+  {
+    "sku": "45971228",
+    "name": "*NO USAR* STICKER ALERTA ROJA 2025",
+    "price": 26,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45971228.png",
+    "productUrl": "https://tienda.farmaciacarol.com/sticker-alerta-roja-2023-details.aspx",
+    "slug": "sticker-alerta-roja-2023",
+    "localImagePath": "/products/45971228.png"
+  },
+  {
+    "sku": "45959090",
+    "name": "AMINO 30 SERVICIOS FRUIT PUNCH 435 G",
+    "price": 2241.16,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45959090.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/amino-x-30-servicios-435-grs--fruit-punch-details.aspx",
+    "slug": "amino-x-30-servicios-435-grs--fruit-punch",
+    "localImagePath": "/products/45959090.jpg"
+  },
+  {
+    "sku": "45959089",
+    "name": "AMINO ENERGY FRUIT FUSION 270 G",
+    "price": 2247.08,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45959089.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/amino-energy-270-grs--fruit-fusion-details.aspx",
+    "slug": "amino-energy-270-grs--fruit-fusion",
+    "localImagePath": "/products/45959089.jpg"
+  },
+  {
+    "sku": "45957387",
+    "name": "BCAA 2200 180 TABLETAS",
+    "price": 1801.8,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45957387.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/bcaa-2200-180-tabletas-details.aspx",
+    "slug": "bcaa-2200-180-tabletas",
+    "localImagePath": "/products/45957387.jpg"
+  },
+  {
+    "sku": "45969470",
+    "name": "BOARDING PSS POUCH RFID 673 BOLSO DE VIAJE BLOQUEADOR",
+    "price": 545.82,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45969470.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/boarding-pss-pouch-rfid-673-bolso-de-viaje-bloqueador-d-details.aspx",
+    "slug": "boarding-pss-pouch-rfid-673-bolso-de-viaje-bloqueador-d",
+    "localImagePath": "/products/45969470.jpg"
+  },
+  {
+    "sku": "45969468",
+    "name": "BODY POCKET 599 BOLSO PARA CUERPO DE VIAJE",
+    "price": 618.59,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45969468.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/body-pocket-599-bolso-para-cuerpo-de-viaje-d-details.aspx",
+    "slug": "body-pocket-599-bolso-para-cuerpo-de-viaje-d",
+    "localImagePath": "/products/45969468.jpg"
+  },
+  {
+    "sku": "5031300",
+    "name": "EQUAL 230 SOBRES.AZUCAR/230GR.",
+    "price": 417.25,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5031300.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/equal-230-sobres-azucar-230gr-d-details.aspx",
+    "slug": "equal-230-sobres-azucar-230gr-d",
+    "localImagePath": "/products/5031300.jpg"
+  },
+  {
+    "sku": "5011700",
+    "name": "EQUAL 50`S AZUCAR 0 CALORIAS 50 SOBRES 1.75 OZ",
+    "price": 162.6,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5011700.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/equal-50-s-sobres-1-75oz-azucar-details.aspx",
+    "slug": "equal-50-s-sobres-1-75oz-azucar",
+    "localImagePath": "/products/5011700.jpg"
+  },
+  {
+    "sku": "5011701",
+    "name": "EQUAL AZUCAR PACKETS SPLENDA 115 G",
+    "price": 263.85,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5011701.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/equal-azucar-115-packets-4-1oz--115g-details.aspx",
+    "slug": "equal-azucar-115-packets-4-1oz--115g",
+    "localImagePath": "/products/5011701.jpg"
+  },
+  {
+    "sku": "5031600",
+    "name": "EQUAL SUCRALOSA 100 SOBRES 3.5 OZ",
+    "price": 282.26,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5031600.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/equal-sucralosa-100sobres-3-5oz-d-details.aspx",
+    "slug": "equal-sucralosa-100sobres-3-5oz-d",
+    "localImagePath": "/products/5031600.jpg"
+  },
+  {
+    "sku": "1000808",
+    "name": "SOLARAY ALOE VERA 2000 MG 100 CAPSULAS FRASCO",
+    "price": 944.94,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000808.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/aloe-vera-gel-2grs-100caps---solaray-details.aspx",
+    "slug": "aloe-vera-gel-2grs-100caps---solaray",
+    "localImagePath": "/products/1000808.jpg"
+  },
+  {
+    "sku": "1000860",
+    "name": "KAL ACIDOFILOS PROBIOTICOS-4 100 CAPSULAS FRASCO",
+    "price": 700.7,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000860.png",
+    "productUrl": "https://tienda.farmaciacarol.com/acidophilus-probiotic-4-100caps---kal-details.aspx",
+    "slug": "acidophilus-probiotic-4-100caps---kal",
+    "localImagePath": "/products/1000860.png"
+  },
+  {
+    "sku": "1000863",
+    "name": "HEALTH PLUS COLON CLEANSE ORIGINAL (LIMPIADOR DE COLON) 200",
+    "price": 1701.7,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000863.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/colon-cleanse-200caps---original-details.aspx",
+    "slug": "colon-cleanse-200caps---original",
+    "localImagePath": "/products/1000863.jpg"
+  },
+  {
+    "sku": "4230600",
+    "name": "MASON CASCARA SAGRADA 450 MG 100 CAPLETAS FRASCO",
+    "price": 1120.6,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/4230600.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/cascara-sagrada-450-mg-x-100-caps--mason-details.aspx",
+    "slug": "cascara-sagrada-450-mg-x-100-caps--mason",
+    "localImagePath": "/products/4230600.jpg"
+  },
+  {
+    "sku": "4233003",
+    "name": "SOLARAY HORSETAIL COLA DE CABALLO 880 MG 100 VEGCAPS",
+    "price": 900.9,
+    "category": "Vitaminas y Suplementos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/4233003.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/horsetail-440-mg-capsulasulas-100--s-d-details.aspx",
+    "slug": "horsetail-440-mg-capsulasulas-100--s-d",
+    "localImagePath": "/products/4233003.jpg"
+  },
+  {
+    "sku": "1663600",
+    "name": "SPLENDA SUGAR/50 SOBRE",
+    "price": 195.44,
+    "category": "Cardiovascular / Crónicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1663600.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/splenda-sugar-50-sobre-details.aspx",
+    "slug": "splenda-sugar-50-sobre",
+    "localImagePath": "/products/1663600.jpg"
+  },
+  {
+    "sku": "1663603",
+    "name": "SPLENDA SUGAR 100 SOBRE",
+    "price": 350.86,
+    "category": "Cardiovascular / Crónicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1663603.png",
+    "productUrl": "https://tienda.farmaciacarol.com/splenda-sugar-100-sobre-details.aspx",
+    "slug": "splenda-sugar-100-sobre",
+    "localImagePath": "/products/1663603.png"
+  },
+  {
+    "sku": "1663604",
+    "name": "SPLENDA SUGAR 200 SOBRES",
+    "price": 589.35,
+    "category": "Cardiovascular / Crónicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1663604.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/splenda-sugar-200-sobres-details.aspx",
+    "slug": "splenda-sugar-200-sobres",
+    "localImagePath": "/products/1663604.jpg"
+  },
+  {
+    "sku": "5011717",
+    "name": "SUKAL 100 SOBRES 3.52OZ (100G)",
+    "price": 250.6,
+    "category": "Cardiovascular / Crónicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5011717.png",
+    "productUrl": "https://tienda.farmaciacarol.com/sukal-100-sobres-3-52oz--100g-d-details.aspx",
+    "slug": "sukal-100-sobres-3-52oz--100g-d",
+    "localImagePath": "/products/5011717.png"
+  },
+  {
+    "sku": "5031601",
+    "name": "EQUAL SUCRALOSA/50SOBRES 1.75OZ.",
+    "price": 141.13,
+    "category": "Cardiovascular / Crónicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/5031601.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/equal-sucralosa-50sobres-1-75oz-details.aspx",
+    "slug": "equal-sucralosa-50sobres-1-75oz",
+    "localImagePath": "/products/5031601.jpg"
+  },
+  {
+    "sku": "1001867",
+    "name": "GUM CEPILLO INTERDENTAL PROXABRUSH 1314 PARA VIAJES 4 PIEZAS",
+    "price": 319.85,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001867.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/gum-1314-proxabrush-trav-ler-p-viaje-details.aspx",
+    "slug": "gum-1314-proxabrush-trav-ler-p-viaje",
+    "localImagePath": "/products/1001867.jpg"
+  },
+  {
+    "sku": "1002228",
+    "name": "COLGATE PASTA DENTAL SENSITIVE PRO ALIVIO BLANQUEADOR FRESH",
+    "price": 455.37,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002228.png",
+    "productUrl": "https://tienda.farmaciacarol.com/colgate-sens-pro-alivio-110gr-white--pasta-details.aspx",
+    "slug": "colgate-sens-pro-alivio-110gr-white--pasta",
+    "localImagePath": "/products/1002228.png"
+  },
+  {
+    "sku": "1002285",
+    "name": "COREGA ULTRA SIN SABOR 20 G",
+    "price": 302.96,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002285.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/corega-ultra-20gr--sin-sabor-details.aspx",
+    "slug": "corega-ultra-20gr--sin-sabor",
+    "localImagePath": "/products/1002285.jpg"
+  },
+  {
+    "sku": "1003837",
+    "name": "SENSODYNE PASTA DENTAL RAPIDO ALIVIO 100 G",
+    "price": 394.56,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1003837.png",
+    "productUrl": "https://tienda.farmaciacarol.com/sensodyne-pasta-dental-rapido-alivio-100-g-details.aspx",
+    "slug": "sensodyne-pasta-dental-rapido-alivio-100-g",
+    "localImagePath": "/products/1003837.png"
+  },
+  {
+    "sku": "1004015",
+    "name": "GUM CEPILLO DENTAL SUPREME MAX SUAVE 1500 2X1",
+    "price": 228.46,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1004015.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/gum-1500-supreme-max-2x1-cepillo-suave-details.aspx",
+    "slug": "gum-1500-supreme-max-2x1-cepillo-suave",
+    "localImagePath": "/products/1004015.jpg"
+  },
+  {
+    "sku": "1004053",
+    "name": "SENSODYNE PRECISION CEPILLO DENTAL",
+    "price": 278.33,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1004053.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/sensodyne-precision-cepillo-dental-details.aspx",
+    "slug": "sensodyne-precision-cepillo-dental",
+    "localImagePath": "/products/1004053.jpg"
+  },
+  {
+    "sku": "1000671",
+    "name": "ORGANIX SHAMPOO ARGAN OIL OF MOROCCO (ACEITE DE ARGAN) 13 OZ",
+    "price": 750.59,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000671.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/organix-shampoo-13oz-ren-moroccan-argan-oil-details.aspx",
+    "slug": "organix-shampoo-13oz-ren-moroccan-argan-oil",
+    "localImagePath": "/products/1000671.jpg"
+  },
+  {
+    "sku": "1000672",
+    "name": "ORGANIX ACONDICIONADOR ARGAN OIL OF MOROCCO (ACEITE DE ARGAN",
+    "price": 750.59,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000672.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/organix-conditioner-argan-oil-morocco-13oz-details.aspx",
+    "slug": "organix-conditioner-argan-oil-morocco-13oz",
+    "localImagePath": "/products/1000672.jpg"
+  },
+  {
+    "sku": "1000673",
+    "name": "ORGANIX MASK.237ML.REN/MOROCCAN ARGAN OI",
+    "price": 567.11,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000673.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/organix-mask-237ml-ren-moroccan-argan-oi-details.aspx",
+    "slug": "organix-mask-237ml-ren-moroccan-argan-oi",
+    "localImagePath": "/products/1000673.jpg"
+  },
+  {
+    "sku": "1002268",
+    "name": "PANTENE SH. CONTROL CAIDA 12/400ML.",
+    "price": 232.15,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002268.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pantene-sh--control-caida-12-400ml-details.aspx",
+    "slug": "pantene-sh--control-caida-12-400ml",
+    "localImagePath": "/products/1002268.jpg"
+  },
+  {
+    "sku": "1002723",
+    "name": "ORGANIX ACONDICIONADOR COCONUT WATER 13 OZ",
+    "price": 567.11,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002723.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/organix-cond-coconut-water-13oz-details.aspx",
+    "slug": "organix-cond-coconut-water-13oz",
+    "localImagePath": "/products/1002723.jpg"
+  },
+  {
+    "sku": "1002967",
+    "name": "NIOXIN SISTEMA 1 PARA CABELLO FINO APARIENCIA 350 ML",
+    "price": 2403.84,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002967.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/nioxin-kit-sistema-1-p-cabello-fino-apariencia-n-d-details.aspx",
+    "slug": "nioxin-kit-sistema-1-p-cabello-fino-apariencia-n-d",
+    "localImagePath": "/products/1002967.jpg"
+  },
+  {
+    "sku": "45952790",
+    "name": "FAMILIA PANUELOS FRESCURA EXTREMA 10 UNIDADES",
+    "price": 18.83,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45952790.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/familia-panuelos-fresc-extrema-4x10-unid-details.aspx",
+    "slug": "familia-panuelos-fresc-extrema-4x10-unid",
+    "localImagePath": "/products/45952790.jpg"
+  },
+  {
+    "sku": "45953280",
+    "name": "KLEENEX ESSENTIAL 15 TOALLITAS DESMAQUILLANTES",
+    "price": 215.99,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45953280.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/kleenex-essential-toallitas-desmaq--2x2-15-d-details.aspx",
+    "slug": "kleenex-essential-toallitas-desmaq--2x2-15-d",
+    "localImagePath": "/products/45953280.jpg"
+  },
+  {
+    "sku": "16035512",
+    "name": "WET ONES CITRUS SCENT WIPES 40 ANTIBACTERIAL",
+    "price": 289.93,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16035512.png",
+    "productUrl": "https://tienda.farmaciacarol.com/wet-ones-citrus-scent-40-antiba-4672-details.aspx",
+    "slug": "wet-ones-citrus-scent-40-antiba-4672",
+    "localImagePath": "/products/16035512.png"
+  },
+  {
+    "sku": "45957559",
+    "name": "WET ONES CITRUS SCENT ANTI-BACTERIAL WIPES",
+    "price": 144.96,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45957559.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/wet-ones-citrus-scent-anti-bact--20wipes-details.aspx",
+    "slug": "wet-ones-citrus-scent-anti-bact--20wipes",
+    "localImagePath": "/products/45957559.jpg"
+  },
+  {
+    "sku": "45957561",
+    "name": "WET ONES FRESH SCENT ANTI-BACT WIPES 20 TOALLAS HUMEDAS",
+    "price": 144.96,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45957561.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/wet-ones-fresh-scent-anti-bact--20wipes-details.aspx",
+    "slug": "wet-ones-fresh-scent-anti-bact--20wipes",
+    "localImagePath": "/products/45957561.jpg"
+  },
+  {
+    "sku": "1003657",
+    "name": "MANITAS LIMPIAS WIPES 10 TOALLAS HUMEDAS",
+    "price": 75.39,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1003657.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/manitas-limpias-wipes-10-toallitas-details.aspx",
+    "slug": "manitas-limpias-wipes-10-toallitas",
+    "localImagePath": "/products/1003657.jpg"
+  },
+  {
+    "sku": "1003661",
+    "name": "MANITAS LIMPIAS FRESH FOR MEN 8OZ.",
+    "price": 207.69,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1003661.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/manitas-limpias-fresh-for-men-8oz-details.aspx",
+    "slug": "manitas-limpias-fresh-for-men-8oz",
+    "localImagePath": "/products/1003661.jpg"
+  },
+  {
+    "sku": "16035800",
+    "name": "MANITAS LIMPIAS 2 OZ",
+    "price": 104.38,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16035800.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/manitas-limpias-2onz-details.aspx",
+    "slug": "manitas-limpias-2onz",
+    "localImagePath": "/products/16035800.jpg"
+  },
+  {
+    "sku": "16035806",
+    "name": "MANITAS LIMPIAS 8 OZ",
+    "price": 253.01,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16035806.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/manitas-limpias-8onz-details.aspx",
+    "slug": "manitas-limpias-8onz",
+    "localImagePath": "/products/16035806.jpg"
+  },
+  {
+    "sku": "16820900",
+    "name": "MANITAS LIMPIAS SPRAY 0.35 OZ 24 UNIDADES",
+    "price": 104.38,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16820900.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/manitas-limpias-spray-0-35oz--24unds-details.aspx",
+    "slug": "manitas-limpias-spray-0-35oz--24unds",
+    "localImagePath": "/products/16820900.jpg"
+  },
+  {
+    "sku": "3007000",
+    "name": "ALGODON PLANCHADO 4++++",
+    "price": 157.21,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3007000.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/algodon-planchado-4-details.aspx",
+    "slug": "algodon-planchado-4",
+    "localImagePath": "/products/3007000.jpg"
+  },
+  {
+    "sku": "45954916",
+    "name": "BOLITAS DE ALGODON ABSORBENTE COLLADO 100 UNIDADES",
+    "price": 167.3,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45954916.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/bolitas-de-algodon-absorbente-100pzas---collado-details.aspx",
+    "slug": "bolitas-de-algodon-absorbente-100pzas---collado",
+    "localImagePath": "/products/45954916.jpg"
+  },
+  {
+    "sku": "8016802",
+    "name": "PREMIER FLEX ADHESIVE CURITAS 30 UNIDS",
+    "price": 163.2,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/8016802.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/premier-v-flex-fabric-3-4-30ct-details.aspx",
+    "slug": "premier-v-flex-fabric-3-4-30ct",
+    "localImagePath": "/products/8016802.jpg"
+  },
+  {
+    "sku": "3016801",
+    "name": "PREMIER VALUE ADHESIVE CLEAR BANDAGE (CURITAS)",
+    "price": 127.2,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016801.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/premier-v-clear-plast-asst--45-d-details.aspx",
+    "slug": "premier-v-clear-plast-asst--45-d",
+    "localImagePath": "/products/3016801.jpg"
+  },
+  {
+    "sku": "3016811",
+    "name": "PREMIER VALUE ADHESIVE SHEER BANDAGES 60 UNIDADES",
+    "price": 148.85,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016811.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/premier-v-sheer-plast-asst-60c-d-details.aspx",
+    "slug": "premier-v-sheer-plast-asst-60c-d",
+    "localImagePath": "/products/3016811.jpg"
+  },
+  {
+    "sku": "3016669",
+    "name": "GAUZE BANDAGE 3\" 1155 GASAS",
+    "price": 68.86,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016669.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/gauze-bandage-3--1155-gasas-details.aspx",
+    "slug": "gauze-bandage-3--1155-gasas",
+    "localImagePath": "/products/3016669.jpg"
+  },
+  {
+    "sku": "3016670",
+    "name": "GASAS GAUZE BANDAGE 4\" 1156 12 ROLLOS",
+    "price": 87.91,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016670.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/gauze-bandage-4--1156-gasas-details.aspx",
+    "slug": "gauze-bandage-4--1156-gasas",
+    "localImagePath": "/products/3016670.jpg"
+  },
+  {
+    "sku": "45954377",
+    "name": "PREMIER VALUER SITE PAD 5\" X 9\" CDC21450N (GAZA DE ALGODON)",
+    "price": 289.4,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45954377.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/site-pad-5-x-9-cdc21450n--gaza-de-algodon-details.aspx",
+    "slug": "site-pad-5-x-9-cdc21450n--gaza-de-algodon",
+    "localImagePath": "/products/45954377.jpg"
+  },
+  {
+    "sku": "45954424",
+    "name": "PREMIER/V 2872 GAUZE PADS 3X3 25 COUNT LATEX FREE C/P.12 (GA",
+    "price": 263.65,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/45954424.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/premier-v-2872-gauze-pads-3x3-25-count-latex-free-c-p-12--gasa-details.aspx",
+    "slug": "premier-v-2872-gauze-pads-3x3-25-count-latex-free-c-p-12--gasa",
+    "localImagePath": "/products/45954424.jpg"
+  },
+  {
+    "sku": "1003241",
+    "name": "NEXCARE SOFT' N FLEX NAT/BANDAGES 30 ONE SIZE",
+    "price": 222.99,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1003241.png",
+    "productUrl": "https://tienda.farmaciacarol.com/nexcare-soft--n-flex-nat-bandages-30-one-size-details.aspx",
+    "slug": "nexcare-soft--n-flex-nat-bandages-30-one-size",
+    "localImagePath": "/products/1003241.png"
+  },
+  {
+    "sku": "3029900",
+    "name": "VENDAS ELASTICAS 6X5 YARDAS TENSOLASTIC",
+    "price": 52,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3029900.png",
+    "productUrl": "https://tienda.farmaciacarol.com/vendas-elasticas-6x5-yardas-tensolastic-details.aspx",
+    "slug": "vendas-elasticas-6x5-yardas-tensolastic",
+    "localImagePath": "/products/3029900.png"
+  },
+  {
+    "sku": "3016662",
+    "name": "WEB TEX INC VENDAS ELASTIC BANDAGE 3\" 1149",
+    "price": 124.19,
+    "category": "Primeros Auxilios",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016662.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/elastic-bandage-3--1149-vendas-details.aspx",
+    "slug": "elastic-bandage-3--1149-vendas",
+    "localImagePath": "/products/3016662.jpg"
+  },
+  {
+    "sku": "1004347",
+    "name": "SAFETY PACIFIER MEDICINE DISPENSER 49925.",
+    "price": 263.75,
+    "category": "Cuidado del Bebé",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1004347.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/safety-pacifier-medicine-dispenser-49925-details.aspx",
+    "slug": "safety-pacifier-medicine-dispenser-49925",
+    "localImagePath": "/products/1004347.jpg"
+  },
+  {
+    "sku": "1001770",
+    "name": "PAMPERS BABY DRY #5 /24 UNIDS JUMBO (PAÑALES)",
+    "price": 1047.18,
+    "category": "Cuidado del Bebé",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001770.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pampers-baby-dry--5-jumbo-details.aspx",
+    "slug": "pampers-baby-dry--5-jumbo",
+    "localImagePath": "/products/1001770.jpg"
+  },
+  {
+    "sku": "1001771",
+    "name": "PAMPERS BABY DRY #3 JUMBO PK 4/ 32 (PAÑALES)",
+    "price": 1047.18,
+    "category": "Cuidado del Bebé",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001771.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pampers-baby-dry--3-jumbo-pk-4--32-panales-details.aspx",
+    "slug": "pampers-baby-dry--3-jumbo-pk-4--32-panales",
+    "localImagePath": "/products/1001771.jpg"
+  },
+  {
+    "sku": "1001772",
+    "name": "PAMPERS BABY DRY S1 JUMBO PK 2/44 (PAÑALES)",
+    "price": 1047.53,
+    "category": "Cuidado del Bebé",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001772.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pampers-bd-s1-jumbo-pk-2-44-details.aspx",
+    "slug": "pampers-bd-s1-jumbo-pk-2-44",
+    "localImagePath": "/products/1001772.jpg"
+  },
+  {
+    "sku": "1001779",
+    "name": "PAMPERS BABY DRY #2 JUMBO PK 4/37 (PAÑALES)",
+    "price": 1047.18,
+    "category": "Cuidado del Bebé",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001779.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pampers-baby-dry--2-jumbo-pk-4-37-panales-details.aspx",
+    "slug": "pampers-baby-dry--2-jumbo-pk-4-37-panales",
+    "localImagePath": "/products/1001779.jpg"
+  },
+  {
+    "sku": "1001781",
+    "name": "PAMPERS BABY DRY #4 JUMBO PK 4/28 (PAÑALES)",
+    "price": 1047.18,
+    "category": "Cuidado del Bebé",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001781.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pampers-baby-dry--4-jumbo-pk-4-28--pa%C3%B1ales-details.aspx",
+    "slug": "pampers-baby-dry--4-jumbo-pk-4-28--pa%C3%B1ales",
+    "localImagePath": "/products/1001781.jpg"
+  },
+  {
+    "sku": "1001421",
+    "name": "AVENT BIBERON NATURAL AZUL 9 OZ",
+    "price": 695,
+    "category": "Cuidado del Bebé",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001421.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/avent-biberon-260ml-9oz-natural-azul-1m--scf695-17-details.aspx",
+    "slug": "avent-biberon-260ml-9oz-natural-azul-1m--scf695-17",
+    "localImagePath": "/products/1001421.jpg"
+  },
+  {
+    "sku": "1001424",
+    "name": "AVENT SET CUBIERTOS PARA VIAJES REF SCF718 (12M+)",
+    "price": 592.12,
+    "category": "Cuidado del Bebé",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001424.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/avent-set-cubiertos-para-viajes-12m--scf718-00-d-details.aspx",
+    "slug": "avent-set-cubiertos-para-viajes-12m--scf718-00-d",
+    "localImagePath": "/products/1001424.jpg"
+  },
+  {
+    "sku": "1002130",
+    "name": "AVENT BIBERON NATURAL ROSADO 9 OZ",
+    "price": 695,
+    "category": "Cuidado del Bebé",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002130.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/avent-biberon-9oz-260ml-natural-rosado-scf634-17-details.aspx",
+    "slug": "avent-biberon-9oz-260ml-natural-rosado-scf634-17",
+    "localImagePath": "/products/1002130.jpg"
+  },
+  {
+    "sku": "1002482",
+    "name": "NIVEA CELLULAR ANTI AGE SPF30 50 ML CREMA FACIAL",
+    "price": 1063.8,
+    "category": "Dermocosmética",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002482.png",
+    "productUrl": "https://tienda.farmaciacarol.com/nivea-vis--cellular-anti-age-cr-facial-dia-50ml-details.aspx",
+    "slug": "nivea-vis--cellular-anti-age-cr-facial-dia-50ml",
+    "localImagePath": "/products/1002482.png"
+  },
+  {
+    "sku": "1002483",
+    "name": "NIVEA CELLULAR ANTI-AGE 50 G CREMA FACIAL DE NOCHE",
+    "price": 1063.8,
+    "category": "Dermocosmética",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1002483.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/nivea-vis--cellular-anti-age-crem-facial-noche-50ml-details.aspx",
+    "slug": "nivea-vis--cellular-anti-age-crem-facial-noche-50ml",
+    "localImagePath": "/products/1002483.jpg"
+  },
+  {
+    "sku": "15021502",
+    "name": "SESDERMA C-VIT CREMA FACIAL HIDRATANTE 50 ML",
+    "price": 2911.37,
+    "category": "Dermocosmética",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/15021502.png",
+    "productUrl": "https://tienda.farmaciacarol.com/sesderma-c--vit-50-ml-crema-facial-hidratante-details.aspx",
+    "slug": "sesderma-c--vit-50-ml-crema-facial-hidratante",
+    "localImagePath": "/products/15021502.png"
+  },
+  {
+    "sku": "16098032",
+    "name": "POND S CLARANT B3 PIEL NORMAL A GRASA 50 ML",
+    "price": 221.6,
+    "category": "Dermocosmética",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16098032.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pond-s-clarant-50ml-b3-p-grasa-details.aspx",
+    "slug": "pond-s-clarant-50ml-b3-p-grasa",
+    "localImagePath": "/products/16098032.jpg"
+  },
+  {
+    "sku": "16098035",
+    "name": "POND'S CLARANT 100 ML",
+    "price": 240.67,
+    "category": "Dermocosmética",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/16098035.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/pond-s-clarant-100ml-b3-details.aspx",
+    "slug": "pond-s-clarant-100ml-b3",
+    "localImagePath": "/products/16098035.jpg"
+  },
+  {
+    "sku": "1000622",
+    "name": "HAWAIIAN TROPIC 240 ML OZONO LOCION PROTECTOR SOLAR SPF80",
+    "price": 1186.89,
+    "category": "Dermocosmética",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1000622.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/hawaiian-tropic-ozono-bloqueador-solar-spf50-240-ml-details.aspx",
+    "slug": "hawaiian-tropic-ozono-bloqueador-solar-spf50-240-ml",
+    "localImagePath": "/products/1000622.jpg"
+  },
+  {
+    "sku": "1001457",
+    "name": "CAMAY CLASICO 3PK 32/120GRS. JABON TOCADOR",
+    "price": 100.11,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001457.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/camay-clasico-3pk-32-120grs--jabon-tocador-details.aspx",
+    "slug": "camay-clasico-3pk-32-120grs--jabon-tocador",
+    "localImagePath": "/products/1001457.jpg"
+  },
+  {
+    "sku": "1001877",
+    "name": "NIVEA BAJO LA DUCHA ACONDICIONADOR CORPORAL 250 ML",
+    "price": 182.71,
+    "category": "Dermocosmética",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001877.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/nivea-bajo-la-ducha-acondicionador-corporal-250-ml-details.aspx",
+    "slug": "nivea-bajo-la-ducha-acondicionador-corporal-250-ml",
+    "localImagePath": "/products/1001877.jpg"
+  },
+  {
+    "sku": "1001878",
+    "name": "NIVEA SUN PROTECT & REFRESH 200 ML FPS50",
+    "price": 778.07,
+    "category": "Dermocosmética",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001878.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/nivea-sun-protect---refresh-fps50-200ml-details.aspx",
+    "slug": "nivea-sun-protect---refresh-fps50-200ml",
+    "localImagePath": "/products/1001878.jpg"
+  },
+  {
+    "sku": "1001934",
+    "name": "HAWAIIAN TROPIC SILK HYDRATION SPF50+ 180 ML",
+    "price": 1235.4,
+    "category": "Dermocosmética",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1001934.png",
+    "productUrl": "https://tienda.farmaciacarol.com/hawaiian-t-silk-hydration-spf50--180ml-details.aspx",
+    "slug": "hawaiian-t-silk-hydration-spf50--180ml",
+    "localImagePath": "/products/1001934.png"
+  },
+  {
+    "sku": "1732104",
+    "name": "MULTI-SOLUTION OXI 60ML.",
+    "price": 286.74,
+    "category": "Oftálmicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/1732104.png",
+    "productUrl": "https://tienda.farmaciacarol.com/multi-solution-oxi-60ml-details.aspx",
+    "slug": "multi-solution-oxi-60ml",
+    "localImagePath": "/products/1732104.png"
+  },
+  {
+    "sku": "33028800",
+    "name": "COTONETES 75 HISOPOS 7438",
+    "price": 130.37,
+    "category": "Oftálmicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/33028800.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/cotonetes-75-hisopos-7438-details.aspx",
+    "slug": "cotonetes-75-hisopos-7438",
+    "localImagePath": "/products/33028800.jpg"
+  },
+  {
+    "sku": "33028801",
+    "name": "COTONETES HISOPOS 150 UNIDADES 2937",
+    "price": 234.01,
+    "category": "Oftálmicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/33028801.PNG",
+    "productUrl": "https://tienda.farmaciacarol.com/cotonetes-hisopos-150-unidades-2937-details.aspx",
+    "slug": "cotonetes-hisopos-150-unidades-2937",
+    "localImagePath": "/products/33028801.png"
+  },
+  {
+    "sku": "17000612",
+    "name": "RENU FRESH SOLUCION MULTIPROPOSITO 355 ML",
+    "price": 1231.44,
+    "category": "Oftálmicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/17000612.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/renu-fresh-sol--multiproposito-355ml-details.aspx",
+    "slug": "renu-fresh-sol--multiproposito-355ml",
+    "localImagePath": "/products/17000612.jpg"
+  },
+  {
+    "sku": "3016556",
+    "name": "FLENTS TEMPLE PADS PEACH 10 UNIDS (PARCHES PARA LENTES)",
+    "price": 33.73,
+    "category": "Oftálmicos",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/3016556.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/flents-temple-pads-peach-d-details.aspx",
+    "slug": "flents-temple-pads-peach-d",
+    "localImagePath": "/products/3016556.jpg"
+  },
+  {
+    "sku": "30000311",
+    "name": "BAYGON AEROSOL 400ML",
+    "price": 338.91,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/30000311.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/baygon-aerosol-400ml-details.aspx",
+    "slug": "baygon-aerosol-400ml",
+    "localImagePath": "/products/30000311.jpg"
+  },
+  {
+    "sku": "31049300",
+    "name": "ACAR KLEAN AEROSOL ANTIACAROS 400 ML",
+    "price": 827,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/31049300.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/acar-klean-aerosol-antiacaros-400ml-details.aspx",
+    "slug": "acar-klean-aerosol-antiacaros-400ml",
+    "localImagePath": "/products/31049300.jpg"
+  },
+  {
+    "sku": "31049600",
+    "name": "VELON CITRONELLA REPELENTE",
+    "price": 227.5,
+    "category": "Cuidado Personal",
+    "imageUrl": "https://tienda.farmaciacarol.com/Images/Products/31049600.jpg",
+    "productUrl": "https://tienda.farmaciacarol.com/velon-citronella-repelente-details.aspx",
+    "slug": "velon-citronella-repelente",
+    "localImagePath": "/products/31049600.jpg"
+  }
+]

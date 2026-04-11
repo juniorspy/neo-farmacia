@@ -1,15 +1,15 @@
 {
-  "name": "scripts",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "neo-farmacia-scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "scrape": "node scrape-carol.mjs",
+    "download-images": "node download-images.mjs",
+    "import-odoo": "node import-to-odoo.mjs"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "axios": "^1.15.0"
+    "axios": "^1.15.0",
+    "cheerio": "^1.0.0"
   }
 }
