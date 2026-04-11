@@ -18,6 +18,7 @@ import {
   Pill,
   PanelLeftClose,
   PanelLeftOpen,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
@@ -33,6 +34,11 @@ const nav = [
   { href: "/settings", label: "Configuración", icon: Settings },
 ];
 
+// Super-admin only (role === 'admin')
+const adminNav = [
+  { href: "/admin/pharmacies", label: "Farmacias", icon: Building2 },
+];
+
 interface SidebarProps {
   open: boolean;
   collapsed: boolean;
@@ -42,8 +48,9 @@ interface SidebarProps {
 
 export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { theme } = useTheme();
+  const isSuperAdmin = user?.role === "admin";
 
   return (
     <>
@@ -121,6 +128,44 @@ export function Sidebar({ open, collapsed, onClose, onToggleCollapse }: SidebarP
               </Link>
             );
           })}
+
+          {isSuperAdmin && (
+            <>
+              <div className={clsx(
+                "px-3 pt-4 pb-1 text-xs uppercase tracking-wider text-slate-500",
+                collapsed && "lg:hidden"
+              )}>
+                Administración
+              </div>
+              {adminNav.map((item) => {
+                const active = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onClose}
+                    title={collapsed ? item.label : undefined}
+                    className={clsx(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                      collapsed && "lg:justify-center lg:px-0",
+                      active
+                        ? "bg-primary-alpha15 text-primary"
+                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                    )}
+                    style={active ? { color: "var(--primary)" } : undefined}
+                  >
+                    <item.icon className="w-5 h-5 shrink-0" />
+                    <span className={clsx(
+                      "whitespace-nowrap transition-opacity duration-200",
+                      collapsed ? "lg:hidden" : "opacity-100"
+                    )}>
+                      {item.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </>
+          )}
         </nav>
 
         {/* Collapse toggle (desktop only) */}
