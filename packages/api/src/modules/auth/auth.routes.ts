@@ -27,7 +27,14 @@ export async function authRoutes(
     }
 
     const token = app.jwt.sign(
-      { id: String(admin._id), email: admin.email, role: admin.role },
+      {
+        id: String(admin._id),
+        email: admin.email,
+        role: admin.role,
+        // Include stores so resolveStore can authorize pharmacist-role users
+        // against their own stores without an extra DB lookup per request.
+        stores: admin.stores.map((s) => ({ id: s.id, name: s.name })),
+      },
       { expiresIn: config.jwt.expiration },
     );
 
