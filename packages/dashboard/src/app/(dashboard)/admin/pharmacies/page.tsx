@@ -12,6 +12,9 @@ import {
   Building2,
   X,
   Clock,
+  Copy,
+  KeyRound,
+  Check,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -22,6 +25,7 @@ interface Step {
   started_at?: string;
   finished_at?: string;
   error?: string | null;
+  data?: Record<string, unknown> | null;
 }
 
 interface Job {
@@ -53,10 +57,11 @@ const STATUS_STYLES: Record<string, string> = {
 const STEP_LABELS: Record<string, string> = {
   mongo_store: "Registrar tienda",
   odoo_db_create: "Crear base de datos Odoo",
-  odoo_seed_admin: "Configurar administrador",
+  odoo_seed_admin: "Configurar administrador Odoo",
+  create_dashboard_admin: "Crear usuario del dashboard",
   meilisearch_index: "Crear índice de búsqueda",
   agent_config: "Configurar agente IA",
-  email_credentials: "Enviar credenciales",
+  email_credentials: "Preparar credenciales",
 };
 
 export default function AdminPharmaciesPage() {
@@ -237,7 +242,21 @@ export default function AdminPharmaciesPage() {
       )}
 
       {selected && (
-        <PharmacyDetailsDrawer pharmacy={selected} onClose={() => setSelected(null)} />
+        <PharmacyDetailsDrawer
+          pharmacy={selected}
+          onClose={() => setSelected(null)}
+          onChanged={() => {
+            loadPharmacies();
+            // Re-sync selected with fresh data on next tick so the drawer updates
+            setTimeout(() => {
+              setSelected((current) => {
+                if (!current) return null;
+                const fresh = pharmacies.find((p) => p.store_id === current.store_id);
+                return fresh || current;
+              });
+            }, 100);
+          }}
+        />
       )}
     </div>
   );
@@ -359,13 +378,89 @@ function CreatePharmacyModal({
   );
 }
 
+function CredentialRow({
+  label,
+  value,
+  field,
+  copied,
+  onCopy,
+  mono,
+}: {
+  label: string;
+  value: string;
+  field: string;
+  copied: string | null;
+  onCopy: (text: string, field: string) => void;
+  mono?: boolean;
+}) {
+  const isCopied = copied === field;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="text-xs text-amber-700 w-16 shrink-0">{label}</div>
+      <div
+        className={clsx(
+          "flex-1 bg-white border border-amber-200 rounded px-2 py-1.5 text-xs text-slate-900 truncate",
+          mono && "font-mono",
+        )}
+        title={value}
+      >
+        {value}
+      </div>
+      <button
+        onClick={() => onCopy(value, field)}
+        className="p-1.5 rounded hover:bg-amber-100 text-amber-700"
+        title="Copiar"
+      >
+        {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+}
+
 function PharmacyDetailsDrawer({
   pharmacy,
   onClose,
+  onChanged,
 }: {
   pharmacy: Pharmacy;
   onClose: () => void;
+  onChanged: () => void;
 }) {
+  const emailStep = pharmacy.job?.steps.find((s) => s.name === "email_credentials");
+  const plaintextPassword = (emailStep?.data?.admin_password as string | undefined) || null;
+  const delivered = (emailStep?.data?.delivered as boolean | undefined) || false;
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [markingDelivered, setMarkingDelivered] = useState(false);
+
+  async function copyToClipboard(text: string, field: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 1500);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function handleMarkDelivered() {
+    if (
+      !confirm(
+        "¿Confirmas que ya entregaste las credenciales al propietario? " +
+          "La contraseña será eliminada del sistema permanentemente.",
+      )
+    )
+      return;
+    setMarkingDelivered(true);
+    try {
+      await api.post(
+        `/api/v1/admin/pharmacies/${pharmacy.store_id}/credentials/mark-delivered`,
+      );
+      onChanged();
+    } finally {
+      setMarkingDelivered(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-end" onClick={onClose}>
       <div
@@ -383,6 +478,68 @@ function PharmacyDetailsDrawer({
         </div>
 
         <div className="p-4 space-y-4">
+          {plaintextPassword && !delivered && (
+            <div className="rounded-lg border-2 border-amber-300 bg-amber-50 p-4">
+              <div className="flex items-start gap-3">
+                <KeyRound className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-amber-900 mb-1">
+                    Credenciales pendientes de entregar
+                  </div>
+                  <div className="text-xs text-amber-800 mb-3">
+                    Copia estos datos y envíalos al propietario. Después haz clic en
+                    “Marcar como entregadas” para borrar la contraseña del sistema.
+                  </div>
+
+                  <div className="space-y-2">
+                    <CredentialRow
+                      label="URL"
+                      value="https://app.leofarmacia.com"
+                      field="url"
+                      copied={copiedField}
+                      onCopy={copyToClipboard}
+                    />
+                    <CredentialRow
+                      label="Email"
+                      value={pharmacy.owner_email}
+                      field="email"
+                      copied={copiedField}
+                      onCopy={copyToClipboard}
+                    />
+                    <CredentialRow
+                      label="Contraseña"
+                      value={plaintextPassword}
+                      field="password"
+                      copied={copiedField}
+                      onCopy={copyToClipboard}
+                      mono
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleMarkDelivered}
+                    disabled={markingDelivered}
+                    className="mt-3 w-full px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {markingDelivered ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
+                    Marcar como entregadas
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {delivered && (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4" />
+              Credenciales entregadas al propietario
+            </div>
+          )}
+
           <div>
             <div className="text-xs uppercase text-slate-500 mb-2">Información</div>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">

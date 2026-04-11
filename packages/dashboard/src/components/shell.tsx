@@ -6,6 +6,13 @@ import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import { useAuth } from "@/lib/auth";
 import { useStore } from "@/lib/store";
+import { api } from "@/lib/api";
+
+interface AdminPharmacy {
+  store_id: string;
+  name: string;
+  status: string;
+}
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,7 +28,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user?.stores) {
+    if (!user) return;
+    // Super-admin sees all active pharmacies as switchable contexts.
+    // Regular pharmacists see only the stores bound to their account.
+    if (user.role === "admin") {
+      api
+        .get<AdminPharmacy[]>("/api/v1/admin/pharmacies")
+        .then((pharmacies) => {
+          const active = pharmacies
+            .filter((p) => p.status === "active")
+            .map((p) => ({ id: p.store_id, name: p.name }));
+          setStores(active.length > 0 ? active : user.stores);
+        })
+        .catch(() => {
+          // Fall back to JWT-bound stores if the admin endpoint fails
+          setStores(user.stores);
+        });
+    } else if (user.stores) {
       setStores(user.stores);
     }
   }, [user, setStores]);

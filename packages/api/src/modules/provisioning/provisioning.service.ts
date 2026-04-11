@@ -87,13 +87,15 @@ export async function createPharmacy(
     store_id: storeId,
     status: 'pending',
     steps: STEP_ORDER.map((name) => {
-      // Seed the plaintext password into the data of the two steps that
-      // need it. The rest of the steps don't see it. Mongo's at-rest is
-      // the only exposure surface; it gets cleared after email step runs.
-      if (name === 'odoo_db_create' || name === 'odoo_seed_admin') {
-        return { name, status: 'pending', data: { admin_password: plaintextAdminPassword } };
-      }
-      if (name === 'email_credentials') {
+      // Seed plaintext password into the steps that need it (and into
+      // email_credentials so super-admin can see/copy it until real email
+      // delivery is wired up and the "mark delivered" action is invoked).
+      const needsPassword =
+        name === 'odoo_db_create' ||
+        name === 'odoo_seed_admin' ||
+        name === 'create_dashboard_admin' ||
+        name === 'email_credentials';
+      if (needsPassword) {
         return { name, status: 'pending', data: { admin_password: plaintextAdminPassword } };
       }
       return { name, status: 'pending' };
@@ -157,10 +159,15 @@ export async function runNextJobStep(config: AppConfig): Promise<boolean> {
 
     await step.run({ config, store, job, step: stepState });
 
-    // Scrub admin_password from step data once the step that needed it has run.
-    // The password remains in email_credentials' step data only until that step
-    // runs, which then clears it too.
-    if (stepState.data && 'admin_password' in stepState.data && stepState.name !== 'email_credentials') {
+    // Scrub admin_password from intermediate step data once the step has run.
+    // email_credentials keeps its copy until a super-admin explicitly marks
+    // credentials as delivered (or until real email sending is wired up),
+    // because until then the super-admin needs a way to retrieve them.
+    if (
+      stepState.data &&
+      'admin_password' in stepState.data &&
+      stepState.name !== 'email_credentials'
+    ) {
       delete (stepState.data as Record<string, unknown>).admin_password;
     }
 
@@ -286,6 +293,25 @@ export async function deletePharmacy(
 
   logger.info({ storeId }, 'Pharmacy deleted');
   return { deleted: true };
+}
+
+/** Scrub the plaintext admin password from the email_credentials step once
+ *  a super-admin has delivered the credentials to the pharmacy owner out-of-band.
+ *  Idempotent — safe to call multiple times.
+ */
+export async function markCredentialsDelivered(storeId: string): Promise<boolean> {
+  const job = await ProvisioningJob.findOne({ store_id: storeId });
+  if (!job) return false;
+  const step = job.steps.find((s) => s.name === 'email_credentials');
+  if (!step || !step.data) return false;
+  if ('admin_password' in step.data) {
+    delete (step.data as Record<string, unknown>).admin_password;
+  }
+  step.data = { ...step.data, delivered: true, delivered_at: new Date() };
+  job.markModified('steps');
+  await job.save();
+  logger.info({ storeId }, 'Credentials marked as delivered');
+  return true;
 }
 
 export async function retryJob(storeId: string): Promise<IProvisioningJob | null> {

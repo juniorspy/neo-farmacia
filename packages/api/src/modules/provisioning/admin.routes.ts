@@ -2,7 +2,12 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { AppConfig } from '../../config/env.js';
 import { Store } from './store.model.js';
 import { ProvisioningJob } from './provisioning-job.model.js';
-import { createPharmacy, retryJob, deletePharmacy } from './provisioning.service.js';
+import {
+  createPharmacy,
+  retryJob,
+  deletePharmacy,
+  markCredentialsDelivered,
+} from './provisioning.service.js';
 
 function requireSuperAdmin(request: FastifyRequest, reply: FastifyReply) {
   const user = request.user as { role: string } | undefined;
@@ -131,6 +136,19 @@ export async function adminRoutes(
         return reply.status(result.reason === 'not found' ? 404 : 400).send(result);
       }
       return result;
+    },
+  );
+
+  // Mark credentials as delivered — scrubs plaintext password from job data
+  app.post(
+    '/api/v1/admin/pharmacies/:storeId/credentials/mark-delivered',
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      if (!requireSuperAdmin(request, reply)) return;
+      const { storeId } = request.params as { storeId: string };
+      const ok = await markCredentialsDelivered(storeId);
+      if (!ok) return reply.status(404).send({ error: 'not found' });
+      return { delivered: true };
     },
   );
 

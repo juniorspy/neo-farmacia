@@ -2,10 +2,11 @@ import type { ProvisioningStep, StepContext } from '../step.types.js';
 import { logger } from '../../../shared/logger.js';
 
 /**
- * Stub: logs the credentials the owner needs. Replace with real SMTP /
- * transactional email sending when email infra is wired up. After "sending",
- * we clear the plaintext password from the job data so it only exists in
- * log history (and the owner's inbox).
+ * Stub: logs the credentials and keeps plaintext password in step data so
+ * a super-admin can retrieve them from the admin UI until they explicitly
+ * mark them as delivered (or until real email sending is wired up).
+ * When real email infra lands, replace this with actual SMTP/transactional
+ * send and clear step.data.admin_password on success.
  */
 export const emailCredentialsStep: ProvisioningStep = {
   name: 'email_credentials',
@@ -22,10 +23,16 @@ export const emailCredentialsStep: ProvisioningStep = {
         admin_login: store.owner_email,
         admin_password: adminPassword || '<missing>',
       },
-      '[TODO: send email] pharmacy credentials ready',
+      '[TODO: send email] pharmacy credentials ready — retrieve via admin UI',
     );
 
-    // Scrub the plaintext password from job data now that the "email" was sent.
-    step.data = { sent: false, stubbed: true, password_cleared: true };
+    // Intentionally KEEP admin_password in step.data so super-admin can copy it.
+    // It gets cleared when the markCredentialsDelivered endpoint is called.
+    step.data = {
+      ...step.data,
+      sent: false,
+      stubbed: true,
+      delivered: false,
+    };
   },
 };
