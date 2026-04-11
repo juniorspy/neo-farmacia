@@ -14,6 +14,7 @@ import { customersRoutes } from './modules/customers/customers.routes.js';
 import { productsRoutes } from './modules/products/products.routes.js';
 import { statsRoutes } from './modules/stats/stats.routes.js';
 import { whatsappRoutes } from './modules/whatsapp/whatsapp.routes.js';
+import { commandsRoutes } from './modules/commands/commands.routes.js';
 
 export async function buildApp(redis: Redis, config: AppConfig) {
   const app = Fastify({
@@ -76,6 +77,11 @@ export async function buildApp(redis: Redis, config: AppConfig) {
 
   await app.register(async (instance) => {
     await whatsappRoutes(instance);
+  });
+
+  // n8n command router (public, bearer-auth via config.n8n.apiKey)
+  await app.register(async (instance) => {
+    await commandsRoutes(instance, { redis, config });
   });
 
   return app;
