@@ -34,6 +34,11 @@ export function loadConfig() {
       masterKey: optional('EVOLUTION_MASTER_KEY', ''),
     },
 
+    meilisearch: {
+      url: optional('MEILISEARCH_URL', 'https://melisearch.onrpa.com'),
+      apiKey: optional('MEILISEARCH_API_KEY', ''),
+    },
+
     n8n: {
       webhookUrl: optional('N8N_WEBHOOK_URL', ''),
       apiKey: optional('N8N_API_KEY', ''),

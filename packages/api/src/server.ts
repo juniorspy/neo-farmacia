@@ -5,6 +5,8 @@ import { initOdoo } from './shared/odoo.js';
 import { initEvolution } from './modules/evolution/evolution.client.js';
 import { buildApp } from './app.js';
 import { seedDefaultAdmin } from './modules/auth/auth.service.js';
+import { initMeilisearch } from './shared/meilisearch.js';
+import { startPeriodicSync } from './modules/catalog-sync/catalog-sync.service.js';
 import { logger } from './shared/logger.js';
 
 async function main() {
@@ -17,6 +19,7 @@ async function main() {
   await connectMongo(config);
   await initOdoo(config);
   initEvolution(config);
+  initMeilisearch(config);
 
   // Seed default admin if DB is empty
   await seedDefaultAdmin();
@@ -26,6 +29,9 @@ async function main() {
 
   await app.listen({ port: config.port, host: '0.0.0.0' });
   logger.info({ port: config.port }, 'Neo Farmacia API running');
+
+  // Start periodic catalog sync (every 10 min)
+  startPeriodicSync();
 
   // Graceful shutdown
   const shutdown = async () => {
