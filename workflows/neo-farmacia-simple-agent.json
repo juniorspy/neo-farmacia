@@ -1,0 +1,224 @@
+{
+  "name": "Neo Farmacia — Simple Test Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "neo-farmacia-test",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-600, 300],
+      "id": "webhook-entry",
+      "name": "Webhook",
+      "webhookId": "neo-farmacia-test"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize incoming payload from Neo Farmacia API webhook forward\nconst input = $input.first().json;\nconst body = input.body || input;\n\nreturn [{\n  json: {\n    text: body.text || body.message || body.chatInput || '',\n    storeId: body.storeId || 'store_leo',\n    chatId: body.chatId || 'test-chat-' + Date.now(),\n    phone: body.phone || '',\n    pushName: body.pushName || 'Cliente'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-400, 300],
+      "id": "normalize",
+      "name": "Normalize Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "=Eres Leo, el asistente virtual de Farmacia Leo en República Dominicana. Atiendes clientes por WhatsApp con amabilidad y profesionalismo dominicano (cercano pero respetuoso).\n\nTU CONTEXTO:\n- Farmacia: Farmacia Leo\n- Store ID: {{ $json.storeId }}\n- Cliente actual: {{ $json.pushName }} (chatId: {{ $json.chatId }})\n\nTIENES 3 HERRAMIENTAS:\n\n1. **catalogo_search** — buscar productos\n   - Usa siempre que el cliente pregunte por un medicamento o producto\n   - Soporta marcas comerciales (dolex, advil, tylenol, clarityne, etc.) → encuentra el genérico automáticamente\n   - Soporta typos\n   - Parámetro q: el nombre del producto a buscar\n\n2. **carrito_agregar** — agregar productos al carrito del cliente\n   - Úsalo DESPUÉS de haber encontrado el producto con catalogo_search\n   - Necesita: productoId (del search), cantidad, y precio\n   - Para MÚLTIPLES productos en un mensaje (ej: \"2 dolex y 1 amoxicilina\"), hacé UNA sola llamada con ambos productos en ops\n\n3. **crear_cliente** — registrar el nombre y dirección del cliente\n   - Úsalo solo cuando el cliente te dé su nombre completo Y dirección\n   - La dirección necesita tener: sector, calle, número\n\nREGLAS IMPORTANTES:\n- NUNCA inventes precios, stock o productos — usa siempre catalogo_search\n- Si pregunta por temas médicos (dosis, efectos, cómo tomar), recomendá consultar con el farmacéutico\n- Respuestas cortas (máximo 3-4 oraciones)\n- Precios siempre en RD$\n- Si no encontrás el producto, disculpate y ofrecé alternativas del search\n- Usá emojis con moderación (💊, 👍)\n\nEJEMPLO DE FLUJO:\n\nCliente: \"¿tienen dolex?\"\n→ Llamás catalogo_search con q=\"dolex\"\n→ Respondés: \"¡Hola! Sí tenemos Acetaminofén 500mg (mismo componente del Dolex) a RD$85. ¿Cuántas cajas querés?\"\n\nCliente: \"mándame 2\"\n→ Llamás carrito_agregar con productoId del search anterior, cantidad=2\n→ Respondés: \"Listo, agregué 2x Acetaminofén 500mg (RD$170). ¿Algo más?\"\n\nCliente: \"eso es todo\"\n→ Respondés: \"Perfecto. Necesito tu nombre y dirección para el envío, ¿me los pasás?\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [-100, 300],
+      "id": "agent",
+      "name": "Leo Agent"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4.1-mini",
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [-200, 520],
+      "id": "openai-model",
+      "name": "OpenAI GPT-4.1 mini"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Normalize Input').item.json.chatId }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [-50, 520],
+      "id": "memory",
+      "name": "Chat Memory"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Busca productos en el catálogo de la farmacia. Soporta marcas comerciales (dolex, advil, etc.) y typos. Úsalo siempre que el cliente pregunte por un medicamento o producto específico.",
+        "method": "POST",
+        "url": "https://api.leofarmacia.com/api/v1/commands",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"command\": \"catalogo.search\",\n  \"commandId\": \"{{ $now.toMillis() }}-search\",\n  \"storeId\": \"{{ $('Normalize Input').item.json.storeId }}\",\n  \"chatId\": \"{{ $('Normalize Input').item.json.chatId }}\",\n  \"payload\": {\n    \"q\": \"{q}\",\n    \"limit\": 5\n  }\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "q",
+              "description": "Nombre del producto a buscar (ej: 'paracetamol', 'dolex', 'pañales')",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [100, 520],
+      "id": "tool-search",
+      "name": "catalogo_search"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Agrega productos al carrito del cliente. Usar DESPUÉS de haber encontrado el producto con catalogo_search. Necesitas el productoId del resultado del search.",
+        "method": "POST",
+        "url": "https://api.leofarmacia.com/api/v1/commands",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"command\": \"pedido.updateItems\",\n  \"commandId\": \"{{ $now.toMillis() }}-cart\",\n  \"storeId\": \"{{ $('Normalize Input').item.json.storeId }}\",\n  \"chatId\": \"{{ $('Normalize Input').item.json.chatId }}\",\n  \"payload\": {\n    \"ops\": [\n      {\n        \"op\": \"add\",\n        \"productoId\": {productoId},\n        \"cantidad\": {cantidad},\n        \"precio\": {precio}\n      }\n    ]\n  }\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "productoId",
+              "description": "ID numérico del producto (del resultado de catalogo_search)",
+              "type": "number"
+            },
+            {
+              "name": "cantidad",
+              "description": "Cantidad a agregar",
+              "type": "number"
+            },
+            {
+              "name": "precio",
+              "description": "Precio unitario del producto (del resultado de catalogo_search)",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [260, 520],
+      "id": "tool-cart",
+      "name": "carrito_agregar"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Registra el nombre y dirección del cliente en la farmacia. Úsalo solo cuando el cliente te haya dado su nombre completo y dirección completa (sector + calle + número).",
+        "method": "POST",
+        "url": "https://api.leofarmacia.com/api/v1/commands",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"command\": \"usuario.ensure\",\n  \"commandId\": \"{{ $now.toMillis() }}-user\",\n  \"storeId\": \"{{ $('Normalize Input').item.json.storeId }}\",\n  \"chatId\": \"{{ $('Normalize Input').item.json.chatId }}\",\n  \"payload\": {\n    \"chatId\": \"{{ $('Normalize Input').item.json.chatId }}\",\n    \"telefono\": \"{{ $('Normalize Input').item.json.phone }}\",\n    \"nombre\": \"{nombre}\",\n    \"direccion\": \"{direccion}\"\n  }\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "nombre",
+              "description": "Nombre completo del cliente (nombre y apellido)",
+              "type": "string"
+            },
+            {
+              "name": "direccion",
+              "description": "Dirección completa del cliente (sector, calle, número)",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [420, 520],
+      "id": "tool-user",
+      "name": "crear_cliente"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"text\": \"{{ $json.output }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [200, 300],
+      "id": "respond",
+      "name": "Respond"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Normalize Input", "type": "main", "index": 0 }]]
+    },
+    "Normalize Input": {
+      "main": [[{ "node": "Leo Agent", "type": "main", "index": 0 }]]
+    },
+    "Leo Agent": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    },
+    "OpenAI GPT-4.1 mini": {
+      "ai_languageModel": [[{ "node": "Leo Agent", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Chat Memory": {
+      "ai_memory": [[{ "node": "Leo Agent", "type": "ai_memory", "index": 0 }]]
+    },
+    "catalogo_search": {
+      "ai_tool": [[{ "node": "Leo Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "carrito_agregar": {
+      "ai_tool": [[{ "node": "Leo Agent", "type": "ai_tool", "index": 0 }]]
+    },
+    "crear_cliente": {
+      "ai_tool": [[{ "node": "Leo Agent", "type": "ai_tool", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
