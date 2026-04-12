@@ -30,11 +30,33 @@ export function createWebhookHandler(deps: WebhookDeps) {
     // Respond immediately — Evolution API has timeout
     reply.status(200).send({ ok: true });
 
-    if (payload.event !== 'messages.upsert') return;
-    if (payload.data.key.fromMe) return;
+    // Debug: log raw event so we can see exactly what Evolution sends
+    logger.info(
+      {
+        event: payload.event,
+        instance: payload.instance,
+        fromMe: payload.data?.key?.fromMe,
+        messageType: payload.data?.messageType,
+        hasMessage: !!payload.data?.message,
+        textPreview: extractText(payload.data)?.substring(0, 50) || null,
+      },
+      'Webhook raw event',
+    );
+
+    if (payload.event !== 'messages.upsert') {
+      logger.debug({ event: payload.event }, 'Webhook: ignoring non-upsert event');
+      return;
+    }
+    if (payload.data.key.fromMe) {
+      logger.debug('Webhook: ignoring own message (fromMe)');
+      return;
+    }
 
     const text = extractText(payload.data);
-    if (!text) return;
+    if (!text) {
+      logger.debug({ messageType: payload.data?.messageType }, 'Webhook: no text extracted');
+      return;
+    }
 
     const messageId = payload.data.key.id;
     const remoteJid = payload.data.key.remoteJid;
