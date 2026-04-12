@@ -60,17 +60,56 @@ neo_farmacia/
 │   ├── stages/              # Stage-by-stage implementation specs
 │   ├── api/                 # API endpoint documentation
 │   ├── decisions/           # Architecture Decision Records (ADRs)
-│   └── sessions/            # Session work logs
+│   ├── sessions/            # Session work logs
+│   └── status/              # Testing status tracking
 ├── packages/
 │   ├── api/                 # Fastify microservice (TypeScript)
 │   │   ├── src/
-│   │   │   ├── modules/     # Feature modules
-│   │   │   ├── shared/      # Shared clients (redis, mongo, odoo)
+│   │   │   ├── modules/
+│   │   │   │   ├── auth/            # JWT, login, Admin model
+│   │   │   │   ├── catalog-sync/    # Meilisearch sync per store
+│   │   │   │   ├── chats/           # Chat history routes
+│   │   │   │   ├── commands/        # n8n command dispatch + handlers
+│   │   │   │   ├── customers/       # Customer routes
+│   │   │   │   ├── evolution/       # Evolution API client (types + HTTP)
+│   │   │   │   ├── handover/        # Bot↔human handover
+│   │   │   │   ├── messages/        # Message model
+│   │   │   │   ├── odoo/            # Raw Odoo passthrough (legacy)
+│   │   │   │   ├── orders/          # Order routes (scoped)
+│   │   │   │   ├── products/        # Product routes (scoped)
+│   │   │   │   ├── provisioning/    # 7-step pharmacy provisioning pipeline
+│   │   │   │   ├── stats/           # Dashboard stats (scoped)
+│   │   │   │   ├── store-context/   # resolveStore preHandler plugin
+│   │   │   │   ├── stores/          # Store CRUD + agent-config routes
+│   │   │   │   ├── users/           # User model + routes
+│   │   │   │   ├── webhook/         # WhatsApp webhook handler + store-resolver
+│   │   │   │   └── whatsapp/        # Multi-connection model + service
+│   │   │   ├── shared/
+│   │   │   │   ├── mongo.ts         # MongoDB client
+│   │   │   │   ├── redis.ts         # Redis client
+│   │   │   │   ├── odoo.ts          # Legacy single-DB Odoo client
+│   │   │   │   ├── odoo-scoped.ts   # ScopedOdoo class (per-store)
+│   │   │   │   ├── odoo-scoped-cache.ts  # In-process cache of scoped clients
+│   │   │   │   ├── odoo-store-ops.ts     # Scoped Odoo helper functions
+│   │   │   │   └── meilisearch.ts   # Meilisearch client
 │   │   │   └── app.ts       # Fastify bootstrap
 │   │   ├── Dockerfile
 │   │   └── package.json
 │   └── dashboard/           # Next.js frontend
 │       ├── src/
+│       │   └── app/
+│       │       ├── login/           # Login page
+│       │       └── (dashboard)/
+│       │           ├── page.tsx             # Home / stats
+│       │           ├── orders/              # Orders list
+│       │           ├── products/            # Products list
+│       │           ├── chats/               # Chat history
+│       │           ├── customers/           # Customer list
+│       │           ├── reports/             # Reports
+│       │           ├── settings/            # Settings
+│       │           ├── whatsapp/            # WhatsApp connection management
+│       │           ├── agent/               # "Mi Agente" config page
+│       │           └── admin/pharmacies/    # Super-admin provisioning UI
 │       ├── Dockerfile
 │       └── package.json
 ├── docker-compose.yml       # Full stack orchestration

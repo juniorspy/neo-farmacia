@@ -2,7 +2,7 @@
 
 Components and flows that are **built and typechecked but have not been exercised end-to-end**. This is the highest-priority list before onboarding a real customer — every item here is a place where a surprise can land.
 
-Updated: 2026-04-11 (end of Phase A + A.5 + B1-B5 session)
+Updated: 2026-04-11 (end of Phase A + A.5 + B1-B6 session)
 
 Legend:
 - 🟢 **Verified** — actually invoked against real infrastructure and observed to work
@@ -15,8 +15,8 @@ Legend:
 
 | Flow | Status | Notes |
 |---|---|---|
-| `POST /api/v1/admin/pharmacies` → 7 steps → active | 🟡 | **Verified for the 6-step variant** (before `create_dashboard_admin` was added) via curl on `farmacia_test`. The 7-step version with the new `create_dashboard_admin` step has **never run**. First new-pharmacy creation after deploy is the real test. |
-| `create_dashboard_admin` step | 🔴 | Entirely new in Phase A.5. Typechecked only. Needs: create new pharmacy, verify `Admin` doc appears in Mongo with `role=pharmacist` + correct stores, verify login with the provided credentials actually works. |
+| `POST /api/v1/admin/pharmacies` → 7 steps → active | 🟢 | **Verified via UI**: created `farmacia_geremy` from admin dashboard. All 7 steps completed successfully in ~25s. |
+| `create_dashboard_admin` step | 🟢 | Verified as part of `farmacia_geremy` provisioning. Admin doc created in Mongo with `role=pharmacist`. Login works (after JWT bug fix). |
 | Partial-failure recovery (unhealthy Odoo DB) | 🔴 | The `verifyDbHealthy` + drop-and-recreate path in `odoo-db-create.step.ts` was added but hasn't been triggered. Needs artificial failure: e.g. manually corrupt a DB mid-create and verify the retry path cleans up. |
 | `POST /admin/pharmacies/:id/retry` | 🔴 | Endpoint exists but was never called. Failure injection needed. |
 | `DELETE /admin/pharmacies/:id?confirm=yes` | 🟢 | Verified against `farmacia_test`: dropped Meilisearch index + Odoo DB + Mongo records. Also verified: missing `confirm` → 400, targeting `store_leo` → refused. |
@@ -35,7 +35,7 @@ Legend:
 | `stats.routes` scoped queries | 🟡 | The two summary endpoints were verified implicitly when loading the dashboard home. The charts endpoint is theoretically scoped but hasn't been smoke-tested since the refactor. |
 | `chats.routes` | 🔴 | Reads from MongoDB with `store_id` filter (was already store-aware). Not retested after middleware introduction. |
 | `customers.routes` | 🔴 | Same as chats. |
-| `catalog-sync` periodic iteration across multiple active stores | 🔴 | Replaced hardcoded `['store_leo']` with `Store.find({status:'active'})`. Only one active store exists today, so the "iterates all" behavior has never been observed. **Create a second pharmacy and watch the next sync tick.** |
+| `catalog-sync` periodic iteration across multiple active stores | 🔴 | Now two active stores exist. Sync works for `store_leo` but **fails for `farmacia_geremy`** — scoped Odoo auth uses `config.odoo.user` (global admin email) instead of store-specific credentials. Open bug. |
 | `catalog-sync` routes (`POST /resync`, `PATCH /synonyms`) | 🔴 | Refactored to use `request.store` + `request.odoo`. Never called post-refactor. |
 | `ScopedOdoo` cache correctness | 🔴 | Cached clients per `(url, db, user)`. Multi-store requests have never happened concurrently. |
 
@@ -56,25 +56,27 @@ Legend:
 
 | Flow | Status | Notes |
 |---|---|---|
-| `resolveStoreByInstance` lookup from Evolution instance name | 🔴 | **Entirely new.** Replaces the old naive `farmacia_` prefix strip. No Store in Mongo currently has `whatsapp_instance_id` set, so **zero real webhook traffic can resolve to a store right now**. This is a blocker before first real customer — see known gap in Stage 8 doc. |
-| Store-resolver in-memory cache + 60s TTL | 🔴 | Cache logic written, never observed. |
+| `resolveStoreByInstance` lookup from Evolution instance name | 🟡 | Store resolver is invoked when WhatsApp messages arrive (tested with `farmacia_geremy`'s connected instance). Messages reach the API webhook endpoint, but are **silently dropped** before reaching n8n. Debug logging added — diagnosis pending. |
+| Store-resolver in-memory cache + 60s TTL | 🟡 | Cache is active during webhook processing. Not independently verified for correctness. |
 | `invalidateStoreResolverCache` on agent-config save | 🔴 | Call site exists in `stores.routes.ts`. Never triggered. |
-| `store_config` injection in n8n payload | 🔴 | The webhook handler now includes `store_config.agent.*`. No real webhook has been received since the change. |
-| Debounce + mutex + handover + idempotency pipeline | 🟡 | All four services are unchanged from before Phase A. They worked in the previous deployment but have not been retested since the webhook handler was rewritten. |
-| Bot reply actually sent to customer via Evolution | 🔴 | **Not implemented.** Logged as "Bot reply ready" — no Evolution POST. Known gap in Stage 8 doc. |
+| `store_config` injection in n8n payload | 🔴 | Blocked by the silent message drop bug — messages never get far enough to inject store_config. |
+| Debounce + mutex + handover + idempotency pipeline | 🔴 | **Active bug**: messages are silently dropped somewhere in this pipeline. Debug logging added across all stages. The exact failure point has not been identified yet. |
+| Bot reply actually sent to customer via Evolution | 🔴 | **Code written** (Phase B6) — `sendText` via Evolution API using the store's connection `instanceName`. Untested end-to-end because blocked by the webhook silent drop bug. |
+| n8n receiving payloads (direct curl) | 🟢 | Tested by sending a payload directly to the n8n webhook URL. n8n processes correctly. |
+| n8n responding with reply text | 🟢 | Confirmed n8n returns valid reply text when given a well-formed payload. |
 
 ## Dashboard UI
 
 | Page / flow | Status | Notes |
 |---|---|---|
-| Super-admin pharmacies list page | 🟡 | Loads after login (verified by user in browser). Create modal, details drawer, delete, retry buttons have never been clicked in the UI — everything in Phase A was tested via curl. |
-| Create pharmacy modal → form submit → auto-refresh | 🔴 | Expected behavior: submit → 201 → auto-refresh polling picks up the new row with status transitioning. Never clicked. |
-| Job progress steps in details drawer | 🔴 | UI reads `pharmacy.job.steps` and shows status badges. Only `farmacia_test`'s 6-step record existed briefly; since that was before `create_dashboard_admin` was added, the 7-step rendering is untested. |
+| Super-admin pharmacies list page | 🟢 | Used to create `farmacia_geremy` in Phase B6. List, create modal, and details drawer all exercised. |
+| Create pharmacy modal → form submit → auto-refresh | 🟢 | Used to create `farmacia_geremy`. Submit → 201 → auto-refresh showed 7-step progression. |
+| Job progress steps in details drawer | 🟢 | Observed full 7-step progression for `farmacia_geremy` including `create_dashboard_admin`. |
 | Credentials copy-to-clipboard panel | 🔴 | Needs a pharmacy whose `email_credentials` step has `admin_password` still in data. Will appear on the first new-pharmacy creation after deploy. |
 | Mark-delivered button flow | 🔴 | Relies on the above. |
 | Retry button on failed jobs | 🔴 | Needs an injected failure. |
 | Delete button → confirm dialog → API call | 🔴 | Logic is there, never clicked. |
-| Super-admin store switcher in header | 🔴 | Requires 2+ active stores. Right now only Farmacia Leo exists. Create a second pharmacy → expect dropdown to appear in header. |
+| Super-admin store switcher in header | 🟢 | Now 2 active stores (Farmacia Leo + farmacia_geremy). Dropdown appears and switching works. |
 | `/agent` "Mi Agente" config page | 🔴 | Loads, form renders, save PATCHes. Never saved. Live preview logic never rendered with user input. |
 | Agent config — greeting-style radio buttons | 🔴 | |
 | Agent config — character count on `custom_notes` | 🔴 | |
@@ -83,7 +85,7 @@ Legend:
 
 | Flow | Status | Notes |
 |---|---|---|
-| Pharmacist login with credentials from a newly provisioned pharmacy | 🔴 | Depends on `create_dashboard_admin` actually having run. Requires: create new pharmacy → grab password from details drawer → log out as super-admin → log in as new pharmacist → verify they see only their own store's data. |
+| Pharmacist login with credentials from a newly provisioned pharmacy | 🟡 | **Tested**: logged in as `farmacia_geremy` pharmacist. Initially got 403 — JWT `stores` field contained ObjectIds instead of `store_id` strings. Bug found and fixed (commit `e5f0749`). Login works after fix. Needs retest to confirm the fix is clean. |
 | Pharmacist tries to access another store's data | 🔴 | Should get 403 from `resolveStore`. Never triggered. |
 
 ## Suggested smoke test (single path that exercises most of the above)
@@ -109,10 +111,18 @@ This one path touches: provisioning pipeline (all 7 steps), scoped routing, stor
 
 These require n8n + WhatsApp in the loop:
 
-- Real webhook arriving with a valid Evolution instance name
-- `resolveStoreByInstance` returning a real Store
-- `store_config` payload actually being consumed by n8n agents
-- End-to-end order creation from a WhatsApp message
-- Reply back to the customer via Evolution (currently not implemented)
+- ~~Real webhook arriving with a valid Evolution instance name~~ — **now arriving**, but silently dropped
+- ~~`resolveStoreByInstance` returning a real Store~~ — **works** (farmacia_geremy's instance resolves)
+- `store_config` payload actually being consumed by n8n agents — blocked by silent drop bug
+- End-to-end order creation from a WhatsApp message — blocked by silent drop bug
+- Reply back to the customer via Evolution — code written, blocked by silent drop bug
 
-These are blocked on: (1) binding an Evolution instance to a Store, (2) user finishing n8n agents, (3) Evolution reply-sending being implemented.
+Primary blocker: the webhook silent message drop bug (messages arrive at the API but never reach n8n). Debug logging is in place. Secondary blocker: catalog sync auth bug for new pharmacies.
+
+## Open Bugs
+
+| Bug | Severity | Status | Notes |
+|---|---|---|---|
+| Webhook silent message drop | **Critical** | Active debug | Messages from WhatsApp arrive at the API webhook endpoint but are silently dropped before reaching n8n. Extensive `console.log` tracing added in Phase B6. Suspected area: debounce/mutex/handover pipeline. |
+| Catalog sync auth for new pharmacies | **High** | Open | `catalog-sync.service` uses `config.odoo.user` (global admin email) to authenticate against new pharmacy Odoo DBs. This user doesn't exist in those DBs. Should use the store-specific owner email or the master admin credentials. Affects `farmacia_geremy`. |
+| JWT stores field type mismatch | **Medium** | Fixed | JWT `stores` array contained MongoDB ObjectIds instead of `store_id` strings. Fixed in commit `e5f0749`. Needs retest confirmation. |

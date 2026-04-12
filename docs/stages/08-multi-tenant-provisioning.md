@@ -172,8 +172,11 @@ On the `pos` service, Odoo's `admin_passwd` is set via an entrypoint shell scrip
 
 ## Known gaps
 
-- **Evolution API reply sending** — the webhook logs `'Bot reply ready'` but doesn't actually POST to Evolution (needs per-store instance apiKey wired into the Store model)
-- **WhatsApp instance binding in UI** — the existing WhatsApp page creates instances in Evolution but doesn't update `Store.whatsapp_instance_id`, so `resolveStoreByInstance` can't find them yet
+- ~~**Evolution API reply sending**~~ — **Implemented in Phase B6**. `sendText` via Evolution API using the store's connection `instanceName`. Untested end-to-end (blocked by webhook silent drop bug).
+- ~~**WhatsApp instance binding in UI**~~ — **Implemented in Phase B6**. New `WhatsappConnection` model + `connection.service.ts`. Dashboard `/whatsapp` page drives connect/disconnect. Multi-connection per store with labels.
+- **Webhook silent message drop** — WhatsApp messages arrive at the API webhook endpoint but are silently dropped before reaching n8n. Debug logging added across the full pipeline (Phase B6). Diagnosis pending.
+- **Catalog sync auth bug** — `catalog-sync.service` uses `config.odoo.user` (global admin email) to authenticate against new pharmacy Odoo DBs. This user doesn't exist in those DBs. Should use store-specific credentials or the master admin. Affects `farmacia_geremy`.
+- **WhatsApp multi-connection model** — was single instance per store, now multi-connection with labels. The `store-resolver.ts` resolves by `WhatsappConnection.instanceName` instead of `Store.whatsapp_instance_id`. Needs verification that all lookup paths use the new model consistently.
 - **Email stub** — credentials are logged + retained in step data. No real SMTP/transactional send yet.
 - **No resend-credentials flow** — clicking "mark delivered" permanently scrubs the plaintext. Recovery requires manual Odoo UI password reset.
 - **Product-level atomic mutex at commit time** — the critical-low tier (<5 units) from ADR-007 serializes via pharmacist confirmation, but the 5-10 tier still has a narrow race window that's deferred.
@@ -186,8 +189,11 @@ Key modules:
 - `packages/api/src/modules/store-context/store-context.plugin.ts`
 - `packages/api/src/modules/stores/stores.routes.ts`
 - `packages/api/src/modules/webhook/store-resolver.ts`
+- `packages/api/src/modules/whatsapp/connection.model.ts`, `connection.service.ts`, `whatsapp.routes.ts` (Phase B6)
+- `packages/api/src/modules/evolution/evolution.client.ts` (updated in Phase B6)
 - `packages/dashboard/src/app/(dashboard)/admin/pharmacies/page.tsx`
 - `packages/dashboard/src/app/(dashboard)/agent/page.tsx`
+- `packages/dashboard/src/app/(dashboard)/whatsapp/page.tsx` (Phase B6)
 
 Refactored for scoped routing:
 - `packages/api/src/modules/orders/orders.routes.ts`

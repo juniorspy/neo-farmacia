@@ -11,24 +11,29 @@
 │  │   API     │◄──►│   (Fastify + TS)     │◄──►│  (AI Agents)     │  │
 │  │ WhatsApp  │    │                      │    │  5 agents:       │  │
 │  │ Gateway   │    │  ┌─────────────┐     │    │  - Intention     │  │
-│  └──────────┘    │  │ Webhook     │     │    │  - Dialogue      │  │
-│       ▲          │  │ Debounce    │     │    │  - Cart          │  │
-│       │          │  │ Handover    │     │    │  - Registration  │  │
-│       │          │  │ Odoo Proxy  │     │    │  - Fallback      │  │
-│  ┌────┴────┐     │  │ Message Log │     │    └──────────────────┘  │
-│  │WhatsApp │     │  │ Dashboard   │     │                          │
-│  │ Users   │     │  │ API         │     │    ┌──────────────────┐  │
-│  └─────────┘     │  └─────────────┘     │    │    Odoo 17       │  │
-│                  │         │  ▲          │    │   (PostgreSQL)   │  │
-│                  └─────────┼──┼──────────┘    │   Inventory SSoT │  │
-│                            │  │               └──────────────────┘  │
+│  │ (multi-   │    │  │ Webhook     │     │    │  - Dialogue      │  │
+│  │ connection│    │  │ Debounce    │     │    │  - Cart          │  │
+│  │ per store)│    │  │ Handover    │     │    │  - Registration  │  │
+│  └──────────┘    │  │ Odoo Proxy  │     │    │  - Fallback      │  │
+│       ▲          │  │ Message Log │     │    └──────────────────┘  │
+│       │          │  │ Dashboard   │     │                          │
+│  ┌────┴────┐     │  │ API         │     │    ┌──────────────────┐  │
+│  │WhatsApp │     │  │ Provisioning│     │    │    Odoo 17       │  │
+│  │ Users   │     │  │ Worker      │     │    │  (PostgreSQL)    │  │
+│  └─────────┘     │  └─────────────┘     │    │  1 DB per store  │  │
+│                  │         │  ▲          │    │  Inventory SSoT  │  │
+│                  └─────────┼──┼──────────┘    └──────────────────┘  │
+│                            │  │                                     │
 │                    ┌───────┴──┴───────┐                             │
 │                    │                  │       ┌──────────────────┐  │
 │                ┌───┴────┐      ┌─────┴──┐    │  POS Sync        │  │
 │                │MongoDB │      │ Redis  │    │  (optional)      │  │
 │                │ Chats  │      │ State  │    │  SQL Server/MySQL│  │
 │                │ Users  │      │ Cache  │    │  → Odoo          │  │
-│                └────────┘      └────────┘    └──────────────────┘  │
+│                │ Stores │      └────────┘    └──────────────────┘  │
+│                │ Jobs   │                                          │
+│                │ Conns  │                                          │
+│                └────────┘                                          │
 │                                                                     │
 │                  ┌──────────────────────┐                           │
 │                  │   Dashboard (Next.js)│                           │
@@ -97,15 +102,18 @@
 
 | Data | Primary Store | Why |
 |---|---|---|
-| Products, stock, lots, expiry, prices | **Odoo** | SSoT for inventory |
+| Products, stock, lots, expiry, prices | **Odoo** | SSoT for inventory (one DB per store) |
 | Sale Orders | **Odoo** | SSoT for sales/accounting |
 | Chat messages | **MongoDB** | High write volume, flexible schema |
 | User profiles | **MongoDB** | Tied to chat, not inventory |
+| Store config + agent config | **MongoDB** | `stores` collection — owner settings, agent personality, timezone, currency |
+| WhatsApp connections | **MongoDB** | `whatsappconnections` collection — multi-connection per store, tracks instanceName/status/label/qrCode |
+| Provisioning jobs | **MongoDB** | `provisioningjobs` collection — 7-step state machine with atomic claim, per-step status |
+| Admin accounts | **MongoDB** | `admins` collection — super-admin + pharmacist logins with bcrypt passwords |
 | Session state (bot/manual) | **Redis** | Ephemeral, fast access |
 | Debounce timers | **Redis** | Ephemeral, TTL-based |
 | Conversation mutex | **Redis** | Ephemeral, TTL-based |
 | Product search cache | **Redis** | Cache of Odoo data, TTL 5min |
-| Store config | **MongoDB** | Owner settings, WhatsApp numbers |
 
 ## Multi-Tenant Isolation
 
