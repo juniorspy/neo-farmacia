@@ -19,6 +19,7 @@ import { catalogSyncRoutes } from './modules/catalog-sync/catalog-sync.routes.js
 import { adminRoutes } from './modules/provisioning/admin.routes.js';
 import { registerStoreContext } from './modules/store-context/store-context.plugin.js';
 import { storesRoutes } from './modules/stores/stores.routes.js';
+import { voiceCallRoutes } from './modules/voice-calls/voice-call.routes.js';
 
 export async function buildApp(redis: Redis, config: AppConfig) {
   const app = Fastify({
@@ -110,6 +111,11 @@ export async function buildApp(redis: Redis, config: AppConfig) {
   // Per-store config (agent persona, etc.) — scoped by resolveStore
   await app.register(async (instance) => {
     await storesRoutes(instance);
+  });
+
+  // Voice calls — customer surface authed by one-time signed-link token (public)
+  await app.register(async (instance) => {
+    await voiceCallRoutes(instance, { redis, config });
   });
 
   return app;

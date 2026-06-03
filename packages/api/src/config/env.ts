@@ -16,6 +16,9 @@ export function loadConfig() {
     // Public-facing URL where the API is reachable. Used when telling
     // external services (Evolution API) where to send webhooks.
     apiPublicUrl: optional('API_PUBLIC_URL', 'https://api.leofarmacia.com'),
+    // Public origin of the dashboard/frontend (where /call/:id lives). Used to
+    // build the signed customer call link that n8n sends over WhatsApp.
+    appPublicUrl: optional('APP_PUBLIC_URL', 'https://app.leofarmacia.com'),
 
     mongo: {
       uri: optional('MONGODB_URI', 'mongodb://localhost:27017/neo_farmacia'),
@@ -50,6 +53,17 @@ export function loadConfig() {
     n8n: {
       webhookUrl: optional('N8N_WEBHOOK_URL', ''),
       apiKey: optional('N8N_API_KEY', ''),
+    },
+
+    voice: {
+      // Realtime voice provider. Configurable per environment now; a future
+      // super-admin page will allow per-pharmacy overrides (stored on the Store).
+      provider: optional('VOICE_PROVIDER', 'openai_realtime'),
+      // OpenAI Realtime — the key never leaves the server; the browser only ever
+      // gets a short-lived client secret minted from it.
+      openaiApiKey: optional('OPENAI_API_KEY', ''),
+      model: optional('VOICE_MODEL', 'gpt-realtime'),
+      voiceName: optional('VOICE_NAME', 'alloy'),
     },
 
     jwt: {
