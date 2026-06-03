@@ -4,6 +4,7 @@ import { Message } from '../messages/message.model.js';
 
 export async function customersRoutes(app: FastifyInstance) {
   app.addHook('preHandler', app.authenticate);
+  app.addHook('preHandler', app.resolveStore);
 
   // GET /api/v1/stores/:storeId/customers
   app.get('/api/v1/stores/:storeId/customers', async (request: FastifyRequest) => {

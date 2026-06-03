@@ -13,6 +13,7 @@ export async function chatsRoutes(
   const { redis, config } = opts;
 
   app.addHook('preHandler', app.authenticate);
+  app.addHook('preHandler', app.resolveStore);
 
   // GET /api/v1/stores/:storeId/chats — active chats with last message
   app.get('/api/v1/stores/:storeId/chats', async (request: FastifyRequest) => {

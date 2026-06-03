@@ -54,7 +54,13 @@ export function createWebhookHandler(deps: WebhookDeps) {
 
     const text = extractText(payload.data);
     if (!text) {
-      logger.debug({ messageType: payload.data?.messageType }, 'Webhook: no text extracted');
+      logger.warn(
+        {
+          messageType: payload.data?.messageType,
+          messageKeys: payload.data?.message ? Object.keys(payload.data.message) : [],
+        },
+        'Webhook: no text extracted — unhandled message shape',
+      );
       return;
     }
 
