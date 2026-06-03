@@ -56,14 +56,18 @@ export function loadConfig() {
     },
 
     voice: {
-      // Realtime voice provider. Configurable per environment now; a future
-      // super-admin page will allow per-pharmacy overrides (stored on the Store).
-      provider: optional('VOICE_PROVIDER', 'openai_realtime'),
-      // OpenAI Realtime — the key never leaves the server; the browser only ever
-      // gets a short-lived client secret minted from it.
-      openaiApiKey: optional('OPENAI_API_KEY', ''),
-      model: optional('VOICE_MODEL', 'gpt-realtime'),
-      voiceName: optional('VOICE_NAME', 'alloy'),
+      // Voice transport label recorded on each call session. Per-pharmacy
+      // provider/voice selection lives in Store.voice_config (super-admin).
+      provider: optional('VOICE_PROVIDER', 'livekit_pipeline'),
+    },
+
+    livekit: {
+      // LiveKit project for voice calls (dedicated farmacia project, NOT the
+      // colmado one). The browser + Python agent worker join rooms here; this
+      // API only mints scoped room tokens.
+      url: optional('LIVEKIT_URL', ''),
+      apiKey: optional('LIVEKIT_API_KEY', ''),
+      apiSecret: optional('LIVEKIT_API_SECRET', ''),
     },
 
     jwt: {

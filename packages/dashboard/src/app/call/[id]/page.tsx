@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
+import { Room, RoomEvent, Track, type RemoteTrack } from "livekit-client";
 import { Phone, PhoneOff, Loader2, PhoneMissed, CheckCircle2, AlertCircle, Mic } from "lucide-react";
 
 /**
  * Public customer call surface: /call/:id?t=<signed token>.
- * Phase 3 — answers, mints an OpenAI Realtime client secret via our backend,
- * and connects the browser microphone DIRECTLY to OpenAI over WebRTC (our
- * backend never touches SDP). Context is STATIC for now (Phase 6 = real context).
+ * v3 (LiveKit pipeline): answering mints a scoped LiveKit room token from our
+ * backend; the browser joins the room and the Python agent worker joins the
+ * same room with the pharmacy's voice_config. Audio flows browser ⇄ LiveKit.
  *
  * Authed ONLY by the link token, so it does NOT use the JWT api client.
  */
@@ -36,8 +37,9 @@ interface SessionView {
 }
 
 interface TokenView {
-  clientSecret: string;
-  model: string;
+  token: string;
+  url: string;
+  room: string;
 }
 
 function statusToPhase(status: string): Phase {
@@ -63,8 +65,8 @@ export default function CallPage() {
   const [session, setSession] = useState<SessionView | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>("");
 
-  const pcRef = useRef<RTCPeerConnection | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
+  const roomRef = useRef<Room | null>(null);
+  const endingRef = useRef(false); // true while WE initiate the disconnect
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Read the signed token from the URL (client-only — avoids useSearchParams Suspense).
@@ -88,11 +90,10 @@ export default function CallPage() {
     [id, token],
   );
 
-  const cleanupMedia = useCallback(() => {
-    pcRef.current?.close();
-    pcRef.current = null;
-    localStreamRef.current?.getTracks().forEach((t) => t.stop());
-    localStreamRef.current = null;
+  const teardown = useCallback(() => {
+    endingRef.current = true;
+    roomRef.current?.disconnect();
+    roomRef.current = null;
   }, []);
 
   // Initial resolve.
@@ -106,22 +107,23 @@ export default function CallPage() {
       });
   }, [token, call]);
 
-  // Tear down media on unmount.
-  useEffect(() => cleanupMedia, [cleanupMedia]);
+  // Tear down the room on unmount.
+  useEffect(() => teardown, [teardown]);
 
-  /** Mic → backend token → WebRTC SDP directly with OpenAI. */
+  /** Mic permission → backend LiveKit token → join the room. */
   const startVoice = useCallback(async () => {
-    // 1. Microphone (must be a handled state, not a crash).
-    let mic: MediaStream;
+    // 1. Ask for the microphone up-front so denial is a handled state (the
+    //    browser caches the grant; LiveKit re-acquires its own track below).
     try {
-      mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const probe = await navigator.mediaDevices.getUserMedia({ audio: true });
+      probe.getTracks().forEach((t) => t.stop());
     } catch {
       setPhase("mic_denied");
       return;
     }
-    localStreamRef.current = mic;
 
-    // 2. Short-lived client secret from our backend.
+    // 2. Scoped room token from our backend (carries context + voice_config
+    //    in metadata for the agent worker — the browser never sees raw keys).
     let tok: TokenView;
     try {
       tok = await call<TokenView>("/token", "GET");
@@ -129,49 +131,35 @@ export default function CallPage() {
       const status = (e as Error & { status?: number }).status;
       setErrorMsg(status === 503 ? "La voz aún no está configurada." : "No se pudo iniciar la sesión de voz.");
       setPhase("error");
-      cleanupMedia();
       return;
     }
 
-    // 3. WebRTC peer — browser connects straight to OpenAI Realtime.
+    // 3. Join the LiveKit room; the agent worker joins on the other side.
     try {
-      const pc = new RTCPeerConnection();
-      pcRef.current = pc;
-      pc.ontrack = (ev) => {
-        if (remoteAudioRef.current) {
-          remoteAudioRef.current.srcObject = ev.streams[0];
+      const room = new Room();
+      roomRef.current = room;
+      endingRef.current = false;
+
+      room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
+        if (track.kind === Track.Kind.Audio && remoteAudioRef.current) {
+          track.attach(remoteAudioRef.current);
           remoteAudioRef.current.play().catch(() => {});
         }
-      };
-      pc.onconnectionstatechange = () => {
-        const st = pc.connectionState;
-        if (st === "connected") setPhase("active");
-        else if (st === "failed" || st === "disconnected") {
-          setErrorMsg("Se perdió la conexión de la llamada.");
-          setPhase("error");
-          cleanupMedia();
-        }
-      };
-      mic.getTracks().forEach((t) => pc.addTrack(t, mic));
-      pc.createDataChannel("oai-events"); // realtime events channel
-
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-
-      const sdpRes = await fetch(`https://api.openai.com/v1/realtime?model=${encodeURIComponent(tok.model)}`, {
-        method: "POST",
-        body: offer.sdp,
-        headers: { Authorization: `Bearer ${tok.clientSecret}`, "Content-Type": "application/sdp" },
       });
-      if (!sdpRes.ok) throw new Error(`SDP exchange failed: ${sdpRes.status}`);
-      const answerSdp = await sdpRes.text();
-      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
+      room.on(RoomEvent.Disconnected, () => {
+        if (endingRef.current) return; // we hung up — phase already set
+        setPhase("ended");
+      });
+
+      await room.connect(tok.url, tok.token);
+      await room.localParticipant.setMicrophoneEnabled(true);
+      setPhase("active");
     } catch {
       setErrorMsg("No se pudo conectar la llamada.");
       setPhase("error");
-      cleanupMedia();
+      teardown();
     }
-  }, [call, cleanupMedia]);
+  }, [call, teardown]);
 
   async function answer() {
     setPhase("answering");
@@ -195,7 +183,7 @@ export default function CallPage() {
   }
 
   async function hangup() {
-    cleanupMedia();
+    teardown();
     await call("/end", "POST").catch(() => {});
     setPhase("ended");
   }

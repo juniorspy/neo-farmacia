@@ -3,11 +3,11 @@ import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type Redis from 'ioredis';
 import type { AppConfig } from '../../config/env.js';
 import { logger } from '../../shared/logger.js';
-import { Store } from '../provisioning/store.model.js';
+import { Store, VOICE_CONFIG_DEFAULTS } from '../provisioning/store.model.js';
 import { Message } from '../messages/message.model.js';
 import { User } from '../users/user.model.js';
 import { inviteTokenMatches, buildCallLink } from './invite-token.js';
-import { mintRealtimeClientSecret } from './openai-realtime.js';
+import { mintLiveKitToken, livekitConfigured } from './livekit-token.js';
 import {
   findSession,
   transitionStatus,
@@ -246,7 +246,7 @@ export async function voiceCallRoutes(
     return publicView(updated);
   });
 
-  // ── MINT realtime client secret (browser connects to OpenAI with it) ──
+  // ── MINT LiveKit token (browser + Python agent worker join the same room) ──
   app.get('/api/v1/voice-calls/:id/token', async (request, reply) => {
     const session = await authByToken(request, reply);
     if (!session) return;
@@ -255,21 +255,41 @@ export async function voiceCallRoutes(
       return reply.status(409).send({ error: `call not connecting (is ${session.status})` });
     }
     const store = await Store.findOne({ store_id: session.store_id })
-      .select('name status')
-      .lean<{ name: string; status: string } | null>();
+      .select('name status voice_config')
+      .lean<{ name: string; status: string; voice_config?: typeof VOICE_CONFIG_DEFAULTS } | null>();
     if (!store || store.status !== 'active') {
       return reply.status(409).send({ error: 'store not active' });
     }
-    if (!config.voice.openaiApiKey) {
+    const voiceConfig = store.voice_config ?? { ...VOICE_CONFIG_DEFAULTS };
+    if (!voiceConfig.enabled) {
+      return reply.status(409).send({ error: 'voice calls disabled for this store' });
+    }
+    if (!livekitConfigured(config)) {
       return reply.status(503).send({ error: 'voice provider not configured' });
     }
 
-    const instructions = buildStaticInstructions(store.name, session.reason);
-    let secret;
+    // Metadata the agent worker reads on join: per-store voice_config + context.
+    // Static instructions for now — the real context assembler (Phase E) enriches this.
+    const metadata = {
+      session_id: String(session._id),
+      store_id: session.store_id,
+      store_name: store.name,
+      chat_id: session.chat_id,
+      reason: session.reason,
+      voice_config: voiceConfig,
+      instructions: buildStaticInstructions(store.name, session.reason),
+    };
+
+    let grant;
     try {
-      secret = await mintRealtimeClientSecret(config, { instructions });
+      grant = await mintLiveKitToken(config, {
+        sessionId: String(session._id),
+        storeId: session.store_id,
+        identity: `cust_${String(session._id)}`,
+        metadata,
+      });
     } catch (err) {
-      logger.error({ err, sessionId: String(session._id) }, 'Realtime client-secret mint failed');
+      logger.error({ err, sessionId: String(session._id) }, 'LiveKit token mint failed');
       await transitionStatus(String(session._id), session.store_id, ['connecting'], 'failed', {
         ended_by: 'provider',
         ended_reason: 'provider_unavailable',
@@ -278,20 +298,15 @@ export async function voiceCallRoutes(
       return reply.status(502).send({ error: 'could not start voice session' });
     }
 
-    // Mark the call live + record context build + provider session. Best-effort:
-    // if the customer hung up during the mint, this loses the race → 409.
+    // Mark the call live + record the room. Best-effort: if the customer hung
+    // up during the mint, this loses the race → 409.
     const live = await transitionStatus(String(session._id), session.store_id, ['connecting'], 'active', {
       context_built_at: new Date(),
-      provider_session_id: secret.providerSessionId,
+      provider_session_id: grant.room,
     });
     if (!live) return reply.status(409).send({ error: 'call no longer active' });
 
-    return {
-      clientSecret: secret.value,
-      model: secret.model,
-      voice: secret.voice,
-      expiresAt: secret.expiresAt,
-    };
+    return { token: grant.token, url: grant.url, room: grant.room, identity: grant.identity };
   });
 
   // ── DEV-only seed: create a ringing session + return the signed link. ──

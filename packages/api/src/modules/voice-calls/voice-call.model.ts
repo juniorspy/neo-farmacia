@@ -36,8 +36,8 @@ export interface IVoiceCallSession extends Document {
   status: VoiceCallStatus;
   reason: string; // why the AI asked for a call
 
-  provider: string; // 'openai_realtime' — field only, no abstraction layer
-  provider_session_id: string | null;
+  provider: string; // 'livekit_pipeline' — transport label, no abstraction layer
+  provider_session_id: string | null; // the LiveKit room name once the call starts
   provider_error_code: string | null;
   provider_error_message: string | null;
 
@@ -80,7 +80,7 @@ const voiceCallSchema = new Schema<IVoiceCallSession>({
   },
   reason: { type: String, default: '' },
 
-  provider: { type: String, default: 'openai_realtime' },
+  provider: { type: String, default: 'livekit_pipeline' },
   provider_session_id: { type: String, default: null },
   provider_error_code: { type: String, default: null },
   provider_error_message: { type: String, default: null },

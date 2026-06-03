@@ -47,6 +47,21 @@ export interface IStore extends Document {
   updated_at: Date;
 }
 
+// Single source of truth for voice-config defaults. Used by the schema AND as
+// a fallback for stores created before the field existed (`.lean()` reads
+// don't apply schema defaults).
+export const VOICE_CONFIG_DEFAULTS = {
+  enabled: false,
+  language: 'es',
+  stt_provider: 'deepgram',
+  stt_model: 'nova-3',
+  llm_provider: 'openai',
+  llm_model: 'gpt-4o-mini',
+  tts_provider: 'openai',
+  tts_voice: 'nova',
+  greeting: '',
+};
+
 const storeSchema = new Schema<IStore>({
   store_id: { type: String, required: true, unique: true, index: true },
   name: { type: String, required: true },
@@ -68,15 +83,15 @@ const storeSchema = new Schema<IStore>({
     custom_notes: { type: String, default: '', maxlength: 500 },
   },
   voice_config: {
-    enabled: { type: Boolean, default: false },
-    language: { type: String, default: 'es' },
-    stt_provider: { type: String, default: 'deepgram' },
-    stt_model: { type: String, default: 'nova-3' },
-    llm_provider: { type: String, default: 'openai' },
-    llm_model: { type: String, default: 'gpt-4o-mini' },
-    tts_provider: { type: String, default: 'openai' },
-    tts_voice: { type: String, default: 'nova' },
-    greeting: { type: String, default: '', maxlength: 300 },
+    enabled: { type: Boolean, default: VOICE_CONFIG_DEFAULTS.enabled },
+    language: { type: String, default: VOICE_CONFIG_DEFAULTS.language },
+    stt_provider: { type: String, default: VOICE_CONFIG_DEFAULTS.stt_provider },
+    stt_model: { type: String, default: VOICE_CONFIG_DEFAULTS.stt_model },
+    llm_provider: { type: String, default: VOICE_CONFIG_DEFAULTS.llm_provider },
+    llm_model: { type: String, default: VOICE_CONFIG_DEFAULTS.llm_model },
+    tts_provider: { type: String, default: VOICE_CONFIG_DEFAULTS.tts_provider },
+    tts_voice: { type: String, default: VOICE_CONFIG_DEFAULTS.tts_voice },
+    greeting: { type: String, default: VOICE_CONFIG_DEFAULTS.greeting, maxlength: 300 },
   },
   whatsapp_instance_id: { type: String, default: null, index: true },
   whatsapp_instance_api_key: { type: String, default: null },

@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { Store } from '../provisioning/store.model.js';
+import { Store, VOICE_CONFIG_DEFAULTS } from '../provisioning/store.model.js';
 import { invalidateStoreResolverCache } from '../webhook/store-resolver.js';
 
 /**
@@ -39,21 +39,6 @@ const VOICE_ENUMS: Record<string, string[]> = {
   tts_provider: ['openai', 'elevenlabs', 'cartesia', 'google'],
 };
 
-// Fallback for stores created before voice_config existed. `.lean()` queries
-// don't apply Mongoose schema defaults, so old docs return it undefined.
-function defaultVoiceConfig() {
-  return {
-    enabled: false,
-    language: 'es',
-    stt_provider: 'deepgram',
-    stt_model: 'nova-3',
-    llm_provider: 'openai',
-    llm_model: 'gpt-4o-mini',
-    tts_provider: 'openai',
-    tts_voice: 'nova',
-    greeting: '',
-  };
-}
 
 export async function storesRoutes(app: FastifyInstance) {
   app.addHook('preHandler', app.authenticate);
@@ -75,7 +60,7 @@ export async function storesRoutes(app: FastifyInstance) {
         lang: s.lang,
         whatsapp_instance_id: s.whatsapp_instance_id,
         agent_config: s.agent_config,
-        voice_config: s.voice_config ?? defaultVoiceConfig(),
+        voice_config: s.voice_config ?? { ...VOICE_CONFIG_DEFAULTS },
         status: s.status,
       };
     },
