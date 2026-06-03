@@ -43,7 +43,7 @@ function stateStyle(state: string) {
 
 export default function WhatsAppPage() {
   const { currentStore } = useStore();
-  const storeId = currentStore?.id || "store_leo";
+  const storeId = currentStore?.id;
 
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +62,7 @@ export default function WhatsAppPage() {
   const qrRefreshRef = useRef<NodeJS.Timeout | null>(null);
 
   const load = useCallback(async () => {
+    if (!storeId) return;
     try {
       const data = await api.get<Connection[]>(
         `/api/v1/stores/${storeId}/whatsapp/connections`,

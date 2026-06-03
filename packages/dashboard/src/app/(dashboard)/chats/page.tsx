@@ -35,9 +35,10 @@ export default function ChatsPage() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sending, setSending] = useState(false);
 
-  const storeId = currentStore?.id || "store_leo";
+  const storeId = currentStore?.id;
 
   const loadChats = useCallback(async () => {
+    if (!storeId) return;
     setLoading(true);
     try {
       const data = await api.get<Chat[]>(`/api/v1/stores/${storeId}/chats`);

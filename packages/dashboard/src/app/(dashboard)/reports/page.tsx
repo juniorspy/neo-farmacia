@@ -83,11 +83,12 @@ export default function ReportsPage() {
   const [summary, setSummary] = useState<SummaryStats | null>(null);
   const [agent, setAgent] = useState<AgentStats | null>(null);
 
-  const storeId = currentStore?.id || "store_leo";
+  const storeId = currentStore?.id;
 
   const [charts, setCharts] = useState<ChartsData>(emptyCharts);
 
   useEffect(() => {
+    if (!storeId) return;
     api.get<SummaryStats>(`/api/v1/stores/${storeId}/stats/summary`, { range: dateRange }).then(setSummary).catch(() => {});
     api.get<AgentStats>(`/api/v1/stores/${storeId}/stats/agent`).then(setAgent).catch(() => {});
     api.get<ChartsData>(`/api/v1/stores/${storeId}/stats/charts`, { range: dateRange }).then(setCharts).catch(() => {});

@@ -28,7 +28,7 @@ const GREETING_SAMPLES: Record<string, string> = {
 
 export default function AgentPage() {
   const { currentStore } = useStore();
-  const storeId = currentStore?.id || "store_leo";
+  const storeId = currentStore?.id;
 
   const [config, setConfig] = useState<AgentConfig | null>(null);
   const [storeName, setStoreName] = useState<string>("");
@@ -38,6 +38,7 @@ export default function AgentPage() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (!storeId) return;
     setLoading(true);
     try {
       const data = await api.get<StoreInfo>(`/api/v1/stores/${storeId}`);

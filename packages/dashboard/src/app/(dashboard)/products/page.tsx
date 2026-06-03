@@ -22,7 +22,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const storeId = currentStore?.id || "store_leo";
+  const storeId = currentStore?.id;
 
   // Debounce search
   useEffect(() => {
@@ -31,6 +31,7 @@ export default function ProductsPage() {
   }, [search]);
 
   const loadProducts = useCallback(async () => {
+    if (!storeId) return;
     setLoading(true);
     try {
       const params: Record<string, string> = {};

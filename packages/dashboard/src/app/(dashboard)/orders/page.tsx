@@ -55,9 +55,10 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const storeId = currentStore?.id || "store_leo";
+  const storeId = currentStore?.id;
 
   const loadOrders = useCallback(async () => {
+    if (!storeId) return;
     setLoading(true);
     try {
       const params: Record<string, string> = {};

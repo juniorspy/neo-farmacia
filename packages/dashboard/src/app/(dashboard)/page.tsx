@@ -100,9 +100,10 @@ export default function DashboardPage() {
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [charts, setCharts] = useState<ChartsData>(emptyCharts);
 
-  const storeId = currentStore?.id || "store_leo";
+  const storeId = currentStore?.id;
 
   useEffect(() => {
+    if (!storeId) return;
     api.get<{ totalOrders: number; pendingOrders: number; completedOrders: number; totalRevenue: number; avgPerOrder: number; totalCustomers: number }>(`/api/v1/stores/${storeId}/stats/summary`, { range: dateRange })
       .then((data) => setStats({
         totalSales: data.totalRevenue,

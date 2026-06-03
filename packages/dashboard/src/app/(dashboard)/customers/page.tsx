@@ -21,7 +21,7 @@ export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const storeId = currentStore?.id || "store_leo";
+  const storeId = currentStore?.id;
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -29,6 +29,7 @@ export default function CustomersPage() {
   }, [search]);
 
   const loadCustomers = useCallback(async () => {
+    if (!storeId) return;
     setLoading(true);
     try {
       const params: Record<string, string> = {};
