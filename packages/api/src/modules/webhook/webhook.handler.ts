@@ -131,7 +131,10 @@ export function createWebhookHandler(deps: WebhookDeps) {
       text,
       config.debounce.windowMs,
     );
-    if (!accumulated) return;
+    if (!accumulated) {
+      logger.debug({ storeId, chatId }, 'Debounced — superseded by a later message');
+      return;
+    }
 
     // 5. Check handover — is bot active?
     if (!(await isBotActive(redis, storeId, chatId))) {
@@ -186,6 +189,19 @@ export function createWebhookHandler(deps: WebhookDeps) {
         headers: { 'X-API-Key': config.n8n.apiKey },
       });
 
+      logger.info(
+        {
+          storeId,
+          chatId,
+          n8nStatus: response.status,
+          n8nKeys:
+            response.data && typeof response.data === 'object'
+              ? Object.keys(response.data as Record<string, unknown>)
+              : typeof response.data,
+        },
+        'n8n responded',
+      );
+
       // 8. Egress handover check (might have flipped to manual mid-call)
       if (!(await isBotActive(redis, storeId, chatId))) {
         logger.info({ storeId, chatId }, 'Manual mode at egress, not sending reply');
@@ -193,7 +209,8 @@ export function createWebhookHandler(deps: WebhookDeps) {
       }
 
       // 9. Handle n8n response — actually send it via Evolution
-      const replyText = response.data?.text || response.data?.content;
+      const replyText =
+        response.data?.text || response.data?.content || response.data?.output;
       if (replyText) {
         await Message.create({
           store_id: storeId,

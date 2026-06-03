@@ -19,7 +19,10 @@ export async function debounceMessage(
   // Append text to accumulated buffer
   const current = await redis.get(key);
   const accumulated = current ? `${current}\n${text}` : text;
-  await redis.set(key, accumulated, 'PX', windowMs);
+  // TTL must outlive the wait below. With TTL = windowMs but a wait of
+  // windowMs + 100, the key expired mid-wait → the GET returned null → every
+  // message looked "superseded" and was silently dropped. Give a margin.
+  await redis.set(key, accumulated, 'PX', windowMs + 5000);
 
   // Wait for the debounce window
   await new Promise((r) => setTimeout(r, windowMs + 100));
