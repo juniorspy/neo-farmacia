@@ -31,7 +31,13 @@ export async function buildApp(redis: Redis, config: AppConfig) {
     },
   });
 
-  await app.register(cors, { origin: true });
+  // @fastify/cors defaults to methods: 'GET,HEAD,POST' — which silently blocks
+  // DELETE (disconnect) and PATCH (agent config) at the CORS preflight. Declare
+  // every method the dashboard actually uses.
+  await app.register(cors, {
+    origin: true,
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  });
 
   // JWT plugin — must register before routes that use app.authenticate
   await registerJwt(app, config);
