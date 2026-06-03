@@ -17,8 +17,43 @@ interface AgentConfigUpdate {
   custom_notes?: string;
 }
 
+interface VoiceConfigUpdate {
+  enabled?: boolean;
+  language?: string;
+  stt_provider?: string;
+  stt_model?: string;
+  llm_provider?: string;
+  llm_model?: string;
+  tts_provider?: string;
+  tts_voice?: string;
+  greeting?: string;
+}
+
 const MAX_STRING = 200;
 const MAX_NOTES = 500;
+
+// Allowed provider values for the per-pharmacy voice config.
+const VOICE_ENUMS: Record<string, string[]> = {
+  stt_provider: ['deepgram'],
+  llm_provider: ['openai', 'anthropic'],
+  tts_provider: ['openai', 'elevenlabs', 'cartesia', 'google'],
+};
+
+// Fallback for stores created before voice_config existed. `.lean()` queries
+// don't apply Mongoose schema defaults, so old docs return it undefined.
+function defaultVoiceConfig() {
+  return {
+    enabled: false,
+    language: 'es',
+    stt_provider: 'deepgram',
+    stt_model: 'nova-3',
+    llm_provider: 'openai',
+    llm_model: 'gpt-4o-mini',
+    tts_provider: 'openai',
+    tts_voice: 'nova',
+    greeting: '',
+  };
+}
 
 export async function storesRoutes(app: FastifyInstance) {
   app.addHook('preHandler', app.authenticate);
@@ -40,6 +75,7 @@ export async function storesRoutes(app: FastifyInstance) {
         lang: s.lang,
         whatsapp_instance_id: s.whatsapp_instance_id,
         agent_config: s.agent_config,
+        voice_config: s.voice_config ?? defaultVoiceConfig(),
         status: s.status,
       };
     },
@@ -103,6 +139,76 @@ export async function storesRoutes(app: FastifyInstance) {
       }
 
       return { ok: true, agent_config: updated.agent_config };
+    },
+  );
+
+  // PATCH /api/v1/stores/:storeId/voice-config — SUPER-ADMIN only.
+  // Voice provider/voice selection is a platform setting, not a pharmacist one.
+  app.patch(
+    '/api/v1/stores/:storeId/voice-config',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const user = request.user as { role?: string } | undefined;
+      if (user?.role !== 'admin') {
+        return reply.status(403).send({ error: 'super-admin only' });
+      }
+      const body = request.body as VoiceConfigUpdate;
+
+      // Validate provider enums.
+      for (const f of ['stt_provider', 'llm_provider', 'tts_provider'] as const) {
+        const v = body[f];
+        if (v !== undefined && !VOICE_ENUMS[f].includes(v)) {
+          return reply.status(400).send({ error: `${f} invalid` });
+        }
+      }
+      // Validate lengths.
+      for (const f of ['language', 'stt_model', 'llm_model', 'tts_voice'] as const) {
+        const v = body[f];
+        if (v !== undefined && v.length > MAX_STRING) {
+          return reply.status(400).send({ error: `${f} too long (max ${MAX_STRING})` });
+        }
+      }
+      if (body.greeting !== undefined && body.greeting.length > 300) {
+        return reply.status(400).send({ error: 'greeting too long (max 300)' });
+      }
+
+      const storeId = request.store.store_id;
+      const update: Record<string, unknown> = {};
+      for (const f of [
+        'enabled',
+        'language',
+        'stt_provider',
+        'stt_model',
+        'llm_provider',
+        'llm_model',
+        'tts_provider',
+        'tts_voice',
+        'greeting',
+      ] as const) {
+        if (body[f] !== undefined) update[`voice_config.${f}`] = body[f];
+      }
+      update.updated_at = new Date();
+
+      // "Apply to all" — set this config as the default across every pharmacy.
+      // A pharmacy can still be given its own voice later (single-store save).
+      const applyToAll = (request.body as { applyToAll?: boolean }).applyToAll === true;
+      if (applyToAll) {
+        const res = await Store.updateMany({}, { $set: update });
+        invalidateStoreResolverCache(); // no arg → clear the whole resolver cache
+        return { ok: true, applied_to_all: true, modified: res.modifiedCount };
+      }
+
+      const updated = await Store.findOneAndUpdate(
+        { store_id: storeId },
+        { $set: update },
+        { new: true },
+      );
+      if (!updated) return reply.status(404).send({ error: 'store not found' });
+
+      if (updated.whatsapp_instance_id) {
+        invalidateStoreResolverCache(updated.whatsapp_instance_id);
+      }
+
+      return { ok: true, voice_config: updated.voice_config };
     },
   );
 }

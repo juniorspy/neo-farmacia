@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { VoiceConfigSection } from "@/components/voice-config-section";
 
 interface Step {
   name: string;
@@ -622,6 +623,8 @@ function PharmacyDetailsDrawer({
               )}
             </div>
           )}
+
+          <VoiceConfigSection storeId={pharmacy.store_id} />
         </div>
       </div>
     </div>

@@ -22,6 +22,19 @@ export interface IStore extends Document {
     delivery_info: string;
     custom_notes: string;
   };
+  // Per-pharmacy voice-call config — edited by super-admin (not env). The agent
+  // worker reads these (via the LiveKit token metadata) to pick STT/LLM/TTS.
+  voice_config: {
+    enabled: boolean;
+    language: string;
+    stt_provider: string;
+    stt_model: string;
+    llm_provider: string;
+    llm_model: string;
+    tts_provider: string;
+    tts_voice: string;
+    greeting: string;
+  };
   // Deprecated single-connection fields — migrated into the WhatsappConnection
   // collection on api startup. Kept on the schema as nullable so existing docs
   // don't fail validation; will be removed in a future cleanup.
@@ -53,6 +66,17 @@ const storeSchema = new Schema<IStore>({
     business_hours: { type: String, default: 'Lun-Sáb 8:00-22:00' },
     delivery_info: { type: String, default: '' },
     custom_notes: { type: String, default: '', maxlength: 500 },
+  },
+  voice_config: {
+    enabled: { type: Boolean, default: false },
+    language: { type: String, default: 'es' },
+    stt_provider: { type: String, default: 'deepgram' },
+    stt_model: { type: String, default: 'nova-3' },
+    llm_provider: { type: String, default: 'openai' },
+    llm_model: { type: String, default: 'gpt-4o-mini' },
+    tts_provider: { type: String, default: 'openai' },
+    tts_voice: { type: String, default: 'nova' },
+    greeting: { type: String, default: '', maxlength: 300 },
   },
   whatsapp_instance_id: { type: String, default: null, index: true },
   whatsapp_instance_api_key: { type: String, default: null },
