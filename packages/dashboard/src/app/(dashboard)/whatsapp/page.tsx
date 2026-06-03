@@ -144,8 +144,8 @@ export default function WhatsAppPage() {
     try {
       await api.delete(`/api/v1/stores/${storeId}/whatsapp/connections/${conn.id}`);
       await load();
-    } catch {
-      alert("Error al desconectar");
+    } catch (err) {
+      alert(err instanceof Error ? `Error al desconectar: ${err.message}` : "Error al desconectar");
     }
   }
 

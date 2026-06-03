@@ -35,11 +35,15 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || `Request failed: ${res.status}`);
+    const body = await res.json().catch(() => ({} as { message?: string; error?: string }));
+    throw new Error(body.message || body.error || `Request failed: ${res.status}`);
   }
 
-  return res.json();
+  // Some endpoints (e.g. DELETE) reply 204 or with an empty body — calling
+  // res.json() on those throws. Tolerate no-content responses.
+  if (res.status === 204) return undefined as T;
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 export const api = {
