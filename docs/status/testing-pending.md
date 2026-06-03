@@ -2,7 +2,7 @@
 
 Components and flows that are **built and typechecked but have not been exercised end-to-end**. This is the highest-priority list before onboarding a real customer — every item here is a place where a surprise can land.
 
-Updated: 2026-04-11 (end of Phase A + A.5 + B1-B6 session)
+Updated: 2026-06-03 (post bug-fix + voice-calls session — see sessions/2026-06-03-01.md)
 
 Legend:
 - 🟢 **Verified** — actually invoked against real infrastructure and observed to work
@@ -111,18 +111,29 @@ This one path touches: provisioning pipeline (all 7 steps), scoped routing, stor
 
 These require n8n + WhatsApp in the loop:
 
-- ~~Real webhook arriving with a valid Evolution instance name~~ — **now arriving**, but silently dropped
+- ~~Real webhook arriving with a valid Evolution instance name~~ — **works**
 - ~~`resolveStoreByInstance` returning a real Store~~ — **works** (farmacia_geremy's instance resolves)
-- `store_config` payload actually being consumed by n8n agents — blocked by silent drop bug
-- End-to-end order creation from a WhatsApp message — blocked by silent drop bug
-- Reply back to the customer via Evolution — code written, blocked by silent drop bug
+- ~~Silent message drop before n8n~~ — **FIXED 2026-06-03** (debounce key TTL expired before its own check; `72ee0f6`)
+- `store_config` payload actually consumed by n8n agents — **unblocked**, pending e2e run
+- End-to-end order creation from a WhatsApp message — **unblocked**, pending e2e run
+- Reply back to the customer via Evolution — **unblocked** (`n8n responded` + `output` field handling added), pending e2e run
 
-Primary blocker: the webhook silent message drop bug (messages arrive at the API but never reach n8n). Debug logging is in place. Secondary blocker: catalog sync auth bug for new pharmacies.
+Primary blocker REMOVED (silent drop fixed). Remaining: final e2e pass of the WhatsApp → n8n → reply loop, and the catalog-sync auth bug for new pharmacies. New untested surface: the entire voice-calls stack (Stage 9) — needs LiveKit creds to exercise.
 
 ## Open Bugs
 
 | Bug | Severity | Status | Notes |
 |---|---|---|---|
-| Webhook silent message drop | **Critical** | Active debug | Messages from WhatsApp arrive at the API webhook endpoint but are silently dropped before reaching n8n. Extensive `console.log` tracing added in Phase B6. Suspected area: debounce/mutex/handover pipeline. |
+| Webhook silent message drop | **Critical** | **FIXED** (`72ee0f6`, 2026-06-03) | Root cause: debounce Redis key TTL = `windowMs` but the check ran at `windowMs + 100` — the key expired mid-wait, so EVERY message was dropped before n8n. TTL now outlives the wait. Reply-loop e2e pass still pending. |
+| CORS blocked DELETE/PATCH | **High** | **FIXED** (`36453d3`) | `@fastify/cors` defaults to `GET,HEAD,POST` — WhatsApp disconnect (DELETE) and agent-config save (PATCH) were blocked at browser preflight. Methods now explicit. |
+| Cross-tenant read on chats/customers | **High** | **FIXED** (`ab0c5c0`) | Both routes only ran `authenticate`, not `resolveStore` — any logged-in user could read another store's chats/customers by changing the `:storeId`. |
 | Catalog sync auth for new pharmacies | **High** | Open | `catalog-sync.service` uses `config.odoo.user` (global admin email) to authenticate against new pharmacy Odoo DBs. This user doesn't exist in those DBs. Should use the store-specific owner email or the master admin credentials. Affects `farmacia_geremy`. |
+| `disponibleVentas` always true | **Medium** | Open (product decision) | `catalogo.handler.ts` has `hit.stock > 0 \|\| true` — the bot reports everything as available. Flipping it depends on whether Odoo stock is real per pharmacy (inventory-connector strategy, ADR-007). |
 | JWT stores field type mismatch | **Medium** | Fixed | JWT `stores` array contained MongoDB ObjectIds instead of `store_id` strings. Fixed in commit `e5f0749`. Needs retest confirmation. |
+
+## Voice calls (Stage 9) — built, fully untested
+
+The whole voice stack (session model, signed links, `/call/:id`, LiveKit token,
+Python agent worker, per-pharmacy `voice_config` + super-admin editor) is built and
+pushed but has **never been exercised end-to-end** — blocked on LiveKit Cloud creds
+and the Dokploy `voice-agent` service env. See `stages/09-voice-calls.md` §10-11.

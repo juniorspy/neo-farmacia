@@ -20,6 +20,7 @@ WhatsApp AI agent sells pharmacy products (sourced from Odoo/POS) → orders app
 | Chat History & Users | MongoDB |
 | State & Cache | Redis (debounce, mutex, handover, rate limit, product cache) |
 | WhatsApp Gateway | Evolution API |
+| Voice Calls | LiveKit Cloud (rooms) + Python agent worker (Deepgram STT → LLM → TTS, config per-pharmacy) |
 | Frontend Dashboard | Next.js (React) |
 | Deploy | Docker / Dokploy on VPS (min 16GB RAM) |
 
@@ -82,6 +83,7 @@ neo_farmacia/
 │   │   │   │   ├── store-context/   # resolveStore preHandler plugin
 │   │   │   │   ├── stores/          # Store CRUD + agent-config routes
 │   │   │   │   ├── users/           # User model + routes
+│   │   │   │   ├── voice-calls/     # Voice call sessions + signed links + LiveKit token
 │   │   │   │   ├── webhook/         # WhatsApp webhook handler + store-resolver
 │   │   │   │   └── whatsapp/        # Multi-connection model + service
 │   │   │   ├── shared/
@@ -95,10 +97,11 @@ neo_farmacia/
 │   │   │   └── app.ts       # Fastify bootstrap
 │   │   ├── Dockerfile
 │   │   └── package.json
-│   └── dashboard/           # Next.js frontend
+│   ├── dashboard/           # Next.js frontend
 │       ├── src/
 │       │   └── app/
 │       │       ├── login/           # Login page
+│       │       ├── call/[id]/       # Public customer voice-call page (signed link)
 │       │       └── (dashboard)/
 │       │           ├── page.tsx             # Home / stats
 │       │           ├── orders/              # Orders list
@@ -112,6 +115,7 @@ neo_farmacia/
 │       │           └── admin/pharmacies/    # Super-admin provisioning UI
 │       ├── Dockerfile
 │       └── package.json
+│   └── voice-agent/         # Python LiveKit agent worker (STT → LLM → TTS per-pharmacy)
 ├── docker-compose.yml       # Full stack orchestration
 ├── .env.example             # Environment variables template
 └── CLAUDE.md                # This file
