@@ -128,8 +128,12 @@ export default function CallPage() {
     try {
       tok = await call<TokenView>("/token", "GET");
     } catch (e) {
-      const status = (e as Error & { status?: number }).status;
-      setErrorMsg(status === 503 ? "La voz aún no está configurada." : "No se pudo iniciar la sesión de voz.");
+      const err = e as Error & { status?: number };
+      setErrorMsg(
+        err.status === 503
+          ? "La voz aún no está configurada."
+          : `No se pudo iniciar la sesión de voz${err.message ? ` — ${err.message}` : "."}`,
+      );
       setPhase("error");
       return;
     }

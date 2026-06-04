@@ -26,6 +26,13 @@ const TTS_PROVIDERS = ["openai", "elevenlabs", "cartesia", "google"];
 const LLM_PROVIDERS = ["openai", "anthropic"];
 const INPUT = "w-full px-3 py-2 border border-slate-200 rounded-lg text-sm";
 
+/** Which providers have API keys on the worker (self-reported at worker boot). */
+interface ProviderAvailability {
+  stt?: Record<string, boolean>;
+  llm?: Record<string, boolean>;
+  tts?: Record<string, boolean>;
+}
+
 export function VoiceConfigSection({ storeId }: { storeId: string }) {
   const [cfg, setCfg] = useState<VoiceConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,17 +42,29 @@ export function VoiceConfigSection({ storeId }: { storeId: string }) {
   const [applyToAll, setApplyToAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [avail, setAvail] = useState<ProviderAvailability | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.get<{ voice_config: VoiceConfig }>(`/api/v1/stores/${storeId}`);
-      setCfg(data.voice_config);
+      const [store, providers] = await Promise.all([
+        api.get<{ voice_config: VoiceConfig }>(`/api/v1/stores/${storeId}`),
+        api
+          .get<{ reported: boolean; providers: ProviderAvailability | null }>(`/api/v1/voice-providers`)
+          .catch(() => null),
+      ]);
+      setCfg(store.voice_config);
+      setAvail(providers?.reported ? providers.providers : null);
     } catch {
       setError("No se pudo cargar la configuración de voz.");
     } finally {
       setLoading(false);
     }
   }, [storeId]);
+
+  // No report yet (worker old/down) → don't gray anything out.
+  const isAvailable = (group: "tts" | "llm", p: string): boolean =>
+    !avail ? true : avail[group]?.[p] === true;
 
   useEffect(() => { load(); }, [load]);
 
@@ -99,7 +118,14 @@ export function VoiceConfigSection({ storeId }: { storeId: string }) {
 
           <Field label="Proveedor de voz (TTS)">
             <select value={cfg.tts_provider} onChange={(e) => set("tts_provider", e.target.value)} className={INPUT}>
-              {TTS_PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
+              {TTS_PROVIDERS.map((p) => {
+                const ok = isAvailable("tts", p);
+                return (
+                  <option key={p} value={p} disabled={!ok} className={ok ? "" : "text-slate-400"}>
+                    {p}{ok ? "" : " (sin key)"}
+                  </option>
+                );
+              })}
             </select>
           </Field>
           <Field label="Voz (id / nombre)">
@@ -113,7 +139,14 @@ export function VoiceConfigSection({ storeId }: { storeId: string }) {
 
           <Field label="Cerebro (LLM)">
             <select value={cfg.llm_provider} onChange={(e) => set("llm_provider", e.target.value)} className={INPUT}>
-              {LLM_PROVIDERS.map((p) => <option key={p} value={p}>{p}</option>)}
+              {LLM_PROVIDERS.map((p) => {
+                const ok = isAvailable("llm", p);
+                return (
+                  <option key={p} value={p} disabled={!ok} className={ok ? "" : "text-slate-400"}>
+                    {p}{ok ? "" : " (sin key)"}
+                  </option>
+                );
+              })}
             </select>
           </Field>
           <Field label="Modelo LLM">

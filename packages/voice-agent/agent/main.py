@@ -20,6 +20,8 @@ import logging
 import os
 import sys
 
+import httpx
+
 print(f"[agent.main] Starting... Python {sys.version}", flush=True)
 
 from livekit import agents
@@ -194,6 +196,38 @@ async def handle_session(ctx: agents.JobContext):
         )
 
 
+def report_provider_availability() -> None:
+    """Tell the backend which provider keys this worker has (booleans ONLY —
+    never the secrets). The super-admin UI uses this to gray out unavailable
+    providers in the per-pharmacy voice config dropdowns."""
+    availability = {
+        "stt": {"deepgram": bool(Config.DEEPGRAM_API_KEY)},
+        "llm": {
+            "openai": bool(Config.OPENAI_API_KEY),
+            "anthropic": bool(anthropic_llm and Config.ANTHROPIC_API_KEY),
+        },
+        "tts": {
+            "openai": bool(Config.OPENAI_API_KEY),
+            "elevenlabs": bool(elevenlabs and Config.ELEVEN_API_KEY),
+            "cartesia": bool(cartesia and Config.CARTESIA_API_KEY),
+            "google": bool(google_tts and os.getenv("GOOGLE_APPLICATION_CREDENTIALS")),
+        },
+    }
+    try:
+        httpx.post(
+            f"{Config.FARMACIA_API_URL.rstrip('/')}/api/v1/voice-providers/report",
+            json=availability,
+            headers={"Authorization": f"Bearer {Config.COMMAND_BEARER}"},
+            timeout=5.0,
+        ).raise_for_status()
+        print(f"[agent.main] Provider availability reported: {availability}", flush=True)
+    except Exception as e:
+        print(f"[agent.main] Provider availability report failed (non-fatal): {e}", flush=True)
+
+
 if __name__ == "__main__":
     print("[agent.main] Launching LiveKit agent worker...", flush=True)
+    # Only on a real `start` — never during the Docker-build `download-files` run.
+    if "start" in sys.argv:
+        report_provider_availability()
     agents.cli.run_app(server)

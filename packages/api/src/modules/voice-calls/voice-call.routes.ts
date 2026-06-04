@@ -309,6 +309,32 @@ export async function voiceCallRoutes(
     return { token: grant.token, url: grant.url, room: grant.room, identity: grant.identity };
   });
 
+  // ── Provider availability (worker self-report → super-admin UI) ──
+  //    The agent worker POSTs which provider keys it has (booleans only, never
+  //    secrets) at boot; the voice-config UI grays out unavailable providers.
+  const PROVIDERS_KEY = 'voice:providers';
+
+  app.post('/api/v1/voice-providers/report', async (request, reply) => {
+    if (!bearerOk(request.headers.authorization, config.n8n.apiKey)) {
+      return reply.status(401).send({ error: 'unauthorized' });
+    }
+    const body = (request.body || {}) as Record<string, Record<string, boolean>>;
+    await redis.set(PROVIDERS_KEY, JSON.stringify(body));
+    logger.info({ providers: body }, 'Voice provider availability reported');
+    return { ok: true };
+  });
+
+  app.get(
+    '/api/v1/voice-providers',
+    { preHandler: [app.authenticate] },
+    async () => {
+      const raw = await redis.get(PROVIDERS_KEY);
+      return raw
+        ? { reported: true, providers: JSON.parse(raw) }
+        : { reported: false, providers: null };
+    },
+  );
+
   // ── DEV-only seed: create a ringing session + return the signed link. ──
   //    Lets us exercise Phases 2-3 before the n8n create endpoint (Phase 4) exists.
   if (config.nodeEnv !== 'production') {
