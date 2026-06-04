@@ -34,6 +34,10 @@ export interface IStore extends Document {
     tts_provider: string;
     tts_voice: string;
     greeting: string;
+    // System-prompt TEMPLATE for the voice agent — fully owned by the
+    // super-admin (no hardcoded prompt in code). The backend fills the
+    // {variables} with real per-call data at token-mint time.
+    prompt_template: string;
   };
   // Deprecated single-connection fields — migrated into the WhatsappConnection
   // collection on api startup. Kept on the schema as nullable so existing docs
@@ -60,6 +64,26 @@ export const VOICE_CONFIG_DEFAULTS = {
   tts_provider: 'openai',
   tts_voice: 'nova',
   greeting: '',
+  // Default prompt TEMPLATE — a starting point the super-admin fully owns and
+  // edits in the UI. Available variables (filled per call by the backend):
+  // {store_name} {agent_name} {reason} {customer_name} {customer_phone}
+  // {recent_messages} {missing_fields} {language}
+  prompt_template: [
+    'Eres {agent_name}, asistente de voz de {store_name}, una farmacia. Hablas español dominicano, cálido y breve.',
+    '',
+    'Motivo de esta llamada: {reason}',
+    'Cliente: {customer_name} ({customer_phone})',
+    'Datos pendientes por confirmar: {missing_fields}',
+    '',
+    'Conversación reciente por WhatsApp:',
+    '{recent_messages}',
+    '',
+    'Al contestar, saluda breve mencionando el motivo y ve directo a resolverlo — ya estás en contexto, NO empieces de cero.',
+    'ALCANCE: SOLO aclaras y recoges datos faltantes (dirección, confirmación de productos, receta). NO modificas el pedido por voz, NO confirmas compras, NO tomas pagos.',
+    'SEGURIDAD: NO das consejo clínico ni de dosis, NO recomiendas tratamientos, NO confirmas medicamentos controlados; si lo piden, di con tacto que eso lo revisa el farmacéutico por WhatsApp.',
+    'Para buscar productos del catálogo usa la herramienta search_product.',
+    'Al terminar, resume lo confirmado y di que el farmacéutico continúa por WhatsApp.',
+  ].join('\n'),
 };
 
 const storeSchema = new Schema<IStore>({
@@ -92,6 +116,11 @@ const storeSchema = new Schema<IStore>({
     tts_provider: { type: String, default: VOICE_CONFIG_DEFAULTS.tts_provider },
     tts_voice: { type: String, default: VOICE_CONFIG_DEFAULTS.tts_voice },
     greeting: { type: String, default: VOICE_CONFIG_DEFAULTS.greeting, maxlength: 300 },
+    prompt_template: {
+      type: String,
+      default: VOICE_CONFIG_DEFAULTS.prompt_template,
+      maxlength: 6000,
+    },
   },
   whatsapp_instance_id: { type: String, default: null, index: true },
   whatsapp_instance_api_key: { type: String, default: null },

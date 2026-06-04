@@ -27,6 +27,7 @@ interface VoiceConfigUpdate {
   tts_provider?: string;
   tts_voice?: string;
   greeting?: string;
+  prompt_template?: string;
 }
 
 const MAX_STRING = 200;
@@ -60,7 +61,9 @@ export async function storesRoutes(app: FastifyInstance) {
         lang: s.lang,
         whatsapp_instance_id: s.whatsapp_instance_id,
         agent_config: s.agent_config,
-        voice_config: s.voice_config ?? { ...VOICE_CONFIG_DEFAULTS },
+        // Merge defaults so stores saved before newer fields (e.g.
+        // prompt_template) existed still expose them in the UI.
+        voice_config: { ...VOICE_CONFIG_DEFAULTS, ...(s.voice_config ?? {}) },
         status: s.status,
       };
     },
@@ -155,6 +158,9 @@ export async function storesRoutes(app: FastifyInstance) {
       if (body.greeting !== undefined && body.greeting.length > 300) {
         return reply.status(400).send({ error: 'greeting too long (max 300)' });
       }
+      if (body.prompt_template !== undefined && body.prompt_template.length > 6000) {
+        return reply.status(400).send({ error: 'prompt_template too long (max 6000)' });
+      }
 
       const storeId = request.store.store_id;
       const update: Record<string, unknown> = {};
@@ -168,6 +174,7 @@ export async function storesRoutes(app: FastifyInstance) {
         'tts_provider',
         'tts_voice',
         'greeting',
+        'prompt_template',
       ] as const) {
         if (body[f] !== undefined) update[`voice_config.${f}`] = body[f];
       }

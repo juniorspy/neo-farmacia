@@ -35,6 +35,7 @@ export interface IVoiceCallSession extends Document {
   answerer_type: AnswererType;
   status: VoiceCallStatus;
   reason: string; // why the AI asked for a call
+  missing_fields: string[]; // what the agent should collect (from n8n)
 
   provider: string; // 'livekit_pipeline' — transport label, no abstraction layer
   provider_session_id: string | null; // the LiveKit room name once the call starts
@@ -79,6 +80,7 @@ const voiceCallSchema = new Schema<IVoiceCallSession>({
     index: true,
   },
   reason: { type: String, default: '' },
+  missing_fields: { type: [String], default: [] },
 
   provider: { type: String, default: 'livekit_pipeline' },
   provider_session_id: { type: String, default: null },

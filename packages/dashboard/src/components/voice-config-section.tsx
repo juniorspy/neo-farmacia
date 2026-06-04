@@ -20,7 +20,11 @@ interface VoiceConfig {
   tts_provider: string;
   tts_voice: string;
   greeting: string;
+  prompt_template: string;
 }
+
+const PROMPT_VARS =
+  "{store_name} {agent_name} {reason} {customer_name} {customer_phone} {recent_messages} {missing_fields} {language}";
 
 const TTS_PROVIDERS = ["openai", "elevenlabs", "cartesia", "google"];
 const LLM_PROVIDERS = ["openai", "anthropic"];
@@ -161,16 +165,29 @@ export function VoiceConfigSection({ storeId }: { storeId: string }) {
           <Field label="Idioma">
             <input value={cfg.language} onChange={(e) => set("language", e.target.value)} className={INPUT} />
           </Field>
-          <Field label="Saludo (opcional)">
+          <Field label="Saludo — instrucción para la primera frase (opcional)">
             <textarea
               value={cfg.greeting}
               onChange={(e) => set("greeting", e.target.value)}
               maxLength={300}
               rows={2}
               className={INPUT}
-              placeholder="Saludo inicial del asistente (opcional)"
+              placeholder='ej: "Saluda diciendo: Hola, soy Sofía de Farmacia Geremy…" — vacío = el agente abre según el prompt'
             />
           </Field>
+
+          <Field label="Prompt del agente (plantilla — control total)">
+            <textarea
+              value={cfg.prompt_template ?? ""}
+              onChange={(e) => set("prompt_template", e.target.value)}
+              maxLength={6000}
+              rows={12}
+              className={`${INPUT} font-mono text-xs`}
+            />
+          </Field>
+          <div className="text-[11px] text-slate-400">
+            Variables disponibles (se rellenan por llamada con datos reales): <span className="font-mono">{PROMPT_VARS}</span>
+          </div>
 
           <div className="text-[11px] text-slate-400">
             STT: {cfg.stt_provider} {cfg.stt_model} · Las API keys viven en el servidor, no aquí.

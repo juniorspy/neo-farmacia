@@ -22,6 +22,7 @@ export interface CreateSessionInput {
   client_id?: string | null;
   answerer_type?: IVoiceCallSession['answerer_type'];
   reason?: string;
+  missing_fields?: string[];
   provider?: string; // caller passes config.voice.provider (or a per-store override)
   n8n_correlation_id?: string | null;
   ring_window_ms?: number;
@@ -41,6 +42,7 @@ export async function createSession(input: CreateSessionInput): Promise<IVoiceCa
     client_id: input.client_id ?? null,
     answerer_type: input.answerer_type ?? 'customer',
     reason: input.reason ?? '',
+    missing_fields: input.missing_fields ?? [],
     idempotency_key: input.idempotency_key,
     // Provider is config-driven (env VOICE_PROVIDER, future per-store override).
     // If the caller doesn't pass one, the schema default applies.

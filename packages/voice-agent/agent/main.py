@@ -100,9 +100,9 @@ def parse_call_context(participant) -> dict:
         "chat_id": ctx.get("chat_id", ""),
         "reason": ctx.get("reason", ""),
         "voice_config": vc,
-        "instructions": ctx.get("instructions", "")
-        or f"Eres el asistente de voz de {ctx.get('store_name', 'la farmacia')}. "
-        "Solo aclaras y recoges datos faltantes; no modificas pedidos ni das consejo clinico.",
+        # The fully-rendered prompt comes from the backend (admin-owned template
+        # + per-call context). NO prompt text lives in this worker.
+        "instructions": ctx.get("instructions", ""),
     }
 
 
@@ -196,17 +196,14 @@ async def handle_session(ctx: agents.JobContext):
         room_input_options=RoomInputOptions(text_enabled=True),
     )
 
-    # Warm greeting — custom per-store greeting if the super-admin set one.
+    # First utterance. If the super-admin set a greeting instruction
+    # (voice_config.greeting), use it verbatim; otherwise the agent opens
+    # guided purely by the admin-owned system prompt. No hardcoded text here.
     greeting = (vc.get("greeting") or "").strip()
     if greeting:
-        await session.generate_reply(instructions=f"Saluda diciendo: {greeting}")
+        await session.generate_reply(instructions=greeting)
     else:
-        await session.generate_reply(
-            instructions=(
-                "Saluda breve y calido. Ya conoces el motivo de la llamada — "
-                "menciona el motivo y ve directo a resolverlo."
-            )
-        )
+        await session.generate_reply()
 
 
 def report_provider_availability() -> None:

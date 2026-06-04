@@ -50,21 +50,50 @@ function publicView(s: IVoiceCallSession, storeName?: string | null) {
 }
 
 /**
- * STATIC context for the Phase-3 POC. Phase 6 replaces this with real assembly
- * (recent messages from Mongo + order from Odoo + customer profile). The
- * read-only / clarification-only / no-clinical-advice policy is fixed here.
+ * Per-call prompt assembly (Phase E). The TEMPLATE is fully owned by the
+ * super-admin (Store.voice_config.prompt_template) — NO prompt text lives in
+ * code. This only fills the {variables} with real per-call data. Unknown
+ * variables are left literal so typos are visible.
  */
-function buildStaticInstructions(storeName: string, reason: string): string {
-  return [
-    `Eres el asistente de voz de ${storeName}, una farmacia. Hablas español dominicano, cálido y breve.`,
-    reason ? `Motivo de esta llamada: ${reason}.` : '',
-    'Ya estás en contexto: NO empieces de cero ni te presentes largamente. Ve al grano con amabilidad.',
-    'ALCANCE (v1): SOLO aclaras y recoges datos faltantes (dirección de entrega, confirmación de productos, receta). NO modificas el pedido por voz, NO confirmas compras, NO tomas pagos.',
-    'SEGURIDAD: NO das consejo clínico ni de dosis, NO recomiendas tratamientos, NO confirmas medicamentos controlados. Si lo piden, explica con tacto que eso lo revisa el farmacéutico y que continúen por el chat de WhatsApp.',
-    'Cuando tengas los datos, resume brevemente y di que el farmacéutico continúa por WhatsApp. Despídete con cortesía.',
-  ]
-    .filter(Boolean)
-    .join(' ');
+function renderPromptTemplate(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (match, key: string) => vars[key] ?? match);
+}
+
+async function buildPromptVars(opts: {
+  storeId: string;
+  chatId: string;
+  storeName: string;
+  agentName: string;
+  language: string;
+  reason: string;
+  missingFields: string[];
+}): Promise<Record<string, string>> {
+  const [customer, msgs] = await Promise.all([
+    User.findOne({ store_id: opts.storeId, chat_id: opts.chatId })
+      .select('name phone')
+      .lean<{ name?: string; phone?: string } | null>(),
+    Message.find({ store_id: opts.storeId, chat_id: opts.chatId })
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .select('sender text')
+      .lean<Array<{ sender: string; text: string }>>(),
+  ]);
+
+  const recentMessages = msgs
+    .reverse()
+    .map((m) => `${m.sender === 'customer' ? 'Cliente' : 'Asistente'}: ${(m.text || '').slice(0, 200)}`)
+    .join('\n');
+
+  return {
+    store_name: opts.storeName,
+    agent_name: opts.agentName,
+    language: opts.language,
+    reason: opts.reason || '(sin motivo registrado)',
+    customer_name: customer?.name || 'cliente',
+    customer_phone: customer?.phone || '',
+    recent_messages: recentMessages || '(sin historial)',
+    missing_fields: opts.missingFields.length ? opts.missingFields.join(', ') : '(ninguno)',
+  };
 }
 
 export async function voiceCallRoutes(
@@ -109,6 +138,7 @@ export async function voiceCallRoutes(
       chatId?: string;
       reason?: string;
       summary?: string;
+      missing_fields?: string[];
       n8n_correlation_id?: string;
       idempotency_key?: string;
     };
@@ -147,12 +177,16 @@ export async function voiceCallRoutes(
     }
 
     const reason = (body.summary || body.reason || '').slice(0, 300);
+    const missingFields = Array.isArray(body.missing_fields)
+      ? body.missing_fields.filter((f) => typeof f === 'string').slice(0, 10).map((f) => f.slice(0, 100))
+      : [];
     let result: { session: IVoiceCallSession; token: string };
     try {
       result = await createSessionWithInvite({
         store_id: storeId,
         chat_id: chatId,
         reason,
+        missing_fields: missingFields,
         provider: config.voice.provider,
         n8n_correlation_id: body.n8n_correlation_id ?? null,
         idempotency_key: idempotencyKey,
@@ -255,12 +289,18 @@ export async function voiceCallRoutes(
       return reply.status(409).send({ error: `call not connecting (is ${session.status})` });
     }
     const store = await Store.findOne({ store_id: session.store_id })
-      .select('name status voice_config')
-      .lean<{ name: string; status: string; voice_config?: typeof VOICE_CONFIG_DEFAULTS } | null>();
+      .select('name status voice_config agent_config')
+      .lean<{
+        name: string;
+        status: string;
+        voice_config?: Partial<typeof VOICE_CONFIG_DEFAULTS>;
+        agent_config?: { agent_name?: string };
+      } | null>();
     if (!store || store.status !== 'active') {
       return reply.status(409).send({ error: 'store not active' });
     }
-    const voiceConfig = store.voice_config ?? { ...VOICE_CONFIG_DEFAULTS };
+    // Merge so stores saved before newer fields existed still get defaults.
+    const voiceConfig = { ...VOICE_CONFIG_DEFAULTS, ...(store.voice_config ?? {}) };
     if (!voiceConfig.enabled) {
       return reply.status(409).send({ error: 'voice calls disabled for this store' });
     }
@@ -268,8 +308,21 @@ export async function voiceCallRoutes(
       return reply.status(503).send({ error: 'voice provider not configured' });
     }
 
-    // Metadata the agent worker reads on join: per-store voice_config + context.
-    // Static instructions for now — the real context assembler (Phase E) enriches this.
+    // Assemble the per-call prompt: admin-owned template + real context
+    // (customer profile + recent WhatsApp messages + what's missing).
+    const promptVars = await buildPromptVars({
+      storeId: session.store_id,
+      chatId: session.chat_id,
+      storeName: store.name,
+      agentName: store.agent_config?.agent_name || store.name,
+      language: voiceConfig.language,
+      reason: session.reason,
+      missingFields: session.missing_fields || [],
+    });
+    const instructions = renderPromptTemplate(voiceConfig.prompt_template, promptVars);
+
+    // Metadata the agent worker reads on join: per-store voice_config + the
+    // fully rendered instructions.
     const metadata = {
       session_id: String(session._id),
       store_id: session.store_id,
@@ -277,7 +330,7 @@ export async function voiceCallRoutes(
       chat_id: session.chat_id,
       reason: session.reason,
       voice_config: voiceConfig,
-      instructions: buildStaticInstructions(store.name, session.reason),
+      instructions,
     };
 
     let grant;
