@@ -136,7 +136,20 @@ def build_tts(vc: dict):
     logger.info(f"TTS: {provider} voice={voice or '(default)'}")
 
     if provider == "elevenlabs" and elevenlabs and Config.ELEVEN_API_KEY:
-        return elevenlabs.TTS(voice_id=voice, model="eleven_turbo_v2_5", language=lang)
+        return elevenlabs.TTS(
+            voice_id=voice,
+            model="eleven_turbo_v2_5",
+            language=lang,
+            # Stable prosody across streamed chunks — without this the default
+            # settings let each synthesized sentence drift in tone/intonation
+            # ("stitched recordings" effect).
+            voice_settings=elevenlabs.VoiceSettings(
+                stability=0.65,
+                similarity_boost=0.8,
+                style=0.0,
+                use_speaker_boost=True,
+            ),
+        )
     if provider == "cartesia" and cartesia and Config.CARTESIA_API_KEY:
         return cartesia.TTS(voice=voice) if voice else cartesia.TTS()
     if provider == "google" and google_tts:
