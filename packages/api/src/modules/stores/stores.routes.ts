@@ -26,6 +26,8 @@ interface VoiceConfigUpdate {
   llm_model?: string;
   tts_provider?: string;
   tts_voice?: string;
+  tts_stability?: number;
+  tts_style?: number;
   greeting?: string;
   prompt_template?: string;
 }
@@ -161,6 +163,12 @@ export async function storesRoutes(app: FastifyInstance) {
       if (body.prompt_template !== undefined && body.prompt_template.length > 6000) {
         return reply.status(400).send({ error: 'prompt_template too long (max 6000)' });
       }
+      for (const f of ['tts_stability', 'tts_style'] as const) {
+        const v = body[f];
+        if (v !== undefined && (typeof v !== 'number' || Number.isNaN(v) || v < 0 || v > 1)) {
+          return reply.status(400).send({ error: `${f} must be a number between 0 and 1` });
+        }
+      }
 
       const storeId = request.store.store_id;
       const update: Record<string, unknown> = {};
@@ -173,6 +181,8 @@ export async function storesRoutes(app: FastifyInstance) {
         'llm_model',
         'tts_provider',
         'tts_voice',
+        'tts_stability',
+        'tts_style',
         'greeting',
         'prompt_template',
       ] as const) {

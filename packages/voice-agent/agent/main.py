@@ -78,8 +78,19 @@ DEFAULT_VOICE_CONFIG = {
     "llm_model": "gpt-4o-mini",
     "tts_provider": "openai",
     "tts_voice": "nova",
+    "tts_stability": 0.5,
+    "tts_style": 0.2,
     "greeting": "",
 }
+
+
+def _clamped_float(value, default: float) -> float:
+    """Parse a 0-1 float from config; fall back to default on garbage."""
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return default
+    return min(1.0, max(0.0, v))
 
 
 def parse_call_context(participant) -> dict:
@@ -136,17 +147,20 @@ def build_tts(vc: dict):
     logger.info(f"TTS: {provider} voice={voice or '(default)'}")
 
     if provider == "elevenlabs" and elevenlabs and Config.ELEVEN_API_KEY:
+        # Expressiveness knobs come from the per-store voice_config (super-admin):
+        # stability low = expressive/variable, high = consistent/flat;
+        # style = energy. Tunable per pharmacy without redeploying.
+        stability = _clamped_float(vc.get("tts_stability"), 0.5)
+        style = _clamped_float(vc.get("tts_style"), 0.2)
+        logger.info(f"TTS elevenlabs settings: stability={stability} style={style}")
         return elevenlabs.TTS(
             voice_id=voice,
             model="eleven_turbo_v2_5",
             language=lang,
-            # Stable prosody across streamed chunks — without this the default
-            # settings let each synthesized sentence drift in tone/intonation
-            # ("stitched recordings" effect).
             voice_settings=elevenlabs.VoiceSettings(
-                stability=0.65,
+                stability=stability,
                 similarity_boost=0.8,
-                style=0.0,
+                style=style,
                 use_speaker_boost=True,
             ),
         )

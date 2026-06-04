@@ -33,6 +33,10 @@ export interface IStore extends Document {
     llm_model: string;
     tts_provider: string;
     tts_voice: string;
+    // ElevenLabs expressiveness knobs (0-1). stability: low = expressive but
+    // variable, high = consistent but flat. style: energy/expressiveness.
+    tts_stability: number;
+    tts_style: number;
     greeting: string;
     // System-prompt TEMPLATE for the voice agent — fully owned by the
     // super-admin (no hardcoded prompt in code). The backend fills the
@@ -63,6 +67,8 @@ export const VOICE_CONFIG_DEFAULTS = {
   llm_model: 'gpt-4o-mini',
   tts_provider: 'openai',
   tts_voice: 'nova',
+  tts_stability: 0.5,
+  tts_style: 0.2,
   greeting: '',
   // Default prompt TEMPLATE — a starting point the super-admin fully owns and
   // edits in the UI. Available variables (filled per call by the backend):
@@ -115,6 +121,8 @@ const storeSchema = new Schema<IStore>({
     llm_model: { type: String, default: VOICE_CONFIG_DEFAULTS.llm_model },
     tts_provider: { type: String, default: VOICE_CONFIG_DEFAULTS.tts_provider },
     tts_voice: { type: String, default: VOICE_CONFIG_DEFAULTS.tts_voice },
+    tts_stability: { type: Number, default: VOICE_CONFIG_DEFAULTS.tts_stability, min: 0, max: 1 },
+    tts_style: { type: Number, default: VOICE_CONFIG_DEFAULTS.tts_style, min: 0, max: 1 },
     greeting: { type: String, default: VOICE_CONFIG_DEFAULTS.greeting, maxlength: 300 },
     prompt_template: {
       type: String,

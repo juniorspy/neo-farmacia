@@ -19,6 +19,8 @@ interface VoiceConfig {
   llm_model: string;
   tts_provider: string;
   tts_voice: string;
+  tts_stability: number;
+  tts_style: number;
   greeting: string;
   prompt_template: string;
 }
@@ -140,6 +142,28 @@ export function VoiceConfigSection({ storeId }: { storeId: string }) {
               placeholder="ej: nova · voiceId de ElevenLabs · sonic"
             />
           </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Estabilidad (0–1)">
+              <input
+                type="number" min={0} max={1} step={0.05}
+                value={cfg.tts_stability ?? 0.5}
+                onChange={(e) => set("tts_stability", Math.min(1, Math.max(0, parseFloat(e.target.value) || 0)))}
+                className={INPUT}
+              />
+            </Field>
+            <Field label="Estilo / energía (0–1)">
+              <input
+                type="number" min={0} max={1} step={0.05}
+                value={cfg.tts_style ?? 0.2}
+                onChange={(e) => set("tts_style", Math.min(1, Math.max(0, parseFloat(e.target.value) || 0)))}
+                className={INPUT}
+              />
+            </Field>
+          </div>
+          <div className="text-[11px] text-slate-400">
+            Solo ElevenLabs · Estabilidad: baja = expresiva pero variable, alta = plana y consistente · Estilo: energía/ánimo de la voz.
+          </div>
 
           <Field label="Cerebro (LLM)">
             <select value={cfg.llm_provider} onChange={(e) => set("llm_provider", e.target.value)} className={INPUT}>
