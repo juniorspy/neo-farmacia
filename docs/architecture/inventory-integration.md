@@ -73,11 +73,19 @@ profunda (nivel 2+), los pedidos de WhatsApp podrían salir **directo como
 ventas en su sistema** (pre-cargados o confirmados en un paso), con esa
 persona operando todo el ciclo desde un solo lugar.
 
-Doble valor: (a) productividad — el mismo empleado pasa de contestar "¿a
-cómo?" todo el día a despachar ventas que el bot ya cerró; (b) argumento de
-venta — la respuesta a la objeción "la IA me quita personal" es *"no: te lo
-convierte en el que despacha más pedidos"*. Sin compromiso de fecha; se
-explora cuando haya farmacias en nivel 2.
+El efecto neto es **eficientizar la cadena completa de venta**:
+
+- El mismo empleado pasa de contestar "¿a cómo?" todo el día a despachar
+  ventas que el bot ya cerró.
+- **La cola del mostrador baja**: el cliente de WhatsApp ya no compite con la
+  fila física — su pedido entra cerrado, cotizado y listo para cobrar.
+- **Se eliminan pasos de la cadena**: hoy es preguntar → buscar precio →
+  responder → anotar a mano → re-digitar en caja → despachar; con el ciclo
+  integrado queda pedido cerrado por el bot → caja confirma → sale.
+- Argumento de venta — la respuesta a la objeción "la IA me quita personal"
+  es *"no: te lo convierte en el que despacha más pedidos"*.
+
+Sin compromiso de fecha; se explora cuando haya farmacias en nivel 2.
 
 1. Su inventario aparece en el bot de WhatsApp **con sus precios y su stock
    real** — el bot deja de depender de confirmación manual de disponibilidad.
