@@ -18,6 +18,7 @@ export const STEP_ORDER = [
   'mongo_store',
   'odoo_db_create',
   'odoo_seed_admin',
+  'odoo_seed_catalog',
   'create_dashboard_admin',
   'meilisearch_index',
   'agent_config',

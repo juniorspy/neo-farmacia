@@ -38,6 +38,9 @@ export function loadConfig() {
       defaultAdminPassword: optional('ODOO_DEFAULT_ADMIN_PASSWORD', 'admin'),
       defaultCountryCode: optional('ODOO_DEFAULT_COUNTRY_CODE', 'DO'),
       defaultLang: optional('ODOO_DEFAULT_LANG', 'es_DO'),
+      // Source DB for the master catalog cloned into each new pharmacy DB
+      // (Stage 10, D2). Empty = use the main ODOO_DB.
+      masterCatalogDb: optional('MASTER_CATALOG_DB', ''),
     },
 
     evolution: {
