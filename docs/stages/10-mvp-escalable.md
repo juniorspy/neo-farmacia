@@ -68,9 +68,14 @@ Mientras no haya stock real, la disponibilidad la confirma el humano al despacha
   - [x] `meilisearch_index` además de crear el índice dispara
     `fullRebuildStoreIndex` → la farmacia nace con búsqueda poblada, sin esperar
     el sync periódico.
-- [ ] **Verificación de alta e2e**: provisionar farmacia de prueba → pipeline OK,
-  catálogo en Odoo, índice Meili poblado, `catalogo.search` responde,
-  `pedido.updateItems` crea draft en SU Odoo.
+- [x] **Verificación de alta e2e** (2026-06-06, producción): `farmacia_test_m2`
+  provisionada con 8 pasos en verde — catálogo maestro (165 productos) copiado
+  1:1 a su Odoo, índice Meili poblado (165 docs + 91 sinónimos), usuario de
+  servicio autenticando contra su DB, sync periódico sin errores.
+  Hallazgo corregido en vivo: `sale_management` no instala `stock` y
+  `qty_available` es campo de `stock` (`8897aad`). La prueba a nivel comandos
+  (`catalogo.search` / `pedido.updateItems`) queda cubierta por la pasada e2e
+  formal de M4 con n8n.
 
 ### M2 — Ciclo de pedido cerrado (patrón ✗)
 
