@@ -35,7 +35,8 @@ es por etapas:
    **contrato de ingesta (ADR-008)**: Ingestion API pública y documentada;
    los conectores propios (ADR-007: SQL Server/MySQL, sync tiered) son
    clientes del mismo contrato 💡 — cambia *quién alimenta* el motor, no la
-   arquitectura.
+   arquitectura. Detalle completo (explicación simple + spec técnica):
+   **`docs/architecture/inventory-integration.md`**.
 
 Lección heredada de colmado aplicada desde el día 1: **no hay bus implícito de
 rutas** (el riesgo crítico #1 de NeoColmado con RTDB). Todos los contratos pasan
@@ -294,7 +295,12 @@ flowchart TD
   colmadero confirma). En farmacia **el catálogo llega completo** y la farmacia
   solo ajusta precios. El equivalente farmacéutico del aprendizaje es el
   **patrón ✗ al despachar** (4.6) mientras no haya stock real conectado.
-- El conector (ADR-007) define ingesta tiered de vuelta al POS: stock < 5 →
+- El inventario real entra por el **contrato de ingesta (ADR-008)** 💡: Ruta A
+  (el IT de la farmacia empuja productos y hace pull+ack de ventas — 2
+  endpoints) o Ruta B (conector nuestro por vendor, cliente del mismo
+  contrato). Ver **`docs/architecture/inventory-integration.md`** (explicación
+  simple + spec técnica).
+- El conector (ADR-007) define la semántica tiered del write-back: stock < 5 →
   hold con confirmación humana; 5–10 → push inmediato; > 10 → batch nocturno
   con reconciliación. 💡
 - Sinónimos farmacéuticos sembrados en cada índice (genérico ↔ marca). ✅

@@ -69,6 +69,11 @@ reconciliación nocturna); ADR-008 define el **transporte/contrato**.
   versionado (`/v1/`), idempotencia y sandbox de prueba (la misma lección de
   "API documentada es una disciplina, no una propiedad").
 
+## Especificación
+
+Detalle completo del contrato (explicación simple + spec técnica con ejemplos
+y diagramas): **`docs/architecture/inventory-integration.md`**.
+
 ## Implementación (cuando llegue el primer cliente real)
 
 - Módulo `ingest` en el API: validación, API keys por store, upsert a Odoo
