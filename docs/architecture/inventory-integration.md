@@ -35,19 +35,48 @@ Nada de reuniones interminables ni accesos raros a sus servidores.
 | **A. Su IT se conecta** | Farmacias con departamento de IT o proveedor de software activo | Su sistema nos envía el catálogo (productos, precios, stock) y consulta las ventas de WhatsApp para registrarlas en su POS. Dos operaciones, una API key, listo. |
 | **B. Nosotros nos conectamos** | Farmacias sin IT | Instalamos un conector nuestro que lee su base de datos y usa exactamente la misma puerta de entrada. La farmacia no hace nada. |
 
-### Qué cambia para la farmacia en el día a día
+### La regla de oro: el pedido no es la venta
+
+En la mayoría de farmacias **nada sale del anaquel sin pasar por caja y
+facturarse** (control interno + obligación fiscal). Eso no es un obstáculo —
+es parte del diseño:
+
+```
+Pedido WhatsApp (nuestra plataforma)  =  boleta de picking / orden de qué cobrar
+Factura en SU caja (su POS)           =  la venta de registro (fiscal, NCF, stock)
+```
+
+Flujo de despacho real: pedido llega al panel → farmacéutico revisa → **lo
+pasa por caja como cualquier venta** (factura, descuenta su stock) → marca
+"despachado" → el delivery sale con la factura. Su proceso de control no se
+toca; nuestro sistema le dice *qué* cobrar, su caja sigue siendo la caja.
+
+Consecuencia clave: al facturar en caja, **su stock ya se descontó por su
+propio proceso** — el sync de inventario lo trae corregido. El write-back
+automático pasa de requisito a optimización opcional.
+
+### La escalera de adopción (la integración es un upgrade, no un prerrequisito)
+
+| Nivel | Qué obtiene la farmacia | Integración necesaria |
+|---|---|---|
+| **0 — Día 1** | Bot vende, pedidos al panel, caja factura como siempre, disponibilidad confirmada al despachar (patrón ✗) | **Ninguna** |
+| **1 — Inventario** | Bot con stock y precios reales; lo facturado en caja se auto-corrige vía sync | Push de productos/stock (Ruta A) o conector (Ruta B) |
+| **2 — Ventas (opcional)** | El pedido llega pre-cargado a su POS; la cajera solo confirma (ahorra digitación) | Pull + ack de ventas — solo si su IT lo quiere |
+
+### Qué cambia para la farmacia en el día a día (nivel 1+)
 
 1. Su inventario aparece en el bot de WhatsApp **con sus precios y su stock
    real** — el bot deja de depender de confirmación manual de disponibilidad.
-2. Cuando el bot vende algo, esa venta **se refleja en su POS** — el inventario
-   físico y el digital nunca se desincronizan.
+2. Lo que factura en caja se refleja en el bot en el próximo sync — físico y
+   digital no se desincronizan.
 3. Si cambian un precio en su sistema, el bot lo sabe en minutos.
 
 ### La frase para la venta
 
-> "No necesito acceso a tu sistema. Tu técnico entra a nuestra guía de
-> integración, son 2 operaciones con ejemplos copy-paste, y tu farmacia queda
-> conectada. Y si no tienes técnico, lo conectamos nosotros."
+> "Tu farmacia empieza a vender por WhatsApp **hoy, sin integrar nada** — tu
+> caja sigue facturando como siempre. Cuando quieras que el bot tenga tu stock
+> y precios al día, tu técnico entra a nuestra guía: son 2 operaciones con
+> ejemplos copy-paste. Y si no tienes técnico, lo conectamos nosotros."
 
 ---
 
@@ -140,7 +169,16 @@ Semántica:
   → sync → Meilisearch → bot. Con stock real fluyendo, se apaga el
   `disponibleVentas: || true`.
 
-### Operación 2 — Ventas WhatsApp (plataforma → farmacia), invertida a pull
+### Operación 2 — Ventas WhatsApp (plataforma → farmacia), invertida a pull — NIVEL 2, OPCIONAL
+
+**Por defecto esta operación no hace falta**: la venta de registro es la
+factura que la cajera emite en su POS al despachar (regla de oro, Parte 1) —
+su stock se descuenta por su propio proceso y el sync de nivel 1 lo trae de
+vuelta. Esta operación existe solo como comodidad para farmacias con IT que
+quieran el pedido **pre-cargado** en su POS (la cajera confirma en vez de
+digitar). Además, muchos POS no permiten que un sistema externo emita
+facturas (control de secuencia NCF) — otra razón por la que la factura
+siempre es de ellos.
 
 El riesgo más alto del diseño original (ADR-007) era escribir nosotros en la DB
 del POS ajeno. **Se invierte la dirección**: el sistema de la farmacia consulta
@@ -207,10 +245,20 @@ sequenceDiagram
   IT->>ING: POST /ingest/sales/:id/ack
 ```
 
+### Regla de consistencia de stock
+
+Con integración activa (nivel 1+), **el stock del POS siempre gana**: el sync
+POS → plataforma sobreescribe el stock del Odoo interno, que es espejo y nunca
+compite con la caja. La ventana entre la factura en caja y el siguiente sync se
+reconcilia con la lógica de "in-flight sales" del Stage 6 (el stock entrante se
+ajusta por ventas WhatsApp aún no reflejadas, para no pisar ni duplicar).
+
 ### Qué NO es este contrato
 
 - No es acceso a nuestro Odoo ni al de la farmacia — ninguna de las dos partes
   toca la DB de la otra.
+- **No es un sistema de facturación**: la factura (y el NCF) siempre la emite
+  el POS de la farmacia. Nuestro pedido es la orden; su factura es la venta.
 - No reemplaza el comando `catalogo.search` de n8n (eso es consumo interno del
   bot); esto es exclusivamente la frontera con sistemas externos.
 - No exige tiempo real: el MVP del contrato funciona con full-sync nocturno +

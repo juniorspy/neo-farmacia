@@ -499,6 +499,11 @@ placeholder — regularizar o descartar.
     repo. ✅
 11. n8n no es fuente de verdad; Odoo es SSoT del canal WhatsApp (ADR-004);
     Meilisearch nunca es fuente contable. ✅
+12. **El pedido de la plataforma no es la venta fiscal**: la factura del POS de
+    la farmacia (caja, NCF) es la venta de registro — nada sale del anaquel
+    sin facturarse en SU sistema. La plataforma dice *qué* cobrar; la caja
+    sigue siendo la caja. Con integración activa, el stock del POS siempre
+    gana sobre el espejo interno (ADR-008, `docs/architecture/inventory-integration.md`). ✅ diseño
 
 ## 9. Puntos de riesgo y deuda arquitectónica
 

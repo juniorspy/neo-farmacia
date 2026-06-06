@@ -45,6 +45,19 @@ el pipeline interno.
      limpio en vez de darnos acceso de escritura a su DB. Elimina la parte más
      burocrática/riesgosa de la integración para el vendor con IT.
 
+### Semántica de venta de registro (amendment 2026-06-06)
+
+En la mayoría de farmacias nada sale del anaquel sin facturarse en caja
+(control interno + NCF fiscal). Por tanto: **el pedido de la plataforma es la
+orden; la factura del POS de la farmacia es la venta de registro**. La cajera
+factura el pedido WhatsApp al despachar como cualquier venta — su stock se
+descuenta por su propio proceso y el sync de inventario lo refleja. Esto
+convierte la Operación 2 (pull+ack) en **nivel opcional de comodidad**
+(pre-cargar el pedido en su POS), no en requisito, y define la escalera de
+adopción: nivel 0 sin integración (día 1), nivel 1 inventario (lectura),
+nivel 2 ventas (opcional). Regla de consistencia: con integración activa, el
+stock del POS siempre sobreescribe el espejo interno.
+
 ### Los conectores propios son clientes del mismo contrato
 
 Para farmacias sin capacidad de IT, los adaptadores de ADR-007 (SQL Server,

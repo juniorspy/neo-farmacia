@@ -118,6 +118,10 @@ página para el IT del dueño.
   sustituto (decisión: vía n8n, no plantilla — sin contexto la conversación se
   rompe). El ítem se remueve/ajusta en el `sale.order`.
 - [ ] Despachar → estado en Odoo + notificación WhatsApp al cliente.
+  Semántica del botón: "despachado" = **ya pasó por caja** (la farmacia factura
+  el pedido en SU POS antes de que salga — regla de negocio #12 del mapa; el
+  pedido nuestro es la orden, su factura es la venta). Etiquetar la acción en
+  el UI acorde a ese flujo mental.
 - [ ] Registro: todo cambio de pedido queda trazado (evento + mensaje).
 
 ### M3 — Voz dentro del ciclo (Stage 9 Phases F+G mínimo)
