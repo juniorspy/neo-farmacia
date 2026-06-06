@@ -35,7 +35,7 @@ Mientras no haya stock real, la disponibilidad la confirma el humano al despacha
 
 > Farmacia nueva = provisionar + QR + vender. Nada más.
 
-- [ ] **Fix auth por farmacia (crítico)** — `getScopedOdoo(config, db)` usa
+- [x] **Fix auth por farmacia (crítico)** — `getScopedOdoo(config, db)` usa
   `config.odoo.user/password` (admin global) contra DBs por farmacia donde ese
   login no existe. Afecta **catalog-sync Y todo `/api/v1/commands`** (pedidos)
   de cualquier farmacia nueva (`farmacia_geremy`).
@@ -50,10 +50,13 @@ Mientras no haya stock real, la disponibilidad la confirma el humano al despacha
     farmacia nunca recibe acceso; (b) la alternativa pone la clave de cifrado en
     el mismo env → mismo radio de explosión con más complejidad; (c) cero cambios
     en call sites. Revisar si algún día las farmacias acceden a su Odoo.
-  - [ ] Ruta admin de reparación para farmacias ya rotas: crea el usuario de
+  - [x] Ruta admin de reparación para farmacias ya rotas: crea el usuario de
     servicio usando el password admin del job (paso `email_credentials`) si aún
     no fue entregado; si no está disponible → re-provisionar.
-- [ ] **Paso `odoo_seed_catalog`** — nuevo paso del pipeline tras `odoo_seed_admin`.
+    (`POST /api/v1/admin/pharmacies/:storeId/repair-odoo-service`)
+- [x] **Paso `odoo_seed_catalog`** — nuevo paso del pipeline tras `odoo_seed_admin`.
+  Nota de implementación: la DB nueva nace solo con `base` — el paso instala
+  `sale_management` primero (sin él ni siquiera existe `product.product`).
   - **Decisión D2 — copia JSON-RPC desde DB maestra** (no duplicación de DB
     template): lee `product.category` + `product.product (sale_ok=true)` de
     `MASTER_CATALOG_DB` (default: la DB principal con el catálogo actual) y los
@@ -61,8 +64,8 @@ Mientras no haya stock real, la disponibilidad la confirma el humano al despacha
     mantener una DB plantilla sincronizada; la copia explícita es idempotente
     (salta productos ya existentes por `default_code`/nombre), controla campos y
     no arrastra datos operativos (pedidos/clientes de Leo).
-  - [ ] Idempotente ante re-runs (retry de step no duplica productos).
-  - [ ] `meilisearch_index` además de crear el índice dispara
+  - [x] Idempotente ante re-runs (retry de step no duplica productos).
+  - [x] `meilisearch_index` además de crear el índice dispara
     `fullRebuildStoreIndex` → la farmacia nace con búsqueda poblada, sin esperar
     el sync periódico.
 - [ ] **Verificación de alta e2e**: provisionar farmacia de prueba → pipeline OK,
