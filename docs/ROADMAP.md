@@ -13,6 +13,7 @@
 | 7 | [POS Sync](stages/06-pos-sync.md) | `designed` | Tiered write-back (ADR-007). SQL Server/MySQL adapters pending. |
 | 8 | [Production](stages/07-production.md) | `pending` | Backups, monitoring, alerts, rate limiting, Traefik hardening |
 | 9 | [Voice Calls](stages/09-voice-calls.md) | `in_progress` — v3 LiveKit pipeline; session/link/create/config/transport **built**; pending LiveKit creds + real context + n8n trigger | AI-initiated WebRTC voice calls with per-pharmacy voice config |
+| 10 | [MVP Escalable](stages/10-mvp-escalable.md) | `in_progress` | Complete cycle + systematic onboarding: master-catalog seed, per-pharmacy Odoo auth fix, ✗ dispatch pattern, voice in the loop, fleet health board. See ARQUITECTURA_MODELO_NEGOCIO.md |
 
 ## Dependency Graph
 
