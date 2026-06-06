@@ -124,7 +124,7 @@ export async function runNextJobStep(config: AppConfig): Promise<boolean> {
       $or: [{ locked_at: null }, { locked_at: { $lt: cutoff } }],
     },
     { $set: { locked_at: now, status: 'running' } },
-    { sort: { created_at: 1 }, new: true },
+    { sort: { created_at: 1 }, returnDocument: 'after' },
   );
 
   if (!job) return false;

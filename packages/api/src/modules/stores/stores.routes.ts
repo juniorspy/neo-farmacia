@@ -119,7 +119,7 @@ export async function storesRoutes(app: FastifyInstance) {
       const updated = await Store.findOneAndUpdate(
         { store_id: storeId },
         { $set: update },
-        { new: true },
+        { returnDocument: 'after' },
       );
       if (!updated) return reply.status(404).send({ error: 'store not found' });
 
@@ -202,7 +202,7 @@ export async function storesRoutes(app: FastifyInstance) {
       const updated = await Store.findOneAndUpdate(
         { store_id: storeId },
         { $set: update },
-        { new: true },
+        { returnDocument: 'after' },
       );
       if (!updated) return reply.status(404).send({ error: 'store not found' });
 
