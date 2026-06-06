@@ -29,11 +29,13 @@ es por etapas:
 
 1. **MVP (sin farmacias reales):** catálogo maestro propio, clonado a cada
    farmacia nueva al provisionarla ✅ (M1, verificado en producción 2026-06-06)
-   — *no es el estándar de operación*. Pendiente M1.5: promover el catálogo
-   real (`pharmacy_inventory`, 17,456 productos) a maestro en DB dedicada ⏳.
-2. **Estándar de operación:** conector con el POS/inventario real de la farmacia
-   (ADR-007, diseñado) 💡 — el conector solo cambia *quién alimenta* el motor,
-   no la arquitectura.
+   — *no es el estándar de operación*. Opcional M1.5 💡: stress test del
+   pipeline con catálogo real de 17k (`pharmacy_inventory`).
+2. **Estándar de operación:** el inventario de CADA farmacia entra por el
+   **contrato de ingesta (ADR-008)**: Ingestion API pública y documentada;
+   los conectores propios (ADR-007: SQL Server/MySQL, sync tiered) son
+   clientes del mismo contrato 💡 — cambia *quién alimenta* el motor, no la
+   arquitectura.
 
 Lección heredada de colmado aplicada desde el día 1: **no hay bus implícito de
 rutas** (el riesgo crítico #1 de NeoColmado con RTDB). Todos los contratos pasan
@@ -502,8 +504,9 @@ placeholder — regularizar o descartar.
   (rota pre-fix) eliminada.
 - ~~**Catálogo inicial**~~ ✅ RESUELTO (M1, `757bdbc`+`8897aad`+`92dffa9`):
   paso `odoo_seed_catalog` (módulos + clonado) + rebuild Meili inmediato.
-  Verificado en producción. Pendiente M1.5 ⏳: promover el catálogo real
-  (17,456 productos en `pharmacy_inventory`) a maestro en DB dedicada.
+  Verificado en producción. El inventario real por farmacia llega vía el
+  contrato de ingesta (ADR-008) cuando haya cliente; M1.5 💡 queda como
+  stress test opcional con `pharmacy_inventory` (17,456).
 - **Pasada e2e del loop completo** ⏳ M4: el silent-drop está corregido pero el
   ciclo WhatsApp → n8n → respuesta no tiene verificación end-to-end formal
   post-fix.
@@ -569,7 +572,7 @@ Neo Farmacia convierte conversaciones en operaciones comerciales trazables.
 | Milestone | Entregable | Piezas | Estado |
 |---|---|---|---|
 | **M1 — Alta sistemática** | Farmacia nueva vendiendo en minutos | Paso `odoo_seed_catalog` (módulos + clonado JSON-RPC) + usuario de servicio por farmacia | ✅ 2026-06-06 |
-| **M1.5 — Catálogo real** | Farmacia nace con 17,456 productos reales | Importador `pharmacy_inventory` → DB `pharmacy_master_catalog` + `MASTER_CATALOG_DB` | ⏳ |
+| **M1.5 — Stress test catálogo real** | Validar pipeline a escala 17k productos (opcional, despriorizada) | Importador `pharmacy_inventory` → DB `pharmacy_master_catalog` + `MASTER_CATALOG_DB` | 💡 |
 | **M2 — Ciclo cerrado** | Pedido → despacho → cliente informado | Acciones ✗/✓ por ítem en `/orders` + evento ✗ → n8n → aviso IA + despacho con notificación | ⏳ |
 | **M3 — Voz en el ciclo** | Llamada como parte del flujo | Phase F (n8n dispara + link) + Phase G mínimo (transcripts, llamada perdida) | ⏳ |
 | **M4 — Operar la flota** | Escalar sin revisión manual | Health board admin + pasada e2e formal del ciclo con farmacia recién provisionada | ⏳ |

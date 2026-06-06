@@ -93,11 +93,11 @@
 **Known blockers before first real customer:**
 
 1. Final e2e verification of WhatsApp → n8n → reply loop (Stage 10 M4).
-2. Real master catalog (Stage 10 M1.5): `pharmacy_inventory` in Meilisearch holds
-   17,456 real products — import into a dedicated `pharmacy_master_catalog` Odoo DB
-   and point `MASTER_CATALOG_DB` at it.
-3. n8n flows adapted for pharmacy — user-owned, in progress.
-4. POS connector for first target pharmacy — blocked on first-customer decision (ADR-007).
+2. n8n flows adapted for pharmacy — user-owned, in progress.
+3. First customer's inventory via the ingestion contract (**ADR-008**: public
+   Ingestion API; ADR-007 connectors are clients of the same contract) — built when
+   the first real customer lands. Optional stress test (M1.5 💡): seed a test
+   pharmacy from `pharmacy_inventory` (17,456 real products).
 
 ## Progress Tracking
 

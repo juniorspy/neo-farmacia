@@ -83,21 +83,30 @@ Mientras no haya stock real, la disponibilidad la confirma el humano al despacha
   La prueba a nivel comandos (`catalogo.search` / `pedido.updateItems`) queda
   cubierta por la pasada e2e formal de M4 con n8n.
 
-### M1.5 — Catálogo maestro REAL (pendiente)
+### M1.5 — Prueba de estrés con catálogo real (OPCIONAL, despriorizada)
 
-> Descubierto al verificar M1: en la instancia compartida de Meilisearch vive
-> **`pharmacy_inventory` — 17,456 productos reales** (export de POS de farmacia,
-> `codigo/descripcion/precio/unidad`, DOP). Confirmado por el usuario como EL
-> catálogo a usar. El maestro actual (165) era un subset de prueba.
+> En la instancia compartida de Meilisearch vive **`pharmacy_inventory` —
+> 17,456 productos reales** (export de POS de farmacia,
+> `codigo/descripcion/precio/unidad`, DOP). NO es "el catálogo a usar en
+> producción": el flujo real es alta + inventario de CADA farmacia vía el
+> contrato de ingesta (**ADR-008**). Este milestone es solo una prueba de
+> estrés del pipeline (seed, sync, búsqueda, n8n) a escala realista de 17k
+> productos. Para el MVP, el maestro de 165 es suficiente.
 
-- [ ] Importador: `pharmacy_inventory` (Meili) → DB Odoo dedicada
-  `pharmacy_master_catalog` (mapeo `codigo→default_code`,
-  `descripcion→name`, `precio→list_price`, `unidad→uom`).
-  **No** importar al Odoo principal — es el POS vivo de Farmacia Leo.
-- [ ] Setear `MASTER_CATALOG_DB=pharmacy_master_catalog` en el env de Dokploy.
-- [ ] Re-provisionar farmacia de prueba → nace con los 17,456.
-- [ ] Confirmar vigencia de los precios del export (no bloquea: la farmacia
-  ajusta precios, como el colmadero).
+- [ ] (Opcional) Importador: `pharmacy_inventory` (Meili) → DB Odoo dedicada
+  `pharmacy_master_catalog` → `MASTER_CATALOG_DB` → provisionar farmacia de
+  prueba → medir: tiempo de seed, sync, latencia de búsqueda, calidad de
+  respuestas del bot con catálogo grande.
+
+### Integración de inventario real — decisión tomada (ADR-008)
+
+El "conector universal" no existe (cero estandarización entre POS de
+farmacias). Lo que se estandariza es **nuestro contrato**: una Ingestion API
+pública y documentada (`PUT /ingest/products` por lotes + `GET /ingest/sales`
+con ack — write-back invertido a pull). Los conectores propios de ADR-007
+(SQL Server/MySQL) son clientes del mismo contrato. Se construye cuando exista
+el primer cliente real; el activo de venta es la guía de integración de 1
+página para el IT del dueño.
 
 ### M2 — Ciclo de pedido cerrado (patrón ✗)
 
