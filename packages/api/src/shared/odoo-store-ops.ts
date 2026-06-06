@@ -148,6 +148,60 @@ export async function updateSaleOrderStateScoped(
   logger.info({ orderId, action }, 'Sale order state updated (scoped)');
 }
 
+/**
+ * Ensure the platform's internal service user exists in a tenant Odoo DB.
+ *
+ * getScopedOdoo() defaults to config.odoo.user/password for every per-store
+ * client (catalog-sync, /api/v1/commands, dashboard routes). That login only
+ * exists in the original DB unless we create it — without this, every newly
+ * provisioned pharmacy fails auth (empty search index, broken orders).
+ *
+ * Decision D1 (docs/stages/10-mvp-escalable.md): one shared internal service
+ * credential from env, seeded into each tenant DB at provisioning time. Odoo
+ * is internal — pharmacies never get access to it.
+ *
+ * The client must be authenticated as that DB's admin; the service user is
+ * created with the admin's own groups. Idempotent: updates the password if
+ * the login already exists (self-healing after env rotation).
+ */
+export async function ensureServiceUser(
+  client: ScopedOdoo,
+  login: string,
+  password: string,
+): Promise<number> {
+  const existing = (await client.execute(
+    'res.users',
+    'search_read',
+    [[['login', '=', login]]],
+    { fields: ['id'], limit: 1, context: { active_test: false } },
+  )) as Array<{ id: number }>;
+
+  if (existing.length > 0) {
+    const userId = existing[0].id;
+    await client.execute('res.users', 'write', [[userId], { password, active: true }]);
+    logger.info({ userId, login }, 'Odoo service user already present, password refreshed');
+    return userId;
+  }
+
+  // Copy the calling admin's groups so the service user can do everything
+  // the platform needs (products, partners, sale orders).
+  const adminUid = await client.authenticate();
+  const [admin] = (await client.execute('res.users', 'read', [[adminUid]], {
+    fields: ['groups_id'],
+  })) as Array<{ groups_id: number[] }>;
+
+  const userId = (await client.execute('res.users', 'create', [
+    {
+      name: 'NeoFarmacia Service',
+      login,
+      password,
+      groups_id: [[6, 0, admin.groups_id]],
+    },
+  ])) as number;
+  logger.info({ userId, login }, 'Odoo service user created');
+  return userId;
+}
+
 export async function findOrCreatePartnerScoped(
   client: ScopedOdoo,
   name: string,

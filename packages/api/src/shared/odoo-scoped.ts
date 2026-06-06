@@ -56,13 +56,18 @@ export class ScopedOdoo {
     method: string,
     args: unknown[],
     kwargs: Record<string, unknown> = {},
+    timeoutMs?: number,
   ): Promise<unknown> {
     const uid = await this.authenticate();
-    return jsonRpc(`${this.opts.url}/jsonrpc`, {
-      service: 'object',
-      method: 'execute_kw',
-      args: [this.opts.db, uid, this.opts.password, model, method, args, kwargs],
-    });
+    return jsonRpc(
+      `${this.opts.url}/jsonrpc`,
+      {
+        service: 'object',
+        method: 'execute_kw',
+        args: [this.opts.db, uid, this.opts.password, model, method, args, kwargs],
+      },
+      timeoutMs,
+    );
   }
 }
 

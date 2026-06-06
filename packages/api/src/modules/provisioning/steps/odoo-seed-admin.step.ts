@@ -1,5 +1,6 @@
 import type { ProvisioningStep, StepContext } from '../step.types.js';
 import { makeScopedOdoo } from '../../../shared/odoo-scoped.js';
+import { ensureServiceUser } from '../../../shared/odoo-store-ops.js';
 import { logger } from '../../../shared/logger.js';
 
 /**
@@ -7,6 +8,10 @@ import { logger } from '../../../shared/logger.js';
  * timezone, and lang, and that the company record matches the pharmacy name.
  * The admin user itself was created by odoo db.create_database with the
  * owner_email as login.
+ *
+ * Also seeds the platform's internal service user (config.odoo.user) into the
+ * new DB so getScopedOdoo() works against it — catalog-sync, commands and
+ * dashboard routes all authenticate with that login (Stage 10, decision D1).
  */
 export const odooSeedAdminStep: ProvisioningStep = {
   name: 'odoo_seed_admin',
@@ -41,11 +46,18 @@ export const odooSeedAdminStep: ProvisioningStep = {
       { name: store.name, phone: store.owner_phone || false, email: store.owner_email },
     ]);
 
+    // Internal service user — the credential every per-store client uses.
+    // Skip if the configured service login IS the admin login (edge config).
+    let serviceUserId: number | null = null;
+    if (config.odoo.user.toLowerCase() !== store.owner_email.toLowerCase()) {
+      serviceUserId = await ensureServiceUser(client, config.odoo.user, config.odoo.password);
+    }
+
     logger.info(
-      { db: store.odoo_db, userId: user.id, companyId },
-      'Odoo admin + company updated',
+      { db: store.odoo_db, userId: user.id, companyId, serviceUserId },
+      'Odoo admin + company updated, service user ensured',
     );
 
-    ctx.step.data = { user_id: user.id, company_id: companyId };
+    ctx.step.data = { user_id: user.id, company_id: companyId, service_user_id: serviceUserId };
   },
 };

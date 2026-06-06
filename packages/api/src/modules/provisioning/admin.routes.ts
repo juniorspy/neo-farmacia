@@ -8,6 +8,9 @@ import {
   deletePharmacy,
   markCredentialsDelivered,
 } from './provisioning.service.js';
+import { makeScopedOdoo } from '../../shared/odoo-scoped.js';
+import { ensureServiceUser } from '../../shared/odoo-store-ops.js';
+import { invalidateScopedOdoo } from '../../shared/odoo-scoped-cache.js';
 
 function requireSuperAdmin(request: FastifyRequest, reply: FastifyReply) {
   const user = request.user as { role: string } | undefined;
@@ -162,6 +165,41 @@ export async function adminRoutes(
       const job = await retryJob(storeId);
       if (!job) return reply.status(404).send({ error: 'Not found' });
       return { store_id: storeId, status: job.status };
+    },
+  );
+
+  // Repair: seed the internal service user into an already-provisioned DB.
+  // Pharmacies created before Stage 10 D1 lack it, so catalog-sync and
+  // commands fail auth against their Odoo. Needs the per-pharmacy admin
+  // password, which only survives in the email_credentials step until the
+  // super-admin marks it delivered — after that, re-provisioning is the path.
+  app.post(
+    '/api/v1/admin/pharmacies/:storeId/repair-odoo-service',
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      if (!requireSuperAdmin(request, reply)) return;
+      const { storeId } = request.params as { storeId: string };
+
+      const store = await Store.findOne({ store_id: storeId }).lean();
+      if (!store) return reply.status(404).send({ error: 'Not found' });
+      if (store.odoo_db === config.odoo.db) {
+        return reply.status(400).send({ error: 'default store uses the main DB; nothing to repair' });
+      }
+
+      const job = await ProvisioningJob.findOne({ store_id: storeId }).lean();
+      const emailStep = job?.steps.find((s) => s.name === 'email_credentials');
+      const adminPassword = emailStep?.data?.admin_password as string | undefined;
+      if (!adminPassword) {
+        return reply.status(409).send({
+          error: 'admin password no longer available (credentials already delivered)',
+          hint: 'delete and re-provision the pharmacy',
+        });
+      }
+
+      const client = makeScopedOdoo(config, store.odoo_db, store.owner_email, adminPassword);
+      const serviceUserId = await ensureServiceUser(client, config.odoo.user, config.odoo.password);
+      invalidateScopedOdoo(store.odoo_db);
+      return { store_id: storeId, service_user_id: serviceUserId };
     },
   );
 }
