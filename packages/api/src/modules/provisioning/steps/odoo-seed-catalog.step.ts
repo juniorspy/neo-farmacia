@@ -34,24 +34,34 @@ const MODULE_INSTALL_TIMEOUT_MS = 600000; // sale_management install is slow on 
 const BATCH_CREATE_TIMEOUT_MS = 300000;
 
 /** db.create_database leaves a bare DB (base module only) — product/sale
- *  models don't exist yet. Install sale_management (pulls in product + sale). */
-async function ensureSaleModule(target: ScopedOdoo): Promise<boolean> {
+ *  models don't exist yet. sale_management pulls in product + sale; stock is
+ *  needed too: qty_available (read by catalog-sync, product search and
+ *  consultarPrecio) only exists with Inventory installed, and lots/expiry +
+ *  the future POS connector (ADR-007) live there as well. */
+const REQUIRED_MODULES = ['sale_management', 'stock'];
+
+async function ensureModules(target: ScopedOdoo): Promise<string[]> {
   const mods = (await target.execute(
     'ir.module.module',
     'search_read',
-    [[['name', '=', 'sale_management']]],
-    { fields: ['id', 'state'], limit: 1 },
-  )) as Array<{ id: number; state: string }>;
-  if (!mods.length) throw new Error('sale_management module not found in target DB');
-  if (mods[0].state === 'installed') return false;
+    [[['name', 'in', REQUIRED_MODULES]]],
+    { fields: ['id', 'name', 'state'] },
+  )) as Array<{ id: number; name: string; state: string }>;
+
+  const found = new Set(mods.map((m) => m.name));
+  const missing = REQUIRED_MODULES.filter((n) => !found.has(n));
+  if (missing.length) throw new Error(`Modules not found in target DB: ${missing.join(', ')}`);
+
+  const toInstall = mods.filter((m) => m.state !== 'installed');
+  if (toInstall.length === 0) return [];
   await target.execute(
     'ir.module.module',
     'button_immediate_install',
-    [[mods[0].id]],
+    [toInstall.map((m) => m.id)],
     {},
     MODULE_INSTALL_TIMEOUT_MS,
   );
-  return true;
+  return toInstall.map((m) => m.name);
 }
 
 /** Copy categories by name (hierarchy deliberately flattened for the MVP).
@@ -98,8 +108,10 @@ export const odooSeedCatalogStep: ProvisioningStep = {
     const source = getScopedOdoo(config, masterDb);
     const target = getScopedOdoo(config, store.odoo_db);
 
-    const moduleInstalled = await ensureSaleModule(target);
-    if (moduleInstalled) logger.info({ db: store.odoo_db }, 'sale_management installed');
+    const modulesInstalled = await ensureModules(target);
+    if (modulesInstalled.length) {
+      logger.info({ db: store.odoo_db, modules: modulesInstalled }, 'Odoo modules installed');
+    }
 
     const { map: catMap, created: categoriesCreated } = await copyCategories(source, target);
 
@@ -190,7 +202,7 @@ export const odooSeedCatalogStep: ProvisioningStep = {
     );
     step.data = {
       master_db: masterDb,
-      module_installed: moduleInstalled,
+      modules_installed: modulesInstalled,
       categories_created: categoriesCreated,
       products_created: created,
       products_skipped: skipped,
