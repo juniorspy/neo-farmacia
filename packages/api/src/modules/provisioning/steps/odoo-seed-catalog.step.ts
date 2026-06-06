@@ -36,9 +36,11 @@ const BATCH_CREATE_TIMEOUT_MS = 300000;
 /** db.create_database leaves a bare DB (base module only) — product/sale
  *  models don't exist yet. sale_management pulls in product + sale; stock is
  *  needed too: qty_available (read by catalog-sync, product search and
- *  consultarPrecio) only exists with Inventory installed, and lots/expiry +
- *  the future POS connector (ADR-007) live there as well. */
-const REQUIRED_MODULES = ['sale_management', 'stock'];
+ *  consultarPrecio) only exists with Inventory installed; product_expiry
+ *  provides use_expiration_date (read by the products routes) and is core
+ *  pharmacy domain anyway (lots/expiry). The full set keeps tenant DBs
+ *  field-compatible with everything the platform reads. */
+const REQUIRED_MODULES = ['sale_management', 'stock', 'product_expiry'];
 
 async function ensureModules(target: ScopedOdoo): Promise<string[]> {
   const mods = (await target.execute(
