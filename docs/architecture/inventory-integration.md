@@ -63,7 +63,21 @@ automático pasa de requisito a optimización opcional.
 | **1 — Inventario** | Bot con stock y precios reales; lo facturado en caja se auto-corrige vía sync | Push de productos/stock (Ruta A) o conector (Ruta B) |
 | **2 — Ventas (opcional)** | El pedido llega pre-cargado a su POS; la cajera solo confirma (ahorra digitación) | Pull + ack de ventas — solo si su IT lo quiere |
 
-### Qué cambia para la farmacia en el día a día (nivel 1+)
+### 💡 Idea anotada (valor futuro): el que atendía WhatsApp se convierte en despachador
+
+Hoy la farmacia tiene a alguien del mostrador atendiendo el WhatsApp a mano.
+Cuando el bot toma ese rol, esa persona no sobra — **se reconvierte en
+operador de despacho**: vive en nuestro panel revisando pedidos (✓/✗),
+pasándolos por caja y coordinando deliveries. Y en farmacias con integración
+profunda (nivel 2+), los pedidos de WhatsApp podrían salir **directo como
+ventas en su sistema** (pre-cargados o confirmados en un paso), con esa
+persona operando todo el ciclo desde un solo lugar.
+
+Doble valor: (a) productividad — el mismo empleado pasa de contestar "¿a
+cómo?" todo el día a despachar ventas que el bot ya cerró; (b) argumento de
+venta — la respuesta a la objeción "la IA me quita personal" es *"no: te lo
+convierte en el que despacha más pedidos"*. Sin compromiso de fecha; se
+explora cuando haya farmacias en nivel 2.
 
 1. Su inventario aparece en el bot de WhatsApp **con sus precios y su stock
    real** — el bot deja de depender de confirmación manual de disponibilidad.
