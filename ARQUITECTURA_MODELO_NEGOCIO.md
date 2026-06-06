@@ -28,7 +28,9 @@ operación** (precio 0, confirmación del colmadero)— en farmacia el modelo es
 es por etapas:
 
 1. **MVP (sin farmacias reales):** catálogo maestro propio, clonado a cada
-   farmacia nueva al provisionarla ⏳ — *no es el estándar de operación*.
+   farmacia nueva al provisionarla ✅ (M1, verificado en producción 2026-06-06)
+   — *no es el estándar de operación*. Pendiente M1.5: promover el catálogo
+   real (`pharmacy_inventory`, 17,456 productos) a maestro en DB dedicada ⏳.
 2. **Estándar de operación:** conector con el POS/inventario real de la farmacia
    (ADR-007, diseñado) 💡 — el conector solo cambia *quién alimenta* el motor,
    no la arquitectura.
@@ -64,7 +66,7 @@ flowchart TB
     MONGO[(MongoDB ✅)]
     REDIS[(Redis ✅)]
     ODOO[(Odoo 17 - una DB por farmacia ✅)]
-    MEILI[(Meilisearch - un índice por farmacia ⚠️)]
+    MEILI[(Meilisearch - un índice por farmacia ✅)]
   end
 
   WA <--> EVO
@@ -92,11 +94,13 @@ No hay app Android: la operación de la farmacia es **web-only** por decisión
 1. Presentar el producto mediante landing page. 💡
 2. Crear cuenta/farmacia desde el super-admin. ✅
 3. Crear identidad, slug (`store_id`), DB Odoo, índice Meilisearch, admin del
-   panel y configuración del agente — pipeline automático de 7 pasos. ✅
+   panel y configuración del agente — pipeline automático de 8 pasos. ✅
 4. Sembrar el catálogo maestro en el Odoo de la farmacia nueva
-   (paso `odoo_seed_catalog`). ⏳ **M1** — hoy la DB nueva nace vacía
-5. Credencial de servicio por farmacia para el catalog-sync. ⏳ **M1** — hoy el
-   sync usa el admin global, que no existe en DBs nuevas (bug conocido, High)
+   (paso `odoo_seed_catalog`: instala `sale_management`+`stock`+`product_expiry`
+   y clona el catálogo). ✅ M1 verificado en producción 2026-06-06
+5. Usuario de servicio interno por farmacia (catalog-sync, comandos y rutas
+   del dashboard autentican con él). ✅ M1 — el bug era más amplio de lo
+   documentado: no solo el sync, también pedidos y dashboard
 6. Conectar uno o varios números de WhatsApp por QR. ✅
 7. Entregar credenciales al dueño (paso `email_credentials`). ⚠️ stub — el
    super-admin las copia y entrega manualmente; email real pendiente
@@ -182,15 +186,15 @@ sequenceDiagram
   loop Worker tick (5s, lock con recuperación de stale)
     W->>M: 1. mongo_store
     W->>O: 2. odoo_db_create (DB pharmacy_{slug})
-    W->>O: 3. odoo_seed_admin (password generado por farmacia)
-    W->>M: 4. create_dashboard_admin
-    W->>S: 5. meilisearch_index (store_{slug}_products)
-    W->>M: 6. agent_config (Sofía, horarios, firma)
-    W->>M: 7. email_credentials (stub ⚠️)
+    W->>O: 3. odoo_seed_admin (password por farmacia + usuario de servicio ✅)
+    W->>O: 4. odoo_seed_catalog (módulos + catálogo maestro ✅)
+    W->>M: 5. create_dashboard_admin
+    W->>S: 6. meilisearch_index + full rebuild inmediato ✅
+    W->>M: 7. agent_config (Sofía, horarios, firma)
+    W->>M: 8. email_credentials (stub ⚠️)
   end
   W->>M: Store status=active
-  Note over O: ⏳ M1: nuevo paso odoo_seed_catalog —<br/>clonar catálogo maestro (DB template de Odoo)
-  Note over S: ⏳ M1: credencial de servicio por farmacia —<br/>hoy el sync usa el admin global y falla en DBs nuevas
+  Note over O,S: M1 verificado en producción 2026-06-06: farmacia nueva nace<br/>con 165 productos, índice poblado (+91 sinónimos) y /products funcionando
 ```
 
 Pasos fallidos se reintentan desde el super-admin (`retryJob`). La eliminación
@@ -420,7 +424,7 @@ n8n no es fuente de verdad: todo se materializa vía comandos idempotentes.
 | `chats` / `customers` / `orders` / `products` / `stats` | Lectura scoped (guard `resolveStore` — leak cross-tenant cerrado `ab0c5c0`) | ✅ |
 | `handover` | Bot ↔ humano | ✅ |
 | `voice-calls` | Create (n8n), señal pública, token LiveKit, disponibilidad de proveedores | ✅ |
-| `catalog-sync` | Rebuild/sync por farmacia | ⚠️ auth M1 |
+| `catalog-sync` | Rebuild/sync por farmacia | ✅ (auth M1 resuelto) |
 | `odoo` (passthrough legacy) | — | ⚠️ muerto (~280 LOC), borrado pendiente de confirmación con n8n vivo |
 
 ## 6. Modelo de datos
@@ -492,11 +496,14 @@ placeholder — regularizar o descartar.
 
 ### Críticos (bloquean escalar)
 
-- **Catalog-sync auth** ⏳ M1: el sync autentica con el admin global contra DBs
-  por farmacia donde ese usuario no existe → toda farmacia nueva tiene índice
-  vacío (afecta `farmacia_geremy`). Sin esto no hay farmacia #2.
-- **Catálogo inicial** ⏳ M1: el provisioning crea la DB Odoo vacía; falta el
-  paso de seed del catálogo maestro. Sin esto, farmacia nueva = bot mudo.
+- ~~**Catalog-sync auth**~~ ✅ RESUELTO (M1, `e935216`): usuario de servicio
+  interno sembrado por el provisioning en cada DB tenant. El alcance real era
+  mayor: también comandos (pedidos) y rutas del dashboard. `farmacia_geremy`
+  (rota pre-fix) eliminada.
+- ~~**Catálogo inicial**~~ ✅ RESUELTO (M1, `757bdbc`+`8897aad`+`92dffa9`):
+  paso `odoo_seed_catalog` (módulos + clonado) + rebuild Meili inmediato.
+  Verificado en producción. Pendiente M1.5 ⏳: promover el catálogo real
+  (17,456 productos en `pharmacy_inventory`) a maestro en DB dedicada.
 - **Pasada e2e del loop completo** ⏳ M4: el silent-drop está corregido pero el
   ciclo WhatsApp → n8n → respuesta no tiene verificación end-to-end formal
   post-fix.
@@ -561,7 +568,8 @@ Neo Farmacia convierte conversaciones en operaciones comerciales trazables.
 
 | Milestone | Entregable | Piezas | Estado |
 |---|---|---|---|
-| **M1 — Alta sistemática** | Farmacia nueva vendiendo en minutos | Paso `odoo_seed_catalog` (clonar catálogo maestro, vía DB template) + fix auth catalog-sync (credencial de servicio por farmacia) | ⏳ |
+| **M1 — Alta sistemática** | Farmacia nueva vendiendo en minutos | Paso `odoo_seed_catalog` (módulos + clonado JSON-RPC) + usuario de servicio por farmacia | ✅ 2026-06-06 |
+| **M1.5 — Catálogo real** | Farmacia nace con 17,456 productos reales | Importador `pharmacy_inventory` → DB `pharmacy_master_catalog` + `MASTER_CATALOG_DB` | ⏳ |
 | **M2 — Ciclo cerrado** | Pedido → despacho → cliente informado | Acciones ✗/✓ por ítem en `/orders` + evento ✗ → n8n → aviso IA + despacho con notificación | ⏳ |
 | **M3 — Voz en el ciclo** | Llamada como parte del flujo | Phase F (n8n dispara + link) + Phase G mínimo (transcripts, llamada perdida) | ⏳ |
 | **M4 — Operar la flota** | Escalar sin revisión manual | Health board admin + pasada e2e formal del ciclo con farmacia recién provisionada | ⏳ |

@@ -13,7 +13,7 @@
 | 7 | [POS Sync](stages/06-pos-sync.md) | `designed` | Tiered write-back (ADR-007). SQL Server/MySQL adapters pending. |
 | 8 | [Production](stages/07-production.md) | `pending` | Backups, monitoring, alerts, rate limiting, Traefik hardening |
 | 9 | [Voice Calls](stages/09-voice-calls.md) | `in_progress` — v3 LiveKit pipeline; session/link/create/config/transport **built**; pending LiveKit creds + real context + n8n trigger | AI-initiated WebRTC voice calls with per-pharmacy voice config |
-| 10 | [MVP Escalable](stages/10-mvp-escalable.md) | `in_progress` | Complete cycle + systematic onboarding: master-catalog seed, per-pharmacy Odoo auth fix, ✗ dispatch pattern, voice in the loop, fleet health board. See ARQUITECTURA_MODELO_NEGOCIO.md |
+| 10 | [MVP Escalable](stages/10-mvp-escalable.md) | `in_progress` — **M1 done & verified in prod (2026-06-06)**: new pharmacy = provision + QR + sell. Pending: M1.5 real-catalog import (17,456 products), M2 ✗ pattern, M3 voice, M4 fleet health | Complete cycle + systematic onboarding. See ARQUITECTURA_MODELO_NEGOCIO.md |
 
 ## Dependency Graph
 
@@ -73,19 +73,29 @@
   Phase E (real context assembler: Mongo messages + Odoo order → metadata), Phase F
   (n8n decides + sends the link), Phase G (hardening, transcripts, human takeover).
 
+**Fixed 2026-06-06 (Stage 10 M1, see docs/sessions/2026-06-06-01.md):**
+
+1. ~~Catalog sync auth for new pharmacies~~ — **FIXED** (`e935216`): provisioning now
+   seeds an internal service user into each tenant DB; covered catalog-sync AND
+   commands AND dashboard routes (the bug was broader than documented).
+2. ~~New pharmacies born with empty Odoo~~ — **FIXED** (`757bdbc`, `8897aad`, `92dffa9`):
+   new `odoo_seed_catalog` step installs sale_management+stock+product_expiry and
+   clones the master catalog; meilisearch_index does an immediate full rebuild.
+   Verified in prod: new pharmacy born with 165 products, populated index, working
+   /products page. `farmacia_geremy` (pre-fix, broken) deleted.
+
 **Open bugs:**
 
-1. **Catalog sync auth for new pharmacies** (High) — `catalog-sync.service` authenticates
-   against new pharmacy Odoo DBs with the global admin user, which doesn't exist there.
-   Affects `farmacia_geremy`. Products of new pharmacies don't get indexed.
-2. **`disponibleVentas` always true** (Medium) — `catalogo.handler.ts` has `|| true`
-   leftover; the bot reports every product as available. Pending a product decision on
-   the inventory-connection strategy (connector for legacy POS vs API) before flipping.
+1. **`disponibleVentas` always true** (Medium) — `catalogo.handler.ts` has `|| true`
+   leftover; the bot reports every product as available. Mitigated by the ✗ dispatch
+   pattern (Stage 10 M2); root-fixed by the POS connector (ADR-007).
 
 **Known blockers before first real customer:**
 
-1. Final e2e verification of WhatsApp → n8n → reply loop (post debounce fix).
-2. Catalog sync auth fix (any pharmacy other than Leo has an empty search index).
+1. Final e2e verification of WhatsApp → n8n → reply loop (Stage 10 M4).
+2. Real master catalog (Stage 10 M1.5): `pharmacy_inventory` in Meilisearch holds
+   17,456 real products — import into a dedicated `pharmacy_master_catalog` Odoo DB
+   and point `MASTER_CATALOG_DB` at it.
 3. n8n flows adapted for pharmacy — user-owned, in progress.
 4. POS connector for first target pharmacy — blocked on first-customer decision (ADR-007).
 

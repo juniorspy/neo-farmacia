@@ -31,7 +31,7 @@ Mientras no haya stock real, la disponibilidad la confirma el humano al despacha
 
 ## Milestones
 
-### M1 — Alta sistemática
+### M1 — Alta sistemática ✅ COMPLETADO (2026-06-06, verificado en producción)
 
 > Farmacia nueva = provisionar + QR + vender. Nada más.
 
@@ -68,14 +68,36 @@ Mientras no haya stock real, la disponibilidad la confirma el humano al despacha
   - [x] `meilisearch_index` además de crear el índice dispara
     `fullRebuildStoreIndex` → la farmacia nace con búsqueda poblada, sin esperar
     el sync periódico.
-- [x] **Verificación de alta e2e** (2026-06-06, producción): `farmacia_test_m2`
-  provisionada con 8 pasos en verde — catálogo maestro (165 productos) copiado
-  1:1 a su Odoo, índice Meili poblado (165 docs + 91 sinónimos), usuario de
-  servicio autenticando contra su DB, sync periódico sin errores.
-  Hallazgo corregido en vivo: `sale_management` no instala `stock` y
-  `qty_available` es campo de `stock` (`8897aad`). La prueba a nivel comandos
-  (`catalogo.search` / `pedido.updateItems`) queda cubierta por la pasada e2e
-  formal de M4 con n8n.
+- [x] **Verificación de alta e2e** (2026-06-06, producción, 3 corridas):
+  farmacia de prueba provisionada con 8 pasos en verde — catálogo maestro
+  (165 productos) copiado 1:1 a su Odoo, índice Meili poblado (165 docs +
+  91 sinónimos), usuario de servicio autenticando contra su DB, sync periódico
+  sin errores, y **`/products` mostrando el catálogo en el dashboard**.
+  Hallazgos corregidos en vivo (misma clase: campos de módulos no instalados —
+  la DB nueva nace solo con `base`):
+  - `8897aad` — `qty_available` requiere `stock` (falló corrida 1 en
+    `meilisearch_index`)
+  - `92dffa9` — `use_expiration_date` requiere `product_expiry` (falló la
+    página `/products` en corrida 2)
+  - `REQUIRED_MODULES` final: `sale_management`, `stock`, `product_expiry`
+  La prueba a nivel comandos (`catalogo.search` / `pedido.updateItems`) queda
+  cubierta por la pasada e2e formal de M4 con n8n.
+
+### M1.5 — Catálogo maestro REAL (pendiente)
+
+> Descubierto al verificar M1: en la instancia compartida de Meilisearch vive
+> **`pharmacy_inventory` — 17,456 productos reales** (export de POS de farmacia,
+> `codigo/descripcion/precio/unidad`, DOP). Confirmado por el usuario como EL
+> catálogo a usar. El maestro actual (165) era un subset de prueba.
+
+- [ ] Importador: `pharmacy_inventory` (Meili) → DB Odoo dedicada
+  `pharmacy_master_catalog` (mapeo `codigo→default_code`,
+  `descripcion→name`, `precio→list_price`, `unidad→uom`).
+  **No** importar al Odoo principal — es el POS vivo de Farmacia Leo.
+- [ ] Setear `MASTER_CATALOG_DB=pharmacy_master_catalog` en el env de Dokploy.
+- [ ] Re-provisionar farmacia de prueba → nace con los 17,456.
+- [ ] Confirmar vigencia de los precios del export (no bloquea: la farmacia
+  ajusta precios, como el colmadero).
 
 ### M2 — Ciclo de pedido cerrado (patrón ✗)
 
@@ -126,6 +148,7 @@ Mientras no haya stock real, la disponibilidad la confirma el humano al despacha
 | D2 | Seed de catálogo por copia JSON-RPC desde `MASTER_CATALOG_DB` | Duplicación de DB template de Odoo | Sin DB plantilla que mantener; idempotente; no arrastra datos operativos |
 | D3 | Disponibilidad por patrón ✗ al despachar (MVP) | Esperar stock real (ADR-007) | Probado en colmado; no bloquea el MVP; ADR-007 lo resuelve de raíz después |
 | D4 | Aviso de ✗ redactado por IA vía n8n | Plantilla fija desde el API | Sin contexto la conversación se rompe; permite sugerir sustitutos |
+| D5 | Catálogo maestro real en DB Odoo dedicada (`pharmacy_master_catalog`) importada desde `pharmacy_inventory` (Meili, 17,456) | Importar al Odoo principal | El Odoo principal es el POS vivo de Farmacia Leo — no se contamina con 17k productos |
 
 ## Código relevante
 
