@@ -198,12 +198,17 @@ página para el IT del dueño.
 - Recordatorios de refill a clientes crónicos (sobre la infraestructura de
   llamadas salientes ya construida — mayor ratio valor/esfuerzo del roadmap).
 - Facturación SaaS a farmacias.
-- 💡 **Tienda online como parte del paquete** (nota 2026-06-06): el inventario
-  y los precios por farmacia ya van a existir en su Odoo — el módulo
-  website/eCommerce de Odoo hace el resto sencillo. Pieza faltante: imágenes
-  de producto (solución eventual; referencia: el `product_3d_generator` del
-  ecosistema colmado genera visuales de producto). Valor agregado directo del
-  paquete: la farmacia gana canal web sin proyecto aparte.
+- ⚠️ **Tienda online como parte del paquete** — código completo (2026-06-07),
+  pendiente verificación en prod. Decisión clave: NO el website/eCommerce
+  nativo de Odoo (hosting multi-DB frágil, branding pobre, desconectado del
+  buzón de pedidos) sino **storefront propio en Next.js sobre nuestra API**
+  (`/store/[storeId]`, público), que reusa búsqueda Meili + el pipeline de
+  pedidos. Los pedidos web crean un `sale.order` tag `client_order_ref=web` en
+  la MISMA DB Odoo → caen en `/orders` junto a WhatsApp y voz (un buzón por
+  todos los canales). Pago contra entrega/en caja (regla #12, sin pasarela).
+  Backend: módulo `storefront` (4 rutas públicas, precios server-side, rate
+  limit por IP). Pieza faltante: imágenes de producto (placeholder por ahora;
+  referencia: `product_3d_generator` del ecosistema colmado).
 - 💡 **Tracking del pedido en mapa** (nota 2026-06-06): el cliente sigue su
   delivery en un mapa (link de tracking enviado por WhatsApp al despachar).
   Valor agregado del paquete; encaja con la notificación de despacho ya

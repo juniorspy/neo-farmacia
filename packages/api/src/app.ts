@@ -23,6 +23,7 @@ import { healthRoutes } from './modules/health/health.routes.js';
 import { registerStoreContext } from './modules/store-context/store-context.plugin.js';
 import { storesRoutes } from './modules/stores/stores.routes.js';
 import { voiceCallRoutes } from './modules/voice-calls/voice-call.routes.js';
+import { storefrontRoutes } from './modules/storefront/storefront.routes.js';
 
 // Tag de OpenAPI por prefijo de URL — agrupa /docs sin anotar cada ruta.
 // Orden importa: el primer patrón que matchea gana.
@@ -39,6 +40,7 @@ const TAG_BY_PREFIX: Array<[RegExp, string]> = [
   [/^\/api\/v1\/stores\/[^/]+\/stats/, 'Stats'],
   [/^\/api\/v1\/stores\/[^/]+\/catalog/, 'Catálogo (Meilisearch)'],
   [/^\/api\/v1\/stores/, 'Stores — config'],
+  [/^\/api\/v1\/storefront/, 'Tienda online'],
   [/^\/api\/v1\/voice/, 'Voz'],
   [/^\/api\/v1\/(commands|products|orders|users)/, 'n8n callbacks'],
 ];
@@ -183,6 +185,11 @@ export async function buildApp(redis: Redis, config: AppConfig) {
   // Voice calls — customer surface authed by one-time signed-link token (public)
   await app.register(async (instance) => {
     await voiceCallRoutes(instance, { redis, config });
+  });
+
+  // Public storefront — plug-and-play online store per pharmacy (no auth)
+  await app.register(async (instance) => {
+    await storefrontRoutes(instance, { redis, config });
   });
 
   return app;

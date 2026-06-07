@@ -593,7 +593,8 @@ Neo Farmacia convierte conversaciones en operaciones comerciales trazables.
 | **M2 — Ciclo cerrado** | Pedido → despacho → cliente informado | Acciones ✗/✓ por ítem en `/orders` + evento ✗ → n8n → aviso IA (fallback plantilla) + despacho con notificación | ⚠️ código completo (`4f3a7f1`), verificación e2e pendiente (requiere loop n8n, se solapa con M4) |
 | **M3 — Voz en el ciclo** | Llamada como parte del flujo | `send_link` (n8n = 1 llamada HTTP) + transcripts a Mongo/chat + sweep de llamadas perdidas con follow-up WhatsApp | ⚠️ código completo (`1280588`), e2e con M4. Nodo n8n user-owned |
 | **M4 — Operar la flota** | Escalar sin revisión manual | Health board admin + pasada e2e formal del ciclo con farmacia recién provisionada | ⚠️ health board código completo (2026-06-07) + `/health` + verificación tasks Meili; falta pasada e2e formal |
-| Post-MVP | Estándar de operación + valor agregado | Conector POS real (ADR-007/008), email de credenciales, landing, recordatorios de refill a crónicos, facturación SaaS, **tienda online por farmacia** (módulo eCommerce de Odoo sobre el inventario/precios ya existentes; falta resolver imágenes), **tracking del pedido en mapa** (link al despachar) | 💡 |
+| **Tienda online por farmacia** | Canal web sin proyecto aparte | Storefront Next.js sobre nuestra API (`/store/:storeId`, público) — reusa búsqueda Meili + pipeline de pedidos; pedidos web caen en el MISMO buzón `/orders` (tag `web`). Pago contra entrega. | ⚠️ código completo 2026-06-07; falta verificación prod + imágenes de producto |
+| Post-MVP | Estándar de operación + valor agregado | Conector POS real (ADR-007/008), email de credenciales, landing, recordatorios de refill a crónicos, facturación SaaS, **tracking del pedido en mapa** (link al despachar) | 💡 |
 
 ## 13. Evidencia principal inspeccionada
 

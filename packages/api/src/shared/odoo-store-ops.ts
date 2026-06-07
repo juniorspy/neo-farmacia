@@ -46,18 +46,22 @@ export async function createSaleOrderScoped(
   client: ScopedOdoo,
   partnerId: number,
   lines: Array<{ productId: number; quantity: number; price: number }>,
+  opts?: { clientOrderRef?: string; note?: string },
 ): Promise<number> {
-  const orderId = (await client.execute('sale.order', 'create', [
-    {
-      partner_id: partnerId,
-      order_line: lines.map((l) => [0, 0, {
-        product_id: l.productId,
-        product_uom_qty: l.quantity,
-        price_unit: l.price,
-      }]),
-    },
-  ])) as number;
-  logger.info({ orderId }, 'Sale order created in Odoo (scoped)');
+  const vals: Record<string, unknown> = {
+    partner_id: partnerId,
+    order_line: lines.map((l) => [0, 0, {
+      product_id: l.productId,
+      product_uom_qty: l.quantity,
+      price_unit: l.price,
+    }]),
+  };
+  // client_order_ref tags the sales channel (e.g. 'web') so the dashboard can
+  // tell a storefront order from a WhatsApp one; note carries delivery data.
+  if (opts?.clientOrderRef) vals.client_order_ref = opts.clientOrderRef;
+  if (opts?.note) vals.note = opts.note;
+  const orderId = (await client.execute('sale.order', 'create', [vals])) as number;
+  logger.info({ orderId, ref: opts?.clientOrderRef }, 'Sale order created in Odoo (scoped)');
   return orderId;
 }
 
