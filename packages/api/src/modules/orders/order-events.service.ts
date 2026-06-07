@@ -5,12 +5,10 @@ import type { ScopedOdoo } from '../../shared/odoo-scoped.js';
 import { logger } from '../../shared/logger.js';
 import type { IStore } from '../provisioning/store.model.js';
 import { User } from '../users/user.model.js';
-import { Message } from '../messages/message.model.js';
-import { WhatsappConnection } from '../whatsapp/connection.model.js';
-import { sendText } from '../evolution/evolution.client.js';
 import { isBotActive } from '../handover/handover.service.js';
 import { buildAgentStoreConfig } from '../stores/store-config.payload.js';
 import { getSaleOrderScoped } from '../../shared/odoo-store-ops.js';
+import { sendCustomerMessage as sendOutbound } from '../whatsapp/outbound.service.js';
 
 /**
  * Order events — the ✗ dispatch pattern (Stage 10 M2, decisions D3/D4).
@@ -85,47 +83,6 @@ export async function resolveOrderCustomer(
   return { chatId: user.chat_id, phone, name: user.name || partner.name || '' };
 }
 
-/** Pick the store's active WhatsApp connection for outbound sends. */
-async function getOpenConnection(storeId: string) {
-  return WhatsappConnection.findOne({
-    store_id: storeId,
-    state: 'open',
-    instance_api_key: { $ne: null },
-  })
-    .sort({ connected_at: -1 })
-    .lean();
-}
-
-/** Send a WhatsApp message to the customer and persist it on the chat. */
-export async function sendCustomerMessage(
-  store: IStore,
-  customer: OrderCustomer,
-  text: string,
-  source: string,
-): Promise<boolean> {
-  const connection = await getOpenConnection(store.store_id);
-  if (!connection) {
-    logger.warn({ storeId: store.store_id }, 'No open WhatsApp connection — cannot notify customer');
-    return false;
-  }
-  try {
-    await sendText(connection.instance_name, connection.instance_api_key as string, customer.phone, text);
-  } catch (err) {
-    logger.error({ err, storeId: store.store_id, chatId: customer.chatId }, 'Failed to send order notice');
-    return false;
-  }
-  await Message.create({
-    store_id: store.store_id,
-    chat_id: customer.chatId,
-    message_id: `order_evt_${Date.now()}_${Math.floor(Math.random() * 1e6)}`,
-    direction: 'outbound',
-    text,
-    sender: 'bot',
-    timestamp: new Date(),
-    meta: { source, instanceName: connection.instance_name, phone: customer.phone },
-  });
-  return true;
-}
 
 export interface RejectEventPayload {
   event: 'order.item_rejected' | 'order.cancelled_no_stock';
@@ -215,8 +172,8 @@ export async function notifyItemRejected(
 
   const aiText = await askN8nForNotice(config, fullPayload);
   const text = aiText || templateRejectNotice(store, customer, fullPayload);
-  const sent = await sendCustomerMessage(
-    store,
+  const sent = await sendOutbound(
+    store.store_id,
     customer,
     text,
     aiText ? 'n8n-order-event' : 'order-event-template',
@@ -238,7 +195,7 @@ export async function notifyDispatched(
   const text =
     `🛵 ${hola} pedido ${order.name} ya fue despachado y va en camino. ` +
     `Total: RD$${order.total.toLocaleString('es-DO')}. ¡Gracias por tu compra! ${sig}`;
-  const sent = await sendCustomerMessage(store, customer, text, 'order-dispatch');
+  const sent = await sendOutbound(store.store_id, customer, text, 'order-dispatch');
   if (!sent) return { notified: false, via: null, skippedReason: 'send_failed' };
   return { notified: true, via: 'template' };
 }

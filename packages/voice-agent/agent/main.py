@@ -204,6 +204,37 @@ async def handle_session(ctx: agents.JobContext):
         turn_detection=MultilingualModel(),
     )
 
+    # Phase G: accumulate the conversation; flush to the backend at call end
+    # so the transcript lands on the session + the dashboard chat history.
+    transcript: list[dict] = []
+
+    @session.on("conversation_item_added")
+    def _on_item(ev):
+        item = getattr(ev, "item", None)
+        role = getattr(item, "role", "") or ""
+        text = (getattr(item, "text_content", None) or "").strip()
+        if text and role in ("user", "assistant"):
+            transcript.append(
+                {"role": "customer" if role == "user" else "agent", "text": text[:1000]}
+            )
+
+    async def _flush_transcript():
+        if not transcript or not call["session_id"]:
+            return
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    f"{Config.FARMACIA_API_URL.rstrip('/')}/api/v1/voice-calls/{call['session_id']}/transcript",
+                    json={"entries": transcript, "final": True},
+                    headers={"Authorization": f"Bearer {Config.COMMAND_BEARER}"},
+                )
+                resp.raise_for_status()
+            logger.info(f"Transcript flushed: {len(transcript)} entries session={call['session_id']}")
+        except Exception as e:
+            logger.warning(f"Transcript flush failed (non-fatal): {e}")
+
+    ctx.add_shutdown_callback(_flush_transcript)
+
     await session.start(
         room=ctx.room,
         agent=assistant,

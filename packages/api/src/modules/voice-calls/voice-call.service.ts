@@ -158,12 +158,20 @@ export async function releaseCallSlot(
   await redis.del(slotKey(storeId, chatId));
 }
 
+export interface MissedRing {
+  sessionId: string;
+  store_id: string;
+  chat_id: string;
+}
+
 /**
  * Sweep rings that were never answered past their deadline → `missed`.
  * Conditional/atomic per session, so it never clobbers a call that already
- * moved to connecting/active in a race. Returns how many were expired.
+ * moved to connecting/active in a race. Returns the sessions that were
+ * actually transitioned (the caller follows up with the customer) — the
+ * atomic guard guarantees each missed call is returned exactly once.
  */
-export async function expireStaleRings(now: Date = new Date()): Promise<number> {
+export async function expireStaleRings(now: Date = new Date()): Promise<MissedRing[]> {
   const stale = await VoiceCallSession.find({
     status: 'ringing',
     invite_expires_at: { $lt: now },
@@ -171,14 +179,14 @@ export async function expireStaleRings(now: Date = new Date()): Promise<number> 
     .select('_id store_id chat_id')
     .lean<Array<{ _id: unknown; store_id: string; chat_id: string }>>();
 
-  let missed = 0;
+  const missed: MissedRing[] = [];
   for (const s of stale) {
     const updated = await transitionStatus(String(s._id), s.store_id, 'ringing', 'missed', {
       ended_by: 'system',
       ended_reason: 'ring_timeout',
     });
-    if (updated) missed += 1;
+    if (updated) missed.push({ sessionId: String(s._id), store_id: s.store_id, chat_id: s.chat_id });
   }
-  if (missed > 0) logger.info({ missed }, 'Expired stale voice-call rings');
+  if (missed.length > 0) logger.info({ missed: missed.length }, 'Expired stale voice-call rings');
   return missed;
 }

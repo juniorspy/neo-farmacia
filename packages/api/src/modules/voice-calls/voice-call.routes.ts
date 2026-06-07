@@ -18,6 +18,10 @@ import {
   DEFAULT_INVITE_TTL_MS,
 } from './voice-call.service.js';
 import { VoiceCallSession, type IVoiceCallSession } from './voice-call.model.js';
+import {
+  sendCustomerMessage as sendOutboundMessage,
+  phoneFromChatId,
+} from '../whatsapp/outbound.service.js';
 
 /** Constant-time bearer check for the n8n create endpoint. */
 function bearerOk(authHeader: string | undefined, expected: string): boolean {
@@ -141,6 +145,10 @@ export async function voiceCallRoutes(
       missing_fields?: string[];
       n8n_correlation_id?: string;
       idempotency_key?: string;
+      // Phase F convenience: true → the API itself sends the link over
+      // WhatsApp, so n8n's job is a single HTTP call. false/omitted → n8n
+      // phrases and sends the link inside its own reply (original behavior).
+      send_link?: boolean;
     };
     const storeId = body.storeId;
     const chatId = body.chatId;
@@ -160,8 +168,8 @@ export async function voiceCallRoutes(
 
     // Store must exist and be active.
     const store = await Store.findOne({ store_id: storeId })
-      .select('status')
-      .lean<{ status: string } | null>();
+      .select('status name agent_config')
+      .lean<{ status: string; name: string; agent_config?: { agent_name?: string; signature?: string } } | null>();
     if (!store) return reply.status(404).send({ error: 'store not found' });
     if (store.status !== 'active') return reply.status(409).send({ error: 'store not active' });
 
@@ -205,12 +213,116 @@ export async function voiceCallRoutes(
     }
 
     const link = buildCallLink(config.appPublicUrl, String(result.session._id), result.token);
-    logger.info({ sessionId: String(result.session._id), storeId, chatId }, 'Voice call created (ringing)');
+
+    // Phase F: optionally deliver the link ourselves over WhatsApp.
+    let linkSent = false;
+    if (body.send_link === true) {
+      const agentName = store.agent_config?.agent_name || 'la asistente';
+      const text =
+        `📞 ${agentName} de ${store.name} quiere llamarte` +
+        `${reason ? ` para: ${reason}` : ''}. ` +
+        `Contesta aquí cuando estés listo: ${link}\n(El enlace vale 10 minutos.)`;
+      linkSent = await sendOutboundMessage(
+        storeId,
+        { chatId, phone: phoneFromChatId(chatId) },
+        text,
+        'voice-call-invite',
+      );
+    }
+
+    logger.info(
+      { sessionId: String(result.session._id), storeId, chatId, linkSent },
+      'Voice call created (ringing)',
+    );
     return reply.status(201).send({
       sessionId: String(result.session._id),
       link,
+      link_sent: linkSent,
       expiresAt: result.session.invite_token_expires_at,
     });
+  });
+
+  // ── TRANSCRIPT (agent worker → bearer-authed, NOT the customer link) ──
+  //    The Python worker accumulates the conversation and posts it at call
+  //    end. Stored on the session + condensed into the chat history so the
+  //    pharmacist sees the call in the dashboard chat view.
+  app.post('/api/v1/voice-calls/:id/transcript', async (request, reply) => {
+    if (!bearerOk(request.headers.authorization, config.n8n.apiKey)) {
+      return reply.status(401).send({ error: 'unauthorized' });
+    }
+    const { id } = request.params as { id: string };
+    const body = (request.body || {}) as {
+      entries?: Array<{ role?: string; text?: string; ts?: string }>;
+      final?: boolean;
+    };
+
+    const entries = (body.entries || [])
+      .filter((e) => e && typeof e.text === 'string' && e.text.trim())
+      .slice(0, 200)
+      .map((e) => ({
+        role: e.role === 'customer' ? ('customer' as const) : ('agent' as const),
+        text: (e.text as string).slice(0, 1000),
+        ts: e.ts ? new Date(e.ts) : new Date(),
+      }));
+
+    let session: IVoiceCallSession | null = null;
+    try {
+      session = await VoiceCallSession.findOneAndUpdate(
+        { _id: id },
+        entries.length
+          ? { $push: { transcript: { $each: entries, $slice: 400 } } }
+          : {},
+        { returnDocument: 'after' },
+      );
+    } catch {
+      session = null; // invalid ObjectId
+    }
+    if (!session) return reply.status(404).send({ error: 'session not found' });
+
+    if (body.final) {
+      // The worker says the call is over. If the customer page never reported
+      // the hangup (closed browser), close the session here — mini-watchdog.
+      const closed = await transitionStatus(
+        String(session._id),
+        session.store_id,
+        ['connecting', 'active'],
+        'ended',
+        { ended_by: 'provider', ended_reason: 'agent_session_closed' },
+      );
+      if (closed) {
+        await releaseCallSlot(redis, session.store_id, session.chat_id);
+        session = closed;
+      }
+
+      // Condensed record into the chat history (NOT sent to the customer).
+      if (session.transcript.length > 0) {
+        const durationS =
+          session.connected_at && session.ended_at
+            ? Math.max(0, Math.round((session.ended_at.getTime() - session.connected_at.getTime()) / 1000))
+            : null;
+        const durStr = durationS !== null ? ` (${Math.floor(durationS / 60)}:${String(durationS % 60).padStart(2, '0')})` : '';
+        const lines = session.transcript
+          .map((t) => `${t.role === 'customer' ? 'Cliente' : 'Agente'}: ${t.text}`)
+          .join('\n');
+        await Message.create({
+          store_id: session.store_id,
+          chat_id: session.chat_id,
+          message_id: `voice_transcript_${String(session._id)}`,
+          direction: 'outbound',
+          text: `📞 Llamada de voz${durStr}\n\n${lines}`.slice(0, 3500),
+          sender: 'bot',
+          timestamp: new Date(),
+          meta: { source: 'voice-call-transcript' },
+        }).catch((err) => {
+          // unique message_id → idempotent if the worker retries the final post
+          if ((err as { code?: number }).code !== 11000) {
+            logger.warn({ err, sessionId: String(session!._id) }, 'Transcript chat record failed');
+          }
+        });
+      }
+    }
+
+    return { ok: true, appended: entries.length, total: session.transcript.length };
   });
 
   // ── GET status (render the ring/answer page) ──

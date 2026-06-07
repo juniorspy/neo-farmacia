@@ -55,6 +55,10 @@ export interface IVoiceCallSession extends Document {
   ended_by: EndedBy | null;
   ended_reason: string | null;
 
+  // Phase G: conversation transcript, posted by the agent worker at call end.
+  // Same privacy class as the WhatsApp chat history already stored in Mongo.
+  transcript: Array<{ role: 'customer' | 'agent'; text: string; ts: Date }>;
+
   created_at: Date;
   ringing_at: Date | null;
   connected_at: Date | null; // stamped when status → active
@@ -98,6 +102,20 @@ const voiceCallSchema = new Schema<IVoiceCallSession>({
   idempotency_key: { type: String, required: true },
   ended_by: { type: String, enum: ['customer', 'operator', 'provider', 'system', null], default: null },
   ended_reason: { type: String, default: null },
+
+  transcript: {
+    type: [
+      new Schema(
+        {
+          role: { type: String, enum: ['customer', 'agent'], required: true },
+          text: { type: String, required: true, maxlength: 1000 },
+          ts: { type: Date, default: Date.now },
+        },
+        { _id: false },
+      ),
+    ],
+    default: [],
+  },
 
   created_at: { type: Date, default: Date.now },
   ringing_at: { type: Date, default: Date.now },
