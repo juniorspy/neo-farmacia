@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Save, Upload, X, Check, Palette, Pill, Printer, Bluetooth, AlertCircle } from "lucide-react";
 import { useTheme, themePresets } from "@/lib/theme";
+import { api } from "@/lib/api";
+import { useStore } from "@/lib/store";
 import {
   pairPrinter,
   getPrinterInfo,
@@ -12,8 +14,30 @@ import {
   printOrderReceipt,
 } from "@/lib/printer";
 
+type PrintMode = "manual" | "auto" | "off";
+
+const printModes: Array<{ value: PrintMode; label: string; description: string }> = [
+  {
+    value: "manual",
+    label: "Manual",
+    description: "Botón de imprimir en cada pedido.",
+  },
+  {
+    value: "auto",
+    label: "Automática",
+    description:
+      "La boleta se imprime sola al llegar un pedido (con la página de pedidos abierta e impresora emparejada).",
+  },
+  {
+    value: "off",
+    label: "Desactivada",
+    description: "Sin impresión desde el panel — por ejemplo, tu sistema POS imprime.",
+  },
+];
+
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { currentStore } = useStore();
   const [customColor, setCustomColor] = useState(theme.primaryColor);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -22,11 +46,42 @@ export default function SettingsPage() {
   const [pairing, setPairing] = useState(false);
   const [printerError, setPrinterError] = useState("");
   const [bluetoothSupported, setBluetoothSupported] = useState(true);
+  const [printMode, setPrintMode] = useState<PrintMode>("manual");
+  const [printModeSaving, setPrintModeSaving] = useState(false);
+  const [printModeSaved, setPrintModeSaved] = useState(false);
+
+  const storeId = currentStore?.id;
 
   useEffect(() => {
     setPrinterInfo(getPrinterInfo());
     setBluetoothSupported(isBluetoothSupported());
   }, []);
+
+  useEffect(() => {
+    if (!storeId) return;
+    api
+      .get<{ print_mode?: PrintMode }>(`/api/v1/stores/${storeId}`)
+      .then((s) => setPrintMode(s.print_mode || "manual"))
+      .catch(() => {});
+  }, [storeId]);
+
+  async function handlePrintModeChange(mode: PrintMode) {
+    if (!storeId || mode === printMode) return;
+    const previous = printMode;
+    setPrintMode(mode);
+    setPrintModeSaving(true);
+    setPrintModeSaved(false);
+    try {
+      await api.patch(`/api/v1/stores/${storeId}/print-config`, { print_mode: mode });
+      setPrintModeSaved(true);
+      setTimeout(() => setPrintModeSaved(false), 3000);
+    } catch {
+      setPrintMode(previous);
+      alert("Error guardando el modo de impresión");
+    } finally {
+      setPrintModeSaving(false);
+    }
+  }
 
   async function handlePairPrinter() {
     setPrinterError("");
@@ -309,10 +364,48 @@ export default function SettingsPage() {
       <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Printer className="w-5 h-5 text-slate-700" />
-          <h2 className="font-semibold text-slate-900">Impresora Bluetooth</h2>
+          <h2 className="font-semibold text-slate-900">Impresión</h2>
+          {printModeSaving && <span className="text-xs text-slate-400">guardando…</span>}
+          {printModeSaved && (
+            <span className="text-xs text-emerald-600 flex items-center gap-1">
+              <Check className="w-3 h-3" /> guardado
+            </span>
+          )}
         </div>
 
-        {!bluetoothSupported ? (
+        {/* Print mode — pharmacy-owned configuration */}
+        <div className="space-y-2">
+          {printModes.map((m) => (
+            <label
+              key={m.value}
+              className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                printMode === m.value
+                  ? "border-primary bg-primary-light"
+                  : "border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <input
+                type="radio"
+                name="print_mode"
+                checked={printMode === m.value}
+                onChange={() => handlePrintModeChange(m.value)}
+                className="mt-0.5 accent-[var(--primary)]"
+              />
+              <div>
+                <p className="text-sm font-medium text-slate-800">{m.label}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{m.description}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        {printMode !== "off" && (
+          <div className="pt-2 border-t border-slate-100">
+            <p className="text-sm font-medium text-slate-700 mb-3">Impresora Bluetooth</p>
+          </div>
+        )}
+
+        {printMode === "off" ? null : !bluetoothSupported ? (
           <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
             <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div className="text-sm">

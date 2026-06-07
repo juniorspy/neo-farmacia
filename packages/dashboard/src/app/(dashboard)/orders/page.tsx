@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { clsx } from "clsx";
 import {
   Search,
@@ -78,8 +78,22 @@ export default function OrdersPage() {
   const [rejectingLine, setRejectingLine] = useState<number | null>(null);
   const [dispatching, setDispatching] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  // Per-pharmacy print mode (settings → Impresión): manual | auto | off
+  const [printMode, setPrintMode] = useState<"manual" | "auto" | "off">("manual");
+  const seenOrders = useRef<Set<number>>(new Set());
+  const seenSeeded = useRef(false);
 
   const storeId = currentStore?.id;
+
+  useEffect(() => {
+    if (!storeId) return;
+    seenOrders.current = new Set();
+    seenSeeded.current = false;
+    api
+      .get<{ print_mode?: "manual" | "auto" | "off" }>(`/api/v1/stores/${storeId}`)
+      .then((s) => setPrintMode(s.print_mode || "manual"))
+      .catch(() => {});
+  }, [storeId]);
 
   useEffect(() => {
     if (!notice) return;
@@ -186,6 +200,61 @@ export default function OrdersPage() {
       setDispatching(false);
     }
   }
+
+  // Auto-print (print_mode = 'auto'): poll for new orders and print the
+  // picking ticket without a click. First poll only seeds the seen-set so we
+  // never print the backlog.
+  const autoPrintTick = useCallback(async () => {
+    if (!storeId) return;
+    try {
+      const all = await api.get<Order[]>(`/api/v1/stores/${storeId}/orders`);
+      if (!seenSeeded.current) {
+        all.forEach((o) => seenOrders.current.add(o.id));
+        seenSeeded.current = true;
+        return;
+      }
+      const fresh = all.filter((o) => !seenOrders.current.has(o.id));
+      if (fresh.length === 0) return;
+      fresh.forEach((o) => seenOrders.current.add(o.id));
+      await loadOrders();
+
+      const printable = fresh.filter((o) => o.status === "pending" || o.status === "ready");
+      if (printable.length === 0) return;
+      if (!getPrinterInfo()) {
+        setNotice(
+          `${printable.length} pedido(s) nuevo(s). Empareja la impresora en Configuración para imprimir automáticamente.`
+        );
+        return;
+      }
+      for (const o of printable) {
+        try {
+          const detail = await api.get<Order>(`/api/v1/stores/${storeId}/orders/${o.id}`);
+          await printOrderReceipt({
+            orderName: detail.name,
+            customer: detail.customer,
+            date: detail.date,
+            lines: (detail.lines || [])
+              .filter((l) => l.qty > 0)
+              .map((l) => ({ name: l.name, qty: l.qty, subtotal: l.subtotal })),
+            total: detail.total,
+            storeName: currentStore?.name || "Neo Farmacia",
+          });
+          setNotice(`🖨️ Pedido ${detail.name} impreso automáticamente`);
+        } catch {
+          setNotice(`⚠️ Pedido nuevo ${o.name} — no se pudo imprimir automáticamente`);
+        }
+      }
+    } catch {
+      // silent — next tick retries
+    }
+  }, [storeId, loadOrders, currentStore?.name]);
+
+  useEffect(() => {
+    if (printMode !== "auto" || !storeId) return;
+    autoPrintTick();
+    const t = setInterval(autoPrintTick, 20000);
+    return () => clearInterval(t);
+  }, [printMode, storeId, autoPrintTick]);
 
   async function printReceipt(order: Order) {
     if (!getPrinterInfo()) {
@@ -418,13 +487,15 @@ export default function OrdersPage() {
                         )}
                         Despachar
                       </button>
-                      <button
-                        onClick={() => printReceipt(selectedOrder)}
-                        className="py-2 px-3 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded-lg transition-colors"
-                        title="Imprimir recibo"
-                      >
-                        <Printer className="w-4 h-4" />
-                      </button>
+                      {printMode !== "off" && (
+                        <button
+                          onClick={() => printReceipt(selectedOrder)}
+                          className="py-2 px-3 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded-lg transition-colors"
+                          title="Imprimir recibo"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                     <p className="text-[11px] text-slate-400 mt-1.5 text-center">
                       Despachar = ya pasó por caja · se avisa al cliente por WhatsApp

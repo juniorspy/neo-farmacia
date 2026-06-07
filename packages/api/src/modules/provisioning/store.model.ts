@@ -43,6 +43,13 @@ export interface IStore extends Document {
     // {variables} with real per-call data at token-mint time.
     prompt_template: string;
   };
+  // Per-pharmacy printing behavior, edited by the pharmacy itself in
+  // /settings. 'manual' = print button on each order; 'auto' = print the
+  // picking ticket when a new order arrives (orders tab open + BT printer
+  // paired); 'off' = no platform printing (e.g. their POS prints — typical
+  // at integration level 2, see docs/architecture/inventory-integration.md).
+  print_mode: 'manual' | 'auto' | 'off';
+
   // Deprecated single-connection fields — migrated into the WhatsappConnection
   // collection on api startup. Kept on the schema as nullable so existing docs
   // don't fail validation; will be removed in a future cleanup.
@@ -130,6 +137,7 @@ const storeSchema = new Schema<IStore>({
       maxlength: 6000,
     },
   },
+  print_mode: { type: String, enum: ['manual', 'auto', 'off'], default: 'manual' },
   whatsapp_instance_id: { type: String, default: null, index: true },
   whatsapp_instance_api_key: { type: String, default: null },
   whatsapp_number: { type: String, default: null },

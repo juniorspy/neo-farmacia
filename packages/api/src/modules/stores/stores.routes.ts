@@ -66,8 +66,28 @@ export async function storesRoutes(app: FastifyInstance) {
         // Merge defaults so stores saved before newer fields (e.g.
         // prompt_template) existed still expose them in the UI.
         voice_config: { ...VOICE_CONFIG_DEFAULTS, ...(s.voice_config ?? {}) },
+        print_mode: s.print_mode || 'manual',
         status: s.status,
       };
+    },
+  );
+
+  // PATCH /api/v1/stores/:storeId/print-config — pharmacy-owned printing mode
+  app.patch(
+    '/api/v1/stores/:storeId/print-config',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { print_mode } = (request.body || {}) as { print_mode?: string };
+      if (!print_mode || !['manual', 'auto', 'off'].includes(print_mode)) {
+        return reply.status(400).send({ error: 'print_mode must be manual | auto | off' });
+      }
+      const { storeId } = request.params as { storeId: string };
+      const updated = await Store.findOneAndUpdate(
+        { store_id: storeId },
+        { $set: { print_mode, updated_at: new Date() } },
+        { returnDocument: 'after' },
+      );
+      if (!updated) return reply.status(404).send({ error: 'store not found' });
+      return { ok: true, print_mode: updated.print_mode };
     },
   );
 
