@@ -67,11 +67,17 @@ integración tiende a desaparecer.
 
 ### La escalera de adopción (la integración es un upgrade, no un prerrequisito)
 
-| Nivel | Qué obtiene la farmacia | Integración necesaria |
-|---|---|---|
-| **0 — Día 1** | Bot vende, pedidos al panel, caja factura como siempre, disponibilidad confirmada al despachar (patrón ✗) | **Ninguna** |
-| **1 — Inventario** | Bot con stock y precios reales; lo facturado en caja se auto-corrige vía sync | Push de productos/stock (Ruta A) o conector (Ruta B) |
-| **2 — Ventas (opcional)** | El pedido llega pre-cargado a su POS; la cajera solo confirma (ahorra digitación) | Pull + ack de ventas — solo si su IT lo quiere |
+| Nivel | Qué obtiene la farmacia | Quién imprime | Integración necesaria |
+|---|---|---|---|
+| **0 — Día 1** | Bot vende, pedidos al panel, caja factura como siempre, disponibilidad confirmada al despachar (patrón ✗) | **Nosotros**: boleta de picking desde el panel (impresora BT ya soportada) | **Ninguna** |
+| **1 — Inventario** | Bot con stock y precios reales; lo facturado en caja se auto-corrige vía sync | **Nosotros** (igual que nivel 0) | Push de productos/stock (Ruta A) o conector (Ruta B) |
+| **2 — Ventas (opcional)** | El pedido llega pre-cargado a su POS; la cajera solo confirma (ahorra digitación) | **Su POS** — factura + ticket en su flujo normal; nuestra impresión se vuelve redundante | Pull + ack de ventas — solo si su IT lo quiere |
+
+Nota: la impresión sigue la escalera — la boleta desde nuestro panel (y la
+futura auto-impresión al llegar el pedido) es una funcionalidad de **nivel
+0/1**; en nivel 2 desaparece naturalmente porque el pedido entra a su sistema
+y su POS imprime como siempre. Menos superficie nuestra que mantener para los
+clientes integrados, y un incentivo más para subir de nivel.
 
 ### 💡 Idea anotada (valor futuro): el que atendía WhatsApp se convierte en despachador
 
