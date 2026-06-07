@@ -46,6 +46,27 @@ const tabs = [
   { key: "cancelled", label: "Cancelados" },
 ];
 
+interface OrderActionResult {
+  success: boolean;
+  orderCancelled?: boolean;
+  notified: boolean;
+  via: string | null;
+  skippedReason?: string;
+}
+
+function notifySkippedText(reason?: string): string {
+  switch (reason) {
+    case "manual_mode":
+      return "⚠️ Chat en modo manual — avísale tú al cliente.";
+    case "no_customer":
+      return "⚠️ Pedido sin WhatsApp asociado — no se pudo avisar.";
+    case "send_failed":
+      return "⚠️ No se pudo enviar el aviso por WhatsApp.";
+    default:
+      return "";
+  }
+}
+
 export default function OrdersPage() {
   const { currentStore } = useStore();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -54,8 +75,17 @@ export default function OrdersPage() {
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [rejectingLine, setRejectingLine] = useState<number | null>(null);
+  const [dispatching, setDispatching] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const storeId = currentStore?.id;
+
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), 6000);
+    return () => clearTimeout(t);
+  }, [notice]);
 
   const loadOrders = useCallback(async () => {
     if (!storeId) return;
@@ -96,6 +126,67 @@ export default function OrdersPage() {
     }
   }
 
+  // ✗ pattern: item not available → remove from order + notify customer (AI/template)
+  async function rejectItem(order: Order, lineId: number, lineName: string) {
+    if (
+      !confirm(
+        `¿Marcar "${lineName}" como no disponible?\nSe retirará del pedido y se avisará al cliente por WhatsApp.`
+      )
+    )
+      return;
+    setRejectingLine(lineId);
+    try {
+      const res = await api.post<OrderActionResult>(
+        `/api/v1/stores/${storeId}/orders/${order.id}/items/${lineId}/reject`
+      );
+      const base = res.orderCancelled
+        ? "Pedido cancelado (era el único producto)."
+        : "Producto retirado del pedido.";
+      setNotice(
+        res.notified
+          ? `${base} Cliente avisado por WhatsApp ✓`
+          : `${base} ${notifySkippedText(res.skippedReason)}`
+      );
+      await loadOrders();
+      if (res.orderCancelled) {
+        setSelectedOrder(null);
+      } else {
+        await loadOrderDetail(order);
+      }
+    } catch {
+      alert("Error al retirar el producto");
+    } finally {
+      setRejectingLine(null);
+    }
+  }
+
+  // Despachar = el pedido ya pasó por caja (la factura la emite SU POS)
+  async function dispatchOrder(order: Order) {
+    if (
+      !confirm(
+        `¿Despachar el pedido ${order.name}?\nConfirma que ya pasó por caja. Se avisará al cliente por WhatsApp.`
+      )
+    )
+      return;
+    setDispatching(true);
+    try {
+      const res = await api.post<OrderActionResult>(
+        `/api/v1/stores/${storeId}/orders/${order.id}/dispatch`
+      );
+      setNotice(
+        res.notified
+          ? "Pedido despachado. Cliente avisado por WhatsApp 🛵"
+          : `Pedido despachado. ${notifySkippedText(res.skippedReason)}`
+      );
+      await loadOrders();
+      setSelectedOrder(null);
+    } catch {
+      alert("Error al despachar");
+    } finally {
+      setDispatching(false);
+    }
+  }
+
   async function printReceipt(order: Order) {
     if (!getPrinterInfo()) {
       alert("No hay impresora emparejada. Ve a Configuración para emparejar.");
@@ -131,6 +222,12 @@ export default function OrdersPage() {
         <h1 className="text-2xl font-bold text-slate-900">Pedidos</h1>
         <p className="text-sm text-slate-500 mt-1">Gestiona los pedidos de la farmacia</p>
       </div>
+
+      {notice && (
+        <div className="px-4 py-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+          {notice}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 bg-slate-100 rounded-lg p-1 w-fit">
@@ -242,14 +339,44 @@ export default function OrdersPage() {
                     <div>
                       <p className="text-slate-500 mb-2">Productos</p>
                       <div className="space-y-2">
-                        {selectedOrder.lines.map((line) => (
-                          <div key={line.id} className="flex items-center justify-between">
-                            <span className="text-slate-700">
-                              {line.qty}x {line.name}
-                            </span>
-                            <span className="text-slate-500">RD${line.subtotal.toLocaleString()}</span>
-                          </div>
-                        ))}
+                        {selectedOrder.lines.map((line) => {
+                          const rejected = line.qty <= 0;
+                          const canReject =
+                            !rejected &&
+                            (selectedOrder.status === "pending" || selectedOrder.status === "ready");
+                          return (
+                            <div key={line.id} className="flex items-center justify-between gap-2">
+                              <span
+                                className={clsx(
+                                  rejected
+                                    ? "text-slate-400 line-through"
+                                    : "text-slate-700"
+                                )}
+                              >
+                                {rejected ? line.name : `${line.qty}x ${line.name}`}
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className={clsx("text-slate-500", rejected && "line-through text-slate-300")}>
+                                  {rejected ? "no disponible" : `RD$${line.subtotal.toLocaleString()}`}
+                                </span>
+                                {canReject && (
+                                  <button
+                                    onClick={() => rejectItem(selectedOrder, line.id, line.name)}
+                                    disabled={rejectingLine !== null}
+                                    className="p-1 rounded text-red-300 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                                    title="No disponible — retirar del pedido y avisar al cliente"
+                                  >
+                                    {rejectingLine === line.id ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <XCircle className="w-3.5 h-3.5" />
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                       <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 font-semibold">
                         <span>Total</span>
@@ -277,21 +404,31 @@ export default function OrdersPage() {
                   </div>
                 )}
                 {selectedOrder.status === "ready" && (
-                  <div className="mt-5 flex gap-2">
-                    <button
-                      onClick={() => updateStatus(selectedOrder.id, "dispatched")}
-                      className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Truck className="w-4 h-4" />
-                      Despachar
-                    </button>
-                    <button
-                      onClick={() => printReceipt(selectedOrder)}
-                      className="py-2 px-3 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded-lg transition-colors"
-                      title="Imprimir recibo"
-                    >
-                      <Printer className="w-4 h-4" />
-                    </button>
+                  <div className="mt-5">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => dispatchOrder(selectedOrder)}
+                        disabled={dispatching}
+                        className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                      >
+                        {dispatching ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Truck className="w-4 h-4" />
+                        )}
+                        Despachar
+                      </button>
+                      <button
+                        onClick={() => printReceipt(selectedOrder)}
+                        className="py-2 px-3 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium rounded-lg transition-colors"
+                        title="Imprimir recibo"
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1.5 text-center">
+                      Despachar = ya pasó por caja · se avisa al cliente por WhatsApp
+                    </p>
                   </div>
                 )}
               </>

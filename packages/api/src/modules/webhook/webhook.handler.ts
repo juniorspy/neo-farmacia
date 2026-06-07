@@ -15,6 +15,7 @@ import { acquireMutex, releaseMutex } from './mutex.service.js';
 import { isBotActive } from '../handover/handover.service.js';
 import { Message } from '../messages/message.model.js';
 import { resolveStoreByInstance } from './store-resolver.js';
+import { buildAgentStoreConfig } from '../stores/store-config.payload.js';
 
 interface WebhookDeps {
   redis: Redis;
@@ -166,21 +167,7 @@ export function createWebhookHandler(deps: WebhookDeps) {
         timestamp: Date.now(),
         // Per-store agent config. n8n agents read these to personalize replies
         // without owning the prompt templates themselves.
-        store_config: {
-          store_id: storeId,
-          name: store.name,
-          currency: store.currency,
-          timezone: store.timezone,
-          lang: store.lang,
-          agent: {
-            name: store.agent_config?.agent_name || 'Sofía',
-            greeting_style: store.agent_config?.greeting_style || 'amigable',
-            signature: store.agent_config?.signature || `— ${store.name}`,
-            business_hours: store.agent_config?.business_hours || '',
-            delivery_info: store.agent_config?.delivery_info || '',
-            custom_notes: store.agent_config?.custom_notes || '',
-          },
-        },
+        store_config: buildAgentStoreConfig(store),
       };
 
       logger.info({ storeId, chatId }, 'Forwarding to n8n');

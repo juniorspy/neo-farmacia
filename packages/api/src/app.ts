@@ -70,7 +70,7 @@ export async function buildApp(redis: Redis, config: AppConfig) {
 
   // Dashboard API routes (protected)
   await app.register(async (instance) => {
-    await ordersRoutes(instance);
+    await ordersRoutes(instance, { redis, config });
   });
 
   await app.register(async (instance) => {

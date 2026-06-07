@@ -134,7 +134,13 @@ export async function updateSaleOrderStateScoped(
       await client.execute('sale.order', 'action_confirm', [[orderId]]);
       break;
     case 'done':
-      await client.execute('sale.order', 'action_done', [[orderId]]);
+      // Odoo 17 renamed action_done → action_lock on sale.order. Try the
+      // current name first, fall back for older DBs.
+      try {
+        await client.execute('sale.order', 'action_lock', [[orderId]]);
+      } catch {
+        await client.execute('sale.order', 'action_done', [[orderId]]);
+      }
       break;
     case 'cancel':
       await client.execute('sale.order', 'action_cancel', [[orderId]]);

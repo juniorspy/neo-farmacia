@@ -56,6 +56,10 @@ export function loadConfig() {
     n8n: {
       webhookUrl: optional('N8N_WEBHOOK_URL', ''),
       apiKey: optional('N8N_API_KEY', ''),
+      // Order events (✗ item rejected, etc). The AI writes the customer
+      // notice with conversation context. Empty = fall back to a plain
+      // template sent directly via Evolution.
+      orderEventWebhookUrl: optional('N8N_ORDER_EVENT_WEBHOOK_URL', ''),
     },
 
     voice: {
