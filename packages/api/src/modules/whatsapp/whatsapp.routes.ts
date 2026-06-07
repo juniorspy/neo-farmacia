@@ -4,13 +4,13 @@ import {
   createInstance,
   deleteInstance,
   logoutInstance,
-  getConnectionState,
   getInstanceQrBase64,
 } from '../evolution/evolution.client.js';
 import { WhatsappConnection } from './connection.model.js';
 import {
   makeInstanceName,
   listConnectionsForStore,
+  syncConnectionLiveState,
 } from './connection.service.js';
 import { invalidateStoreResolverCache } from '../webhook/store-resolver.js';
 import { logger } from '../../shared/logger.js';
@@ -20,44 +20,6 @@ import { logger } from '../../shared/logger.js';
  * (e.g. "Caja", "Delivery", "Farmacéutico de guardia"). Each connection is
  * an independent Evolution instance with its own apiKey and state.
  */
-
-function mapEvolutionState(state: string | undefined): 'qr' | 'connecting' | 'open' | 'close' | 'unknown' {
-  switch (state) {
-    case 'open':
-    case 'connected':
-      return 'open';
-    case 'close':
-    case 'disconnected':
-    case 'logout':
-      return 'close';
-    case 'qr':
-    case 'qrReadSuccess':
-      return 'qr';
-    case 'connecting':
-      return 'connecting';
-    default:
-      return 'unknown';
-  }
-}
-
-async function refreshConnectionState(
-  instanceName: string,
-  apiKey: string | null,
-): Promise<{ state: ReturnType<typeof mapEvolutionState>; number: string | null }> {
-  try {
-    const res = await getConnectionState(instanceName, apiKey || '');
-    const state = mapEvolutionState(
-      ((res as Record<string, unknown>)?.instance as Record<string, unknown>)?.state as string,
-    );
-    const wuid =
-      (((res as Record<string, unknown>)?.instance as Record<string, unknown>)?.wuid as string) || '';
-    const number = wuid ? wuid.split('@')[0] : null;
-    return { state, number };
-  } catch (err) {
-    logger.warn({ err, instanceName }, 'getConnectionState failed');
-    return { state: 'unknown', number: null };
-  }
-}
 
 export async function whatsappRoutes(
   app: FastifyInstance,
@@ -170,19 +132,7 @@ export async function whatsappRoutes(
       });
       if (!conn) return reply.status(404).send({ error: 'connection not found' });
 
-      const { state, number } = await refreshConnectionState(
-        conn.instance_name,
-        conn.instance_api_key,
-      );
-      const changed = state !== conn.state || (number && number !== conn.number);
-      if (changed) {
-        conn.state = state;
-        if (number) conn.number = number;
-        if (state === 'open' && !conn.connected_at) conn.connected_at = new Date();
-        if (state === 'close') conn.disconnected_at = new Date();
-        await conn.save();
-        invalidateStoreResolverCache(conn.instance_name);
-      }
+      await syncConnectionLiveState(conn);
 
       return {
         id: String(conn._id),

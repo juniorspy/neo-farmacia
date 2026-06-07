@@ -12,7 +12,7 @@ import { makeScopedOdoo } from '../../shared/odoo-scoped.js';
 import { ensureServiceUser } from '../../shared/odoo-store-ops.js';
 import { invalidateScopedOdoo } from '../../shared/odoo-scoped-cache.js';
 
-function requireSuperAdmin(request: FastifyRequest, reply: FastifyReply) {
+export function requireSuperAdmin(request: FastifyRequest, reply: FastifyReply) {
   const user = request.user as { role: string } | undefined;
   if (!user || user.role !== 'admin') {
     reply.status(403).send({ error: 'Forbidden: super-admin only' });

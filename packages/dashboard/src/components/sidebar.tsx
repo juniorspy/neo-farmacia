@@ -20,6 +20,7 @@ import {
   PanelLeftOpen,
   Building2,
   Bot,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
@@ -39,6 +40,7 @@ const nav = [
 // Super-admin only (role === 'admin')
 const adminNav = [
   { href: "/admin/pharmacies", label: "Farmacias", icon: Building2 },
+  { href: "/admin/health", label: "Salud de flota", icon: Activity },
 ];
 
 interface SidebarProps {

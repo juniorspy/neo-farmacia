@@ -17,6 +17,7 @@ import { whatsappRoutes } from './modules/whatsapp/whatsapp.routes.js';
 import { commandsRoutes } from './modules/commands/commands.routes.js';
 import { catalogSyncRoutes } from './modules/catalog-sync/catalog-sync.routes.js';
 import { adminRoutes } from './modules/provisioning/admin.routes.js';
+import { healthRoutes } from './modules/health/health.routes.js';
 import { registerStoreContext } from './modules/store-context/store-context.plugin.js';
 import { storesRoutes } from './modules/stores/stores.routes.js';
 import { voiceCallRoutes } from './modules/voice-calls/voice-call.routes.js';
@@ -106,6 +107,11 @@ export async function buildApp(redis: Redis, config: AppConfig) {
   // Super-admin: pharmacy provisioning (JWT + role=admin)
   await app.register(async (instance) => {
     await adminRoutes(instance, { config });
+  });
+
+  // Health: public liveness probe + super-admin fleet board
+  await app.register(async (instance) => {
+    await healthRoutes(instance, { redis });
   });
 
   // Per-store config (agent persona, etc.) — scoped by resolveStore

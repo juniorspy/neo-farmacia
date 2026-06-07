@@ -10,10 +10,5 @@ export async function webhookRoutes(
   const handler = createWebhookHandler(opts);
 
   app.post('/webhook/evolution', handler);
-
-  app.get('/health', async () => ({
-    status: 'ok',
-    service: 'neo-farmacia-api',
-    timestamp: new Date().toISOString(),
-  }));
+  // GET /health lives in modules/health — real mongo/redis check, not a stub.
 }

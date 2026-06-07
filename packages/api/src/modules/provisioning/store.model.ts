@@ -50,6 +50,15 @@ export interface IStore extends Document {
   // at integration level 2, see docs/architecture/inventory-integration.md).
   print_mode: 'manual' | 'auto' | 'off';
 
+  // Catalog sync status — written by catalog-sync after each run, read by the
+  // fleet health board. last_synced_at is the last SUCCESSFUL sync (also the
+  // incremental "since" cursor — surviving restarts avoids a full rebuild on
+  // every deploy); last_error is the error of the last attempt, null when OK.
+  catalog_sync: {
+    last_synced_at: Date | null;
+    last_error: string | null;
+  };
+
   // Deprecated single-connection fields — migrated into the WhatsappConnection
   // collection on api startup. Kept on the schema as nullable so existing docs
   // don't fail validation; will be removed in a future cleanup.
@@ -138,6 +147,10 @@ const storeSchema = new Schema<IStore>({
     },
   },
   print_mode: { type: String, enum: ['manual', 'auto', 'off'], default: 'manual' },
+  catalog_sync: {
+    last_synced_at: { type: Date, default: null },
+    last_error: { type: String, default: null },
+  },
   whatsapp_instance_id: { type: String, default: null, index: true },
   whatsapp_instance_api_key: { type: String, default: null },
   whatsapp_number: { type: String, default: null },

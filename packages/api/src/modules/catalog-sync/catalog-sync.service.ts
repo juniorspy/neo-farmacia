@@ -5,14 +5,33 @@ import {
   ensureIndex,
   upsertDocuments,
   setSynonyms,
+  waitForTask,
   type ProductDoc,
 } from '../../shared/meilisearch.js';
 import { logger } from '../../shared/logger.js';
 import { PHARMACY_SYNONYMS } from './synonyms.seed.js';
 import { Store, type IStore } from '../provisioning/store.model.js';
 
-// Track last sync per store to do incremental syncs
-const lastSyncByStore = new Map<string, Date>();
+/**
+ * Persist the sync outcome on the store doc. last_synced_at doubles as the
+ * incremental "since" cursor (so restarts don't force a full rebuild) and
+ * feeds the fleet health board. syncedAt is captured BEFORE the Odoo query:
+ * the overlap re-syncs a few products (idempotent) instead of missing edits
+ * made mid-sync.
+ */
+async function recordSyncResult(storeId: string, syncedAt: Date | null, error?: unknown) {
+  const $set: Record<string, unknown> = {
+    'catalog_sync.last_error': error
+      ? error instanceof Error
+        ? error.message
+        : String(error)
+      : null,
+  };
+  if (syncedAt) $set['catalog_sync.last_synced_at'] = syncedAt;
+  await Store.updateOne({ store_id: storeId }, { $set }).catch((err) =>
+    logger.warn({ err, storeId }, 'Failed to persist catalog_sync status'),
+  );
+}
 
 function odooProductToDoc(p: Record<string, unknown>): ProductDoc {
   return {
@@ -53,27 +72,36 @@ export async function fullRebuildStoreIndex(
   const indexName = store.meilisearch_index;
   logger.info({ storeId: store.store_id, indexName }, 'Full rebuild starting');
 
-  await ensureIndex(indexName);
+  try {
+    const startedAt = new Date();
+    await ensureIndex(indexName);
 
-  const products = (await client.execute(
-    'product.product',
-    'search_read',
-    [[['sale_ok', '=', true]]],
-    { fields: PRODUCT_FIELDS, limit: 10000 },
-  )) as Array<Record<string, unknown>>;
+    const products = (await client.execute(
+      'product.product',
+      'search_read',
+      [[['sale_ok', '=', true]]],
+      { fields: PRODUCT_FIELDS, limit: 10000 },
+    )) as Array<Record<string, unknown>>;
 
-  const docs = products.map(odooProductToDoc);
+    const docs = products.map(odooProductToDoc);
 
-  const BATCH_SIZE = 500;
-  for (let i = 0; i < docs.length; i += BATCH_SIZE) {
-    await upsertDocuments(indexName, docs.slice(i, i + BATCH_SIZE));
+    const BATCH_SIZE = 500;
+    let lastTaskUid: number | null = null;
+    for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+      lastTaskUid = (await upsertDocuments(indexName, docs.slice(i, i + BATCH_SIZE))) ?? lastTaskUid;
+    }
+
+    await setSynonyms(indexName, PHARMACY_SYNONYMS);
+    // Tasks run in uid order — the last upsert covers the whole batch run
+    if (lastTaskUid !== null) await waitForTask(lastTaskUid);
+    await recordSyncResult(store.store_id, startedAt);
+
+    logger.info({ storeId: store.store_id, count: docs.length }, 'Full rebuild complete');
+    return docs.length;
+  } catch (err) {
+    await recordSyncResult(store.store_id, null, err);
+    throw err;
   }
-
-  await setSynonyms(indexName, PHARMACY_SYNONYMS);
-  lastSyncByStore.set(store.store_id, new Date());
-
-  logger.info({ storeId: store.store_id, count: docs.length }, 'Full rebuild complete');
-  return docs.length;
 }
 
 /** Incremental sync: push only products modified since last sync for this store. */
@@ -81,32 +109,39 @@ export async function incrementalSyncStore(
   store: IStore,
   client: ScopedOdoo,
 ): Promise<number> {
-  const since = lastSyncByStore.get(store.store_id);
+  const since = store.catalog_sync?.last_synced_at;
   if (!since) return fullRebuildStoreIndex(store, client);
 
-  const sinceStr = since.toISOString().slice(0, 19).replace('T', ' ');
-  const products = (await client.execute(
-    'product.product',
-    'search_read',
-    [[
-      ['sale_ok', '=', true],
-      ['write_date', '>', sinceStr],
-    ]],
-    { fields: PRODUCT_FIELDS, limit: 1000 },
-  )) as Array<Record<string, unknown>>;
+  try {
+    const startedAt = new Date();
+    const sinceStr = new Date(since).toISOString().slice(0, 19).replace('T', ' ');
+    const products = (await client.execute(
+      'product.product',
+      'search_read',
+      [[
+        ['sale_ok', '=', true],
+        ['write_date', '>', sinceStr],
+      ]],
+      { fields: PRODUCT_FIELDS, limit: 1000 },
+    )) as Array<Record<string, unknown>>;
 
-  if (products.length === 0) {
-    logger.debug({ storeId: store.store_id }, 'Incremental sync: no changes');
-    lastSyncByStore.set(store.store_id, new Date());
-    return 0;
+    if (products.length === 0) {
+      logger.debug({ storeId: store.store_id }, 'Incremental sync: no changes');
+      await recordSyncResult(store.store_id, startedAt);
+      return 0;
+    }
+
+    const docs = products.map(odooProductToDoc);
+    const taskUid = await upsertDocuments(store.meilisearch_index, docs);
+    if (taskUid !== null) await waitForTask(taskUid);
+    await recordSyncResult(store.store_id, startedAt);
+
+    logger.info({ storeId: store.store_id, count: docs.length }, 'Incremental sync complete');
+    return docs.length;
+  } catch (err) {
+    await recordSyncResult(store.store_id, null, err);
+    throw err;
   }
-
-  const docs = products.map(odooProductToDoc);
-  await upsertDocuments(store.meilisearch_index, docs);
-  lastSyncByStore.set(store.store_id, new Date());
-
-  logger.info({ storeId: store.store_id, count: docs.length }, 'Incremental sync complete');
-  return docs.length;
 }
 
 /** Start periodic background sync across all active stores. Called once at startup. */

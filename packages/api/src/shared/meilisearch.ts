@@ -61,11 +61,43 @@ export async function ensureIndex(indexName: string): Promise<void> {
   }
 }
 
-export async function upsertDocuments(indexName: string, documents: ProductDoc[]): Promise<void> {
-  if (documents.length === 0) return;
+export async function upsertDocuments(
+  indexName: string,
+  documents: ProductDoc[],
+): Promise<number | null> {
+  if (documents.length === 0) return null;
   const c = ensureClient();
-  await c.post(`/indexes/${indexName}/documents`, documents);
-  logger.info({ indexName, count: documents.length }, 'Meilisearch upsert documents');
+  const res = await c.post(`/indexes/${indexName}/documents`, documents);
+  const taskUid = (res.data?.taskUid as number) ?? null;
+  logger.info({ indexName, count: documents.length, taskUid }, 'Meilisearch upsert documents');
+  return taskUid;
+}
+
+/**
+ * Wait for a Meilisearch task to reach a terminal state. Meili indexes
+ * asynchronously: the POST above only enqueues — without this check a failed
+ * indexing task looks like a successful sync. Tasks are processed in uid
+ * order, so awaiting the LAST enqueued uid covers the whole batch run.
+ * Throws on task failure/cancellation so callers record the error.
+ */
+export async function waitForTask(taskUid: number, timeoutMs = 60000): Promise<void> {
+  const c = ensureClient();
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const res = await c.get(`/tasks/${taskUid}`);
+    const { status, error } = res.data as {
+      status: string;
+      error?: { message?: string } | null;
+    };
+    if (status === 'succeeded') return;
+    if (status === 'failed' || status === 'canceled') {
+      throw new Error(`Meilisearch task ${taskUid} ${status}: ${error?.message || 'unknown'}`);
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`Meilisearch task ${taskUid} still ${status} after ${timeoutMs}ms`);
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
 }
 
 export async function deleteDocuments(indexName: string, ids: number[]): Promise<void> {
@@ -136,6 +168,22 @@ export async function searchIndex(
     ...(opts.attributesToRetrieve ? { attributesToRetrieve: opts.attributesToRetrieve } : {}),
   });
   return res.data;
+}
+
+// ── Stats ──
+
+export interface IndexStats {
+  numberOfDocuments: number;
+  isIndexing: boolean;
+}
+
+export async function getIndexStats(indexName: string): Promise<IndexStats> {
+  const c = ensureClient();
+  const res = await c.get(`/indexes/${indexName}/stats`);
+  return {
+    numberOfDocuments: (res.data?.numberOfDocuments as number) ?? 0,
+    isIndexing: Boolean(res.data?.isIndexing),
+  };
 }
 
 // ── Helpers ──
