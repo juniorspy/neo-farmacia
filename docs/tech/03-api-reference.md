@@ -1,5 +1,10 @@
 # API Reference
 
+> ⚠️ **Snapshot de 2026-04 — incompleto.** La fuente viva y siempre actual es
+> el Swagger UI del propio API: **`/docs`** (`https://api.leofarmacia.com/docs`,
+> en dev `http://localhost:3000/docs`). Este markdown se conserva por los
+> ejemplos narrativos (mapeos de estado, shapes de respuesta).
+
 All endpoints exposed by the Fastify API at `https://api.leofarmacia.com`.
 
 ## Authentication

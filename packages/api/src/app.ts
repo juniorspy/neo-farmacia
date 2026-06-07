@@ -1,5 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
 import type Redis from 'ioredis';
 import type { AppConfig } from './config/env.js';
 import { registerJwt } from './modules/auth/jwt.plugin.js';
@@ -22,6 +24,30 @@ import { registerStoreContext } from './modules/store-context/store-context.plug
 import { storesRoutes } from './modules/stores/stores.routes.js';
 import { voiceCallRoutes } from './modules/voice-calls/voice-call.routes.js';
 
+// Tag de OpenAPI por prefijo de URL — agrupa /docs sin anotar cada ruta.
+// Orden importa: el primer patrón que matchea gana.
+const TAG_BY_PREFIX: Array<[RegExp, string]> = [
+  [/^\/health$|^\/api\/v1\/admin\/fleet-health/, 'Health'],
+  [/^\/webhook/, 'Webhook (Evolution)'],
+  [/^\/api\/v1\/auth/, 'Auth'],
+  [/^\/api\/v1\/admin/, 'Admin — provisioning'],
+  [/^\/api\/v1\/stores\/[^/]+\/whatsapp/, 'WhatsApp'],
+  [/^\/api\/v1\/stores\/[^/]+\/orders/, 'Pedidos'],
+  [/^\/api\/v1\/stores\/[^/]+\/chats/, 'Chats & handover'],
+  [/^\/api\/v1\/stores\/[^/]+\/products/, 'Productos'],
+  [/^\/api\/v1\/stores\/[^/]+\/customers/, 'Clientes'],
+  [/^\/api\/v1\/stores\/[^/]+\/stats/, 'Stats'],
+  [/^\/api\/v1\/stores\/[^/]+\/catalog/, 'Catálogo (Meilisearch)'],
+  [/^\/api\/v1\/stores/, 'Stores — config'],
+  [/^\/api\/v1\/voice/, 'Voz'],
+  [/^\/api\/v1\/(commands|products|orders|users)/, 'n8n callbacks'],
+];
+
+function tagForUrl(url: string): string {
+  const match = TAG_BY_PREFIX.find(([re]) => re.test(url));
+  return match ? match[1] : 'Otros';
+}
+
 export async function buildApp(redis: Redis, config: AppConfig) {
   const app = Fastify({
     logger: {
@@ -40,6 +66,38 @@ export async function buildApp(redis: Redis, config: AppConfig) {
     origin: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
+
+  // OpenAPI live docs at /docs. Routes need no schema to appear (method +
+  // path + tag, grouped by URL prefix below); request/response examples show
+  // up as routes gain `schema` declarations. Must register BEFORE the routes.
+  await app.register(swagger, {
+    openapi: {
+      info: {
+        title: 'Neo Farmacia API',
+        description:
+          'Microservicio central: webhook WhatsApp, callbacks n8n, dashboard por farmacia (scoped por store_id), provisioning super-admin y llamadas de voz.',
+        version: '0.1.0',
+      },
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+            description:
+              'JWT del dashboard (POST /api/v1/auth/login). Las rutas n8n usan bearer con N8N_API_KEY.',
+          },
+        },
+      },
+    },
+    transform: ({ schema, url }) => {
+      const s = (schema || {}) as Record<string, unknown>;
+      if (url.includes('/dev/')) s.hide = true; // seeds y utilidades dev fuera de /docs
+      if (!s.tags) s.tags = [tagForUrl(url)];
+      return { schema: s as typeof schema, url };
+    },
+  });
+  await app.register(swaggerUi, { routePrefix: '/docs' });
 
   // JWT plugin — must register before routes that use app.authenticate
   await registerJwt(app, config);

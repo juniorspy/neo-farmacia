@@ -1,5 +1,8 @@
 # API Documentation
 
+> ⚠️ **Snapshot de 2026-04 — incompleto.** La fuente viva es el Swagger UI en
+> **`/docs`** del API (auto-generado de las rutas reales, 56 endpoints).
+
 Endpoint documentation for the Fastify microservice. Updated as endpoints are implemented.
 
 ## Base URL
