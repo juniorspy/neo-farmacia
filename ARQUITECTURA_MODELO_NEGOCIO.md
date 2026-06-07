@@ -584,7 +584,7 @@ Neo Farmacia convierte conversaciones en operaciones comerciales trazables.
 |---|---|---|---|
 | **M1 — Alta sistemática** | Farmacia nueva vendiendo en minutos | Paso `odoo_seed_catalog` (módulos + clonado JSON-RPC) + usuario de servicio por farmacia | ✅ 2026-06-06 |
 | **M1.5 — Stress test catálogo real** | Validar pipeline a escala 17k productos (opcional, despriorizada) | Importador `pharmacy_inventory` → DB `pharmacy_master_catalog` + `MASTER_CATALOG_DB` | 💡 |
-| **M2 — Ciclo cerrado** | Pedido → despacho → cliente informado | Acciones ✗/✓ por ítem en `/orders` + evento ✗ → n8n → aviso IA + despacho con notificación | ⏳ |
+| **M2 — Ciclo cerrado** | Pedido → despacho → cliente informado | Acciones ✗/✓ por ítem en `/orders` + evento ✗ → n8n → aviso IA (fallback plantilla) + despacho con notificación | ⚠️ código completo (`4f3a7f1`), verificación e2e pendiente (requiere loop n8n, se solapa con M4) |
 | **M3 — Voz en el ciclo** | Llamada como parte del flujo | Phase F (n8n dispara + link) + Phase G mínimo (transcripts, llamada perdida) | ⏳ |
 | **M4 — Operar la flota** | Escalar sin revisión manual | Health board admin + pasada e2e formal del ciclo con farmacia recién provisionada | ⏳ |
 | Post-MVP | Estándar de operación | Conector POS real (ADR-007), email de credenciales, landing, recordatorios de refill a crónicos, facturación SaaS | 💡 |

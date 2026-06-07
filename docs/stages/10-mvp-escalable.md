@@ -108,21 +108,31 @@ con ack — write-back invertido a pull). Los conectores propios de ADR-007
 el primer cliente real; el activo de venta es la guía de integración de 1
 página para el IT del dueño.
 
-### M2 — Ciclo de pedido cerrado (patrón ✗)
+### M2 — Ciclo de pedido cerrado (patrón ✗) — código completo (2026-06-06), pendiente verificación e2e
 
 > El farmacéutico confirma disponibilidad al despachar; el cliente siempre queda informado.
 
-- [ ] Acciones por ítem en `/orders` del dashboard: ✓ disponible / ✗ no disponible.
-- [ ] ✗ → `POST` al API → evento a n8n (webhook dedicado con `store_config` +
-  contexto del pedido/chat) → **la IA redacta el aviso** y puede sugerir
-  sustituto (decisión: vía n8n, no plantilla — sin contexto la conversación se
-  rompe). El ítem se remueve/ajusta en el `sale.order`.
-- [ ] Despachar → estado en Odoo + notificación WhatsApp al cliente.
-  Semántica del botón: "despachado" = **ya pasó por caja** (la farmacia factura
-  el pedido en SU POS antes de que salga — regla de negocio #12 del mapa; el
-  pedido nuestro es la orden, su factura es la venta). Etiquetar la acción en
-  el UI acorde a ese flujo mental.
-- [ ] Registro: todo cambio de pedido queda trazado (evento + mensaje).
+- [x] Acciones por ítem en `/orders` del dashboard: ✗ por línea (líneas
+  rechazadas quedan tachadas como traza). (`4f3a7f1`)
+- [x] ✗ → `POST /orders/:id/items/:lineId/reject` → la línea queda en qty 0
+  (no se elimina: Odoo 17 bloquea unlink en pedidos confirmados, y qty-0 es
+  la traza); si era la última línea viva, cancela el pedido → evento a n8n
+  (`N8N_ORDER_EVENT_WEBHOOK_URL`, payload con `store_config` + pedido +
+  rechazado) → **la IA redacta el aviso** con sustitutos → **fallback a
+  plantilla** vía Evolution si n8n falla o no está configurado (el cliente
+  nunca queda sin aviso). Si el chat está en handover manual, NO se envía
+  (el panel le dice al farmacéutico que avise él).
+- [x] Despachar → `POST /orders/:id/dispatch` → confirm/lock en Odoo +
+  notificación WhatsApp. Semántica en el UI: *"Despachar = ya pasó por caja ·
+  se avisa al cliente"* (regla #12). Fix de paso: `action_done` ya no existe
+  en sale.order de Odoo 17 → `action_lock` con fallback.
+- [x] Registro: línea qty-0 como traza en Odoo + aviso persistido en Mongo
+  (`messages`, meta.source `n8n-order-event`/`order-event-template`/
+  `order-dispatch`) + logs estructurados.
+- [ ] **Verificación e2e en producción**: pedido real por WhatsApp → ✗ → aviso
+  recibido por el cliente → despacho → notificación. Requiere el loop n8n
+  activo (se solapa con M4). El workflow n8n del evento ✗ es user-owned;
+  mientras no exista, opera en modo plantilla.
 
 ### M3 — Voz dentro del ciclo (Stage 9 Phases F+G mínimo)
 
