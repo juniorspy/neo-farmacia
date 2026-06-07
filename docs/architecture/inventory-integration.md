@@ -73,11 +73,13 @@ integración tiende a desaparecer.
 | **1 — Inventario** | Bot con stock y precios reales; lo facturado en caja se auto-corrige vía sync | **Nosotros** (igual que nivel 0) | Push de productos/stock (Ruta A) o conector (Ruta B) |
 | **2 — Ventas (opcional)** | El pedido llega pre-cargado a su POS; la cajera solo confirma (ahorra digitación) | **Su POS** — factura + ticket en su flujo normal; nuestra impresión se vuelve redundante | Pull + ack de ventas — solo si su IT lo quiere |
 
-Nota: la impresión sigue la escalera — la boleta desde nuestro panel (y la
-futura auto-impresión al llegar el pedido) es una funcionalidad de **nivel
-0/1**; en nivel 2 desaparece naturalmente porque el pedido entra a su sistema
-y su POS imprime como siempre. Menos superficie nuestra que mantener para los
-clientes integrados, y un incentivo más para subir de nivel.
+Nota: la impresión sigue la escalera como **default**, pero la decisión final
+es **configuración de cada farmacia** en su propio panel (Configuración):
+`imprimir desde el panel: sí/no/automático al llegar pedido`. El nivel de
+integración solo define el valor inicial sensato (0/1 → panel imprime;
+2 → su POS imprime y lo nuestro apagado) — la farmacia lo cambia cuando
+quiera sin tocar nada del lado plataforma. ⏳ pendiente: campo de
+configuración operativa por store + toggle en `/settings`.
 
 ### 💡 Idea anotada (valor futuro): el que atendía WhatsApp se convierte en despachador
 
