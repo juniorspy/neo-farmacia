@@ -168,11 +168,23 @@ página para el IT del dueño.
 - [ ] Watchdog/takeover humano completo queda en Stage 9 Phase G (post-MVP si
   hace falta recortar).
 
-### M4 — Operar la flota
+### M4 — Operar la flota — health board código completo (2026-06-07), pendiente verificación en prod
 
-- [ ] Health board en `/admin`: por farmacia — conexión WhatsApp viva, último
-  sync de catálogo + conteo del índice, último mensaje procesado, errores
-  recientes, llamadas de voz del día.
+- [x] Health board en `/admin/health` (dashboard) + `GET /api/v1/admin/fleet-health`:
+  por farmacia — conexión WhatsApp viva (estado refrescado contra Evolution y
+  persistido), último sync de catálogo + conteo real del índice (Meili stats),
+  último mensaje procesado, errores recientes (provisioning + sync), llamadas
+  de voz del día (total + perdidas). Auto-refresh 30s.
+- [x] Deuda pagada con el board:
+  - `GET /health` público (mongo/redis/uptime, 503 si degradado) — reemplaza
+    el stub siempre-ok que vivía en webhook.routes (eliminado: ruta duplicada
+    habría roto el boot).
+  - **Verificación de tasks de Meilisearch**: `upsertDocuments` devuelve el
+    `taskUid` y el sync espera la task (`waitForTask`) — una task fallida ya
+    no se reporta como éxito silencioso.
+  - `lastSyncByStore` en memoria → persistido en `Store.catalog_sync`
+    (`last_synced_at` + `last_error`): sobrevive reinicios (sin full rebuild
+    por deploy) y alimenta el board.
 - [ ] **Pasada e2e formal** del ciclo completo con una farmacia recién
   provisionada: WhatsApp → n8n → respuesta → pedido → ✗/✓ → despacho → voz.
   (Cierra también la verificación pendiente del fix del silent-drop.)

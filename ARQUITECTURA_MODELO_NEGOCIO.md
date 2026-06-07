@@ -540,12 +540,15 @@ placeholder — regularizar o descartar.
 
 ### Operativos
 
-- Health board de flota ⏳ M4 — sin él, operar 10+ farmacias exige revisión
-  manual por farmacia.
+- Health board de flota ⚠️ código completo (2026-06-07): `/admin/health` +
+  `GET /api/v1/admin/fleet-health` (WhatsApp vivo, catálogo + conteo índice,
+  último mensaje, voz del día, errores) + `GET /health` público — pendiente
+  verificación en prod.
 - Módulo legacy `odoo.ts` + `modules/odoo` muerto (~280 LOC) — borrar tras
   confirmar con n8n vivo. Gráficas duplicadas home/reports (~200 LOC).
-- `cache lastSyncByStore` del catalog-sync es in-process: un redeploy fuerza
-  full rebuild por farmacia (aceptable a baja escala).
+- ~~`cache lastSyncByStore` del catalog-sync es in-process~~ resuelto
+  (2026-06-07): persistido en `Store.catalog_sync`; el sync además verifica
+  la task de Meilisearch (adiós éxito silencioso).
 - Separar formalmente `producción`, `en prueba`, `planeado` en docs — este
   documento usa los indicadores ✅/⚠️/⏳/💡 con ese fin.
 
@@ -589,7 +592,7 @@ Neo Farmacia convierte conversaciones en operaciones comerciales trazables.
 | **M1.5 — Stress test catálogo real** | Validar pipeline a escala 17k productos (opcional, despriorizada) | Importador `pharmacy_inventory` → DB `pharmacy_master_catalog` + `MASTER_CATALOG_DB` | 💡 |
 | **M2 — Ciclo cerrado** | Pedido → despacho → cliente informado | Acciones ✗/✓ por ítem en `/orders` + evento ✗ → n8n → aviso IA (fallback plantilla) + despacho con notificación | ⚠️ código completo (`4f3a7f1`), verificación e2e pendiente (requiere loop n8n, se solapa con M4) |
 | **M3 — Voz en el ciclo** | Llamada como parte del flujo | `send_link` (n8n = 1 llamada HTTP) + transcripts a Mongo/chat + sweep de llamadas perdidas con follow-up WhatsApp | ⚠️ código completo (`1280588`), e2e con M4. Nodo n8n user-owned |
-| **M4 — Operar la flota** | Escalar sin revisión manual | Health board admin + pasada e2e formal del ciclo con farmacia recién provisionada | ⏳ |
+| **M4 — Operar la flota** | Escalar sin revisión manual | Health board admin + pasada e2e formal del ciclo con farmacia recién provisionada | ⚠️ health board código completo (2026-06-07) + `/health` + verificación tasks Meili; falta pasada e2e formal |
 | Post-MVP | Estándar de operación + valor agregado | Conector POS real (ADR-007/008), email de credenciales, landing, recordatorios de refill a crónicos, facturación SaaS, **tienda online por farmacia** (módulo eCommerce de Odoo sobre el inventario/precios ya existentes; falta resolver imágenes), **tracking del pedido en mapa** (link al despachar) | 💡 |
 
 ## 13. Evidencia principal inspeccionada
