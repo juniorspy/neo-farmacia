@@ -186,6 +186,16 @@ página para el IT del dueño.
 - Recordatorios de refill a clientes crónicos (sobre la infraestructura de
   llamadas salientes ya construida — mayor ratio valor/esfuerzo del roadmap).
 - Facturación SaaS a farmacias.
+- 💡 **Tienda online como parte del paquete** (nota 2026-06-06): el inventario
+  y los precios por farmacia ya van a existir en su Odoo — el módulo
+  website/eCommerce de Odoo hace el resto sencillo. Pieza faltante: imágenes
+  de producto (solución eventual; referencia: el `product_3d_generator` del
+  ecosistema colmado genera visuales de producto). Valor agregado directo del
+  paquete: la farmacia gana canal web sin proyecto aparte.
+- 💡 **Tracking del pedido en mapa** (nota 2026-06-06): el cliente sigue su
+  delivery en un mapa (link de tracking enviado por WhatsApp al despachar).
+  Valor agregado del paquete; encaja con la notificación de despacho ya
+  construida en M2.
 
 ## Decisiones tomadas en este stage
 
