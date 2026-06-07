@@ -55,6 +55,16 @@ Consecuencia clave: al facturar en caja, **su stock ya se descontó por su
 propio proceso** — el sync de inventario lo trae corregido. El write-back
 automático pasa de requisito a optimización opcional.
 
+### La meta operativa: pedido casi automático
+
+Con la fuente de verdad conectada (nivel 1+), **no hay verificación manual
+del pedido**: el bot solo vende lo que existe, el pedido fluye solo, y el
+farmacéutico **solo imprime** — la revisión es empírica, al pickear los
+productos con la boleta en la mano. El patrón ✗ del despacho es un **camino
+de excepción** (discrepancia detectada al pickear), no una etapa obligatoria
+del flujo. En nivel 0 (sin integración) el ✗ trabaja más; con cada nivel de
+integración tiende a desaparecer.
+
 ### La escalera de adopción (la integración es un upgrade, no un prerrequisito)
 
 | Nivel | Qué obtiene la farmacia | Integración necesaria |

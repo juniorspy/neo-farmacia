@@ -29,6 +29,14 @@ es **inverso: el catálogo llega completo** y la farmacia ajusta.
 Mientras no haya stock real, la disponibilidad la confirma el humano al despachar
 (**patrón ✗**, heredado del colmado y probado allí).
 
+**Principio operativo (nota 2026-06-06)**: el ✗ es **camino de excepción, no
+verificación obligatoria**. La meta es el pedido casi automático — el
+farmacéutico solo imprime y revisa empíricamente al pickear — sostenida por la
+fuente de verdad en la DB de la farmacia (nivel 1+ de integración, ADR-008).
+En nivel 0 el ✗ cubre discrepancias; con stock real conectado tiende a
+desaparecer. Nada en el flujo debe BLOQUEAR un pedido esperando confirmación
+manual.
+
 ## Milestones
 
 ### M1 — Alta sistemática ✅ COMPLETADO (2026-06-06, verificado en producción)
@@ -134,13 +142,29 @@ página para el IT del dueño.
   activo (se solapa con M4). El workflow n8n del evento ✗ es user-owned;
   mientras no exista, opera en modo plantilla.
 
-### M3 — Voz dentro del ciclo (Stage 9 Phases F+G mínimo)
+### M3 — Voz dentro del ciclo (Stage 9 Phases F+G mínimo) — código completo (2026-06-06)
 
-- [ ] **Phase F**: nodo de decisión en n8n → `POST /api/v1/voice-calls`
-  (idempotente, ya existe) → manda el link firmado por WhatsApp.
-- [ ] **Phase G mínimo**: transcript de la llamada persistido en Mongo (visible
-  en el chat del dashboard); llamada perdida → mensaje de seguimiento por
-  WhatsApp.
+- [x] **Phase F (lado plataforma)**: `POST /api/v1/voice-calls` acepta
+  `send_link: true` → el API entrega el link firmado por WhatsApp él mismo —
+  el nodo n8n queda reducido a **una sola llamada HTTP**. Sin el flag, n8n
+  recibe el link y lo fraseaa dentro de su respuesta (comportamiento
+  original). (`1280588`)
+- [ ] **Phase F (lado n8n, user-owned)**: nodo de decisión que llama al
+  endpoint cuando la conversación lo amerite.
+- [x] **Phase G mínimo — transcripts**: el worker Python acumula la
+  conversación (`conversation_item_added`) y la postea al cerrar
+  (`POST /voice-calls/:id/transcript`, bearer). Queda en la sesión (capped)
+  y como registro condensado 📞 en el chat del dashboard (idempotente).
+  Bonus mini-watchdog: si el navegador del cliente se cerró sin reportar el
+  hangup, el post final cierra la sesión y libera el slot.
+- [x] **Phase G mínimo — llamada perdida**: hallazgo: `expireStaleRings`
+  existía pero **nunca estaba cableado**. Nuevo sweep (60s) → `missed`
+  (transición atómica = follow-up exactly-once) → mensaje WhatsApp de
+  seguimiento, respetando handover manual.
+- [x] Sender saliente compartido extraído a `whatsapp/outbound.service.ts`
+  (pedidos + voz, un solo camino Evolution + persistencia Mongo).
+- [ ] Verificación e2e (con M4): llamada real disparada desde n8n →
+  transcript visible en el chat → llamada perdida → follow-up.
 - [ ] Watchdog/takeover humano completo queda en Stage 9 Phase G (post-MVP si
   hace falta recortar).
 

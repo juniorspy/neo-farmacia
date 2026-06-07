@@ -489,8 +489,11 @@ placeholder — regularizar o descartar.
 4. Un operador humano puede tomar control de una conversación; la IA no
    responde después del handover. ✅
 5. El pedido conserva correlación con la conversación. ✅
-6. **En farmacia, la disponibilidad la confirma el humano al despachar
-   (patrón ✗) mientras no exista conector de stock real.** ⏳ M2 → 💡 ADR-007
+6. **El patrón ✗ es camino de excepción, no verificación obligatoria.** La
+   meta operativa es el pedido casi automático: el farmacéutico solo imprime
+   y revisa empíricamente al pickear — sostenido por la fuente de verdad del
+   POS de la farmacia (nivel 1+ de integración). En nivel 0 el ✗ cubre las
+   discrepancias; con stock real conectado tiende a desaparecer. ✅ diseño
 7. Un ✗ siempre produce corrección del pedido y aviso al cliente vía IA con
    contexto. ⏳ M2
 8. La IA de voz es read-only y **nunca da consejo clínico**. ✅
@@ -585,7 +588,7 @@ Neo Farmacia convierte conversaciones en operaciones comerciales trazables.
 | **M1 — Alta sistemática** | Farmacia nueva vendiendo en minutos | Paso `odoo_seed_catalog` (módulos + clonado JSON-RPC) + usuario de servicio por farmacia | ✅ 2026-06-06 |
 | **M1.5 — Stress test catálogo real** | Validar pipeline a escala 17k productos (opcional, despriorizada) | Importador `pharmacy_inventory` → DB `pharmacy_master_catalog` + `MASTER_CATALOG_DB` | 💡 |
 | **M2 — Ciclo cerrado** | Pedido → despacho → cliente informado | Acciones ✗/✓ por ítem en `/orders` + evento ✗ → n8n → aviso IA (fallback plantilla) + despacho con notificación | ⚠️ código completo (`4f3a7f1`), verificación e2e pendiente (requiere loop n8n, se solapa con M4) |
-| **M3 — Voz en el ciclo** | Llamada como parte del flujo | Phase F (n8n dispara + link) + Phase G mínimo (transcripts, llamada perdida) | ⏳ |
+| **M3 — Voz en el ciclo** | Llamada como parte del flujo | `send_link` (n8n = 1 llamada HTTP) + transcripts a Mongo/chat + sweep de llamadas perdidas con follow-up WhatsApp | ⚠️ código completo (`1280588`), e2e con M4. Nodo n8n user-owned |
 | **M4 — Operar la flota** | Escalar sin revisión manual | Health board admin + pasada e2e formal del ciclo con farmacia recién provisionada | ⏳ |
 | Post-MVP | Estándar de operación | Conector POS real (ADR-007), email de credenciales, landing, recordatorios de refill a crónicos, facturación SaaS | 💡 |
 
