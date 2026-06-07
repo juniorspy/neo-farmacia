@@ -74,12 +74,13 @@ integración tiende a desaparecer.
 | **2 — Ventas (opcional)** | El pedido llega pre-cargado a su POS; la cajera solo confirma (ahorra digitación) | **Su POS** — factura + ticket en su flujo normal; nuestra impresión se vuelve redundante | Pull + ack de ventas — solo si su IT lo quiere |
 
 Nota: la impresión sigue la escalera como **default**, pero la decisión final
-es **configuración de cada farmacia** en su propio panel (Configuración):
-`imprimir desde el panel: sí/no/automático al llegar pedido`. El nivel de
+es **configuración de cada farmacia** en su propio panel (Configuración →
+Impresión): manual / automática al llegar pedido / desactivada. El nivel de
 integración solo define el valor inicial sensato (0/1 → panel imprime;
 2 → su POS imprime y lo nuestro apagado) — la farmacia lo cambia cuando
-quiera sin tocar nada del lado plataforma. ⏳ pendiente: campo de
-configuración operativa por store + toggle en `/settings`.
+quiera sin tocar nada del lado plataforma. ✅ implementado (`0d926cd`):
+`Store.print_mode` + selector en `/settings` + `/orders` lo honra (auto =
+polling 20s e imprime pedidos nuevos; off oculta la impresión).
 
 ### 💡 Idea anotada (valor futuro): el que atendía WhatsApp se convierte en despachador
 
