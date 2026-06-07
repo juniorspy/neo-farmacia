@@ -9,7 +9,7 @@ function optional(key: string, fallback: string): string {
 }
 
 export function loadConfig() {
-  return {
+  const config = {
     nodeEnv: optional('NODE_ENV', 'development'),
     port: parseInt(optional('PORT', '3000')),
     logLevel: optional('LOG_LEVEL', 'info'),
@@ -82,6 +82,11 @@ export function loadConfig() {
       expiration: parseInt(optional('JWT_EXPIRATION', '86400000')),
     },
 
+    docs: {
+      // Swagger UI at /docs. Set DOCS_ENABLED=false to hide it in production.
+      enabled: optional('DOCS_ENABLED', 'true') !== 'false',
+    },
+
     debounce: {
       windowMs: parseInt(optional('DEBOUNCE_WINDOW_MS', '2000')),
     },
@@ -94,6 +99,20 @@ export function loadConfig() {
       productTtlSec: parseInt(optional('PRODUCT_CACHE_TTL_SEC', '300')),
     },
   } as const;
+
+  // Fail CLOSED in production: a missing secret must crash the boot loudly,
+  // not leave the API silently open (forgeable JWTs, unauthenticated n8n
+  // command dispatch). Dev keeps the convenient defaults.
+  if (config.nodeEnv === 'production') {
+    if (config.jwt.secret === 'dev-secret-change-in-production') {
+      throw new Error('JWT_SECRET must be set in production (the dev default is public in the repo)');
+    }
+    if (!config.n8n.apiKey) {
+      throw new Error('N8N_API_KEY must be set in production (n8n-facing routes would be open)');
+    }
+  }
+
+  return config;
 }
 
 export type AppConfig = ReturnType<typeof loadConfig>;

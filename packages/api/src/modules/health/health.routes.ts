@@ -85,7 +85,14 @@ async function buildStoreHealth(store: IStore, provisioningError: string | null)
 export async function healthRoutes(app: FastifyInstance, opts: { redis: Redis }) {
   // Liveness probe — no auth, cheap, for Dokploy/uptime checks and deploy
   // verification (replaces the old 404→401 probe workaround).
-  app.get('/health', async (_request: FastifyRequest, reply: FastifyReply) => {
+  app.get('/health', {
+    schema: {
+      summary: 'Liveness probe (Dokploy / verificación de deploy)',
+      description:
+        'Auth: ninguna. 200 = sano, 503 = degradado.\n\n' +
+        'Respuesta: `{ status, uptime_s, mongo, redis }`.',
+    },
+  }, async (_request: FastifyRequest, reply: FastifyReply) => {
     const mongoUp = mongoose.connection.readyState === 1;
     const redisUp = opts.redis.status === 'ready';
     const ok = mongoUp && redisUp;
@@ -102,7 +109,17 @@ export async function healthRoutes(app: FastifyInstance, opts: { redis: Redis })
   // voice calls today, recent errors.
   app.get(
     '/api/v1/admin/fleet-health',
-    { preHandler: [app.authenticate] },
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        summary: 'Health board de flota — estado operativo de cada farmacia',
+        description:
+          'Auth: JWT role=admin. Una llamada: WhatsApp VIVO contra Evolution, catálogo ' +
+          '(conteo Meili + último sync + error), último mensaje, voz hoy, errores.\n\n' +
+          'Respuesta: `{ generated_at, fleet: [{ store_id, name, status, whatsapp, catalog, ' +
+          'last_message, voice_today, provisioning_error }] }`.',
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       if (!requireSuperAdmin(request, reply)) return;
 

@@ -9,7 +9,23 @@ export async function authRoutes(
   const { config } = opts;
 
   // POST /api/v1/auth/login
-  app.post('/api/v1/auth/login', async (request: FastifyRequest, reply: FastifyReply) => {
+  app.post('/api/v1/auth/login', {
+    schema: {
+      summary: 'Login del dashboard — devuelve JWT',
+      description:
+        'Auth: ninguna. 401 si credenciales inválidas.\n\n' +
+        'Respuesta: `{ token, user: { id, name, email, role, stores } }`. ' +
+        '`role: admin` = super-admin (todas las farmacias); `pharmacist` = solo sus stores.',
+      body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string' },
+        },
+      },
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
     const { email, password } = request.body as { email: string; password: string };
 
     if (!email || !password) {
@@ -53,6 +69,10 @@ export async function authRoutes(
   // GET /api/v1/auth/me
   app.get('/api/v1/auth/me', {
     preHandler: [app.authenticate],
+    schema: {
+      summary: 'Usuario actual del JWT',
+      description: 'Auth: JWT. Respuesta: `{ id, name, email, role, stores }`.',
+    },
   }, async (request: FastifyRequest, reply: FastifyReply) => {
     const { id } = request.user as { id: string };
     const admin = await findAdminById(id);

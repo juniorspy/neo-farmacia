@@ -6,6 +6,7 @@ import { ProcessedCommand } from './processed.model.js';
 import type { CommandRequest, CommandContext, CommandResult } from './types.js';
 import { Store, type IStore } from '../provisioning/store.model.js';
 import { getScopedOdoo } from '../../shared/odoo-scoped-cache.js';
+import { n8nBearerOk } from '../../shared/n8n-auth.js';
 
 import { usuarioLookupCombined, usuarioEnsure } from './handlers/usuario.handler.js';
 import { catalogoSearch } from './handlers/catalogo.handler.js';
@@ -22,20 +23,44 @@ export async function commandsRoutes(
 ) {
   const { redis, config } = opts;
 
-  // Shared bearer check for n8n
+  // Bearer check for n8n — fails CLOSED in production (no key = only open in
+  // dev; the boot guard in config/env.ts guarantees the key exists in prod).
   async function verifyBearer(request: FastifyRequest, reply: FastifyReply): Promise<boolean> {
-    const auth = request.headers.authorization;
-    const expected = config.n8n.apiKey;
-    if (!expected) return true; // No key configured = open (dev mode)
-    if (!auth || !auth.startsWith('Bearer ') || auth.slice(7) !== expected) {
-      reply.status(401).send({ ok: false, error: 'unauthorized' });
-      return false;
-    }
-    return true;
+    if (!config.n8n.apiKey && config.nodeEnv !== 'production') return true;
+    if (n8nBearerOk(request.headers.authorization, config.n8n.apiKey)) return true;
+    reply.status(401).send({ ok: false, error: 'unauthorized' });
+    return false;
   }
 
   // POST /api/v1/commands
-  app.post('/api/v1/commands', async (request: FastifyRequest, reply: FastifyReply) => {
+  app.post('/api/v1/commands', {
+    schema: {
+      summary: 'Despachador de comandos n8n (idempotente, scoped por farmacia)',
+      description:
+        'Auth: `Authorization: Bearer N8N_API_KEY`. Punto único de entrada de los agentes n8n. ' +
+        'Idempotente por `commandId` (replay devuelve el resultado cacheado). Resuelve la farmacia ' +
+        'y opera contra SU base Odoo.\n\n' +
+        'Comandos: `usuario.lookupCombined`, `usuario.ensure`, `catalogo.search`, ' +
+        '`pedido.updateItems`, `pedido.consultarPrecio`, `pedido.despachar`, `pedido.cancel`.\n\n' +
+        'Respuesta: `{ ok: true, commandId, result }` — `result` depende del comando.',
+      body: {
+        type: 'object',
+        required: ['command', 'commandId', 'storeId'],
+        properties: {
+          command: { type: 'string', description: 'Uno de los comandos listados arriba' },
+          commandId: { type: 'string', description: 'ID único por invocación (idempotencia)' },
+          storeId: { type: 'string' },
+          chatId: { type: 'string' },
+          usuarioId: { type: 'string' },
+          payload: {
+            type: 'object',
+            additionalProperties: true,
+            description: 'Argumentos específicos del comando',
+          },
+        },
+      },
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
     if (!(await verifyBearer(request, reply))) return;
 
     const body = request.body as Partial<CommandRequest>;

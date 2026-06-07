@@ -18,7 +18,12 @@ if (res.statusCode !== 200) throw new Error(`/docs/json -> ${res.statusCode}`);
 const spec = res.json() as { paths: Record<string, Record<string, { tags?: string[] }>> };
 
 const routes = Object.entries(spec.paths).flatMap(([path, methods]) =>
-  Object.entries(methods).map(([method, op]) => ({ method: method.toUpperCase(), path, tag: op.tags?.[0] })),
+  Object.entries(methods).map(([method, op]) => ({
+    method: method.toUpperCase(),
+    path,
+    tag: (op as { tags?: string[] }).tags?.[0],
+    documented: Boolean((op as { summary?: string }).summary),
+  })),
 );
 const byTag = new Map<string, number>();
 for (const r of routes) byTag.set(r.tag || 'Otros', (byTag.get(r.tag || 'Otros') || 0) + 1);
@@ -28,9 +33,17 @@ if (devLeaks.length > 0) {
   throw new Error(`rutas dev expuestas en /docs: ${devLeaks.map((r) => r.path).join(', ')}`);
 }
 
+const undocumented = routes.filter((r) => !r.documented);
 console.log(`OK — boot limpio, ${routes.length} endpoints en /docs (dev ocultas):`);
 for (const [tag, count] of [...byTag.entries()].sort((a, b) => b[1] - a[1])) {
   console.log(`  ${String(count).padStart(3)}  ${tag}`);
+}
+console.log(
+  `Documentación: ${routes.length - undocumented.length}/${routes.length} rutas con summary`,
+);
+if (undocumented.length > 0) {
+  console.log('Sin documentar:');
+  for (const r of undocumented) console.log(`  ${r.method} ${r.path}`);
 }
 
 await app.close();

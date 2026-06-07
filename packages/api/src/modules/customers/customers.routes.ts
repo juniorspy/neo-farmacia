@@ -7,7 +7,24 @@ export async function customersRoutes(app: FastifyInstance) {
   app.addHook('preHandler', app.resolveStore);
 
   // GET /api/v1/stores/:storeId/customers
-  app.get('/api/v1/stores/:storeId/customers', async (request: FastifyRequest) => {
+  app.get('/api/v1/stores/:storeId/customers', {
+    schema: {
+      summary: 'Listar clientes (máx 50, por actividad reciente)',
+      description:
+        'Auth: JWT (scoped). Clientes captados por WhatsApp (colección users de Mongo).\n\n' +
+        'Respuesta: array `{ id, name, phone, chatId, registered, createdAt }`.',
+      params: {
+        type: 'object',
+        properties: { storeId: { type: 'string' } },
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          search: { type: 'string', description: 'Regex por nombre o teléfono' },
+        },
+      },
+    },
+  }, async (request: FastifyRequest) => {
     const { storeId } = request.params as { storeId: string };
     const { search } = request.query as { search?: string };
 
@@ -35,7 +52,20 @@ export async function customersRoutes(app: FastifyInstance) {
   });
 
   // GET /api/v1/stores/:storeId/customers/:customerId
-  app.get('/api/v1/stores/:storeId/customers/:customerId', async (request: FastifyRequest, reply: FastifyReply) => {
+  app.get('/api/v1/stores/:storeId/customers/:customerId', {
+    schema: {
+      summary: 'Detalle de un cliente con conteo de mensajes',
+      description:
+        'Auth: JWT (scoped). Respuesta: `{ id, name, phone, chatId, address, registered, messageCount, createdAt }`.',
+      params: {
+        type: 'object',
+        properties: {
+          storeId: { type: 'string' },
+          customerId: { type: 'string', description: 'Mongo ObjectId' },
+        },
+      },
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
     const { storeId, customerId } = request.params as { storeId: string; customerId: string };
 
     const customer = await User.findOne({ _id: customerId, store_id: storeId }).lean();

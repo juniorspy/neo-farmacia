@@ -1,10 +1,34 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { AppConfig } from '../../config/env.js';
 import { User } from './user.model.js';
 import { logger } from '../../shared/logger.js';
+import { makeN8nGuard } from '../../shared/n8n-auth.js';
 
-export async function usersRoutes(app: FastifyInstance) {
+export async function usersRoutes(app: FastifyInstance, opts: { config: AppConfig }) {
+  const requireN8n = makeN8nGuard(opts.config);
+
   // Lookup or create user — called by n8n
-  app.post('/api/v1/users/lookup', async (request: FastifyRequest, reply: FastifyReply) => {
+  app.post('/api/v1/users/lookup', {
+    schema: {
+      summary: 'Buscar o crear usuario por chat (n8n Registration Agent)',
+      description:
+        'Auth: `Bearer N8N_API_KEY`. Busca por `chatId`, fallback por `phone`; crea si no existe. ' +
+        'Completa name/address/phone solo si venían vacíos.\n\n' +
+        'Respuesta: `{ user, isNew }`.',
+      body: {
+        type: 'object',
+        required: ['storeId', 'chatId'],
+        properties: {
+          storeId: { type: 'string' },
+          chatId: { type: 'string', description: 'JID de WhatsApp del cliente' },
+          phone: { type: 'string' },
+          name: { type: 'string' },
+          address: { type: 'string' },
+        },
+      },
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!requireN8n(request, reply)) return;
     const { storeId, chatId, phone, name, address } = request.body as {
       storeId: string;
       chatId: string;

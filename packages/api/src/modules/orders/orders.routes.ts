@@ -58,6 +58,30 @@ export async function ordersRoutes(
 
   app.get(
     '/api/v1/stores/:storeId/orders',
+    {
+      schema: {
+        summary: 'Listar pedidos de la farmacia',
+        description:
+          'Auth: JWT (scoped por store). Lee sale.order de la DB Odoo de la farmacia.\n\n' +
+          'Respuesta: array `{ id, name, customer, customerId, date, total, status, odooState }`. ' +
+          'Status: `pending` (draft/sent) · `ready` (sale) · `dispatched` (done) · `cancelled` (cancel).',
+        params: {
+          type: 'object',
+          properties: { storeId: { type: 'string' } },
+        },
+        querystring: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'string',
+              description: 'pending | ready | dispatched | cancelled',
+            },
+            limit: { type: 'integer', description: 'Default 50' },
+            offset: { type: 'integer', description: 'Default 0' },
+          },
+        },
+      },
+    },
     async (request: FastifyRequest) => {
       const { status, limit, offset } = request.query as {
         status?: string;
@@ -76,6 +100,21 @@ export async function ordersRoutes(
 
   app.get(
     '/api/v1/stores/:storeId/orders/:orderId',
+    {
+      schema: {
+        summary: 'Detalle de un pedido con líneas',
+        description:
+          'Auth: JWT (scoped). Respuesta: pedido + `lines: [{ id, productId, name, qty, price, subtotal }]` ' +
+          '+ `note`. Líneas con `qty: 0` = rechazadas (✗).',
+        params: {
+          type: 'object',
+          properties: {
+            storeId: { type: 'string' },
+            orderId: { type: 'integer', description: 'sale.order id en Odoo' },
+          },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { orderId } = request.params as { storeId: string; orderId: string };
       const order = await getSaleOrderScoped(request.odoo, parseInt(orderId));
@@ -100,6 +139,26 @@ export async function ordersRoutes(
   // informs the customer — AI via n8n with context, template as fallback.
   app.post(
     '/api/v1/stores/:storeId/orders/:orderId/items/:lineId/reject',
+    {
+      schema: {
+        summary: 'Rechazar un ítem del pedido (patrón ✗, M2)',
+        description:
+          'Auth: JWT (scoped). La línea queda en qty 0 (traza, no unlink); si era la última viva, ' +
+          'cancela el pedido. Avisa al cliente: IA vía n8n con contexto → fallback plantilla. ' +
+          'Si el chat está en handover manual NO se envía (avisa el panel).\n\n' +
+          'Body opcional: `{ reason?: string }` (default `no_disponible`) — sin schema a propósito: ' +
+          'el dashboard postea sin body.\n\n' +
+          'Respuesta: `{ success, orderCancelled, total, notified, channel }`.',
+        params: {
+          type: 'object',
+          properties: {
+            storeId: { type: 'string' },
+            orderId: { type: 'integer' },
+            lineId: { type: 'integer', description: 'sale.order.line id' },
+          },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { orderId, lineId } = request.params as {
         storeId: string;
@@ -174,6 +233,22 @@ export async function ordersRoutes(
   // invoice is the sale). Confirms/locks in Odoo + notifies the customer.
   app.post(
     '/api/v1/stores/:storeId/orders/:orderId/dispatch',
+    {
+      schema: {
+        summary: 'Despachar pedido (M2) — confirma y bloquea en Odoo + avisa al cliente',
+        description:
+          'Auth: JWT (scoped). "Despachado" = ya pasó por la caja de la farmacia (regla #12: ' +
+          'la factura del POS es la venta fiscal, no nuestro pedido). Sin body.\n\n' +
+          'Respuesta: `{ success, notified, channel }`.',
+        params: {
+          type: 'object',
+          properties: {
+            storeId: { type: 'string' },
+            orderId: { type: 'integer' },
+          },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { orderId } = request.params as { storeId: string; orderId: string };
       const store = request.store;
@@ -213,6 +288,29 @@ export async function ordersRoutes(
 
   app.patch(
     '/api/v1/stores/:storeId/orders/:orderId/status',
+    {
+      schema: {
+        summary: 'Cambiar estado del pedido (genérico)',
+        description:
+          'Auth: JWT (scoped). Mapea estado dashboard → acción Odoo: ready→confirm, ' +
+          'dispatched→done, cancelled→cancel, pending→draft.\n\n' +
+          'Respuesta: `{ success, orderId, status }`.',
+        params: {
+          type: 'object',
+          properties: {
+            storeId: { type: 'string' },
+            orderId: { type: 'integer' },
+          },
+        },
+        body: {
+          type: 'object',
+          required: ['status'],
+          properties: {
+            status: { type: 'string', description: 'pending | ready | dispatched | cancelled' },
+          },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { orderId } = request.params as { storeId: string; orderId: string };
       const { status } = request.body as { status: string };

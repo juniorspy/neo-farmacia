@@ -16,7 +16,19 @@ export async function chatsRoutes(
   app.addHook('preHandler', app.resolveStore);
 
   // GET /api/v1/stores/:storeId/chats — active chats with last message
-  app.get('/api/v1/stores/:storeId/chats', async (request: FastifyRequest) => {
+  app.get('/api/v1/stores/:storeId/chats', {
+    schema: {
+      summary: 'Chats activos con último mensaje (máx 50)',
+      description:
+        'Auth: JWT (scoped). Agrega mensajes por chat y enriquece con usuario + modo de sesión.\n\n' +
+        'Respuesta: array `{ id, customer, phone, lastMessage, time, sender, mode }` — ' +
+        '`mode`: `bot` | `manual` (handover).',
+      params: {
+        type: 'object',
+        properties: { storeId: { type: 'string' } },
+      },
+    },
+  }, async (request: FastifyRequest) => {
     const { storeId } = request.params as { storeId: string };
 
     // Aggregate: group messages by chat_id, get last message and count unread
@@ -57,7 +69,29 @@ export async function chatsRoutes(
   });
 
   // GET /api/v1/stores/:storeId/chats/:chatId/messages
-  app.get('/api/v1/stores/:storeId/chats/:chatId/messages', async (request: FastifyRequest) => {
+  app.get('/api/v1/stores/:storeId/chats/:chatId/messages', {
+    schema: {
+      summary: 'Historial de mensajes de un chat (ascendente)',
+      description:
+        'Auth: JWT (scoped). Paginación hacia atrás con `before`.\n\n' +
+        'Respuesta: array `{ id, text, sender, direction, time }` — ' +
+        '`sender`: customer | bot | agent.',
+      params: {
+        type: 'object',
+        properties: {
+          storeId: { type: 'string' },
+          chatId: { type: 'string', description: 'JID de WhatsApp (URL-encoded)' },
+        },
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'integer', description: 'Default 50' },
+          before: { type: 'string', description: 'ISO date — mensajes anteriores a este instante' },
+        },
+      },
+    },
+  }, async (request: FastifyRequest) => {
     const { storeId, chatId } = request.params as { storeId: string; chatId: string };
     const { limit, before } = request.query as { limit?: string; before?: string };
 
@@ -81,7 +115,26 @@ export async function chatsRoutes(
   });
 
   // POST /api/v1/stores/:storeId/chats/:chatId/messages — send manual message
-  app.post('/api/v1/stores/:storeId/chats/:chatId/messages', async (request: FastifyRequest, reply: FastifyReply) => {
+  app.post('/api/v1/stores/:storeId/chats/:chatId/messages', {
+    schema: {
+      summary: 'Enviar mensaje manual (farmacéutico → cliente)',
+      description:
+        'Auth: JWT (scoped). Persiste el mensaje como `sender: agent`.\n\n' +
+        'Respuesta: `{ id, text, sender, direction, time }`.',
+      params: {
+        type: 'object',
+        properties: {
+          storeId: { type: 'string' },
+          chatId: { type: 'string' },
+        },
+      },
+      body: {
+        type: 'object',
+        required: ['text'],
+        properties: { text: { type: 'string' } },
+      },
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
     const { storeId, chatId } = request.params as { storeId: string; chatId: string };
     const { text } = request.body as { text: string };
 

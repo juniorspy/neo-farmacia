@@ -14,7 +14,24 @@ export async function statsRoutes(app: FastifyInstance) {
   app.addHook('preHandler', app.resolveStore);
 
   // GET /api/v1/stores/:storeId/stats/summary
-  app.get('/api/v1/stores/:storeId/stats/summary', async (request: FastifyRequest) => {
+  app.get('/api/v1/stores/:storeId/stats/summary', {
+    schema: {
+      summary: 'KPIs del dashboard (pedidos, ingresos, clientes, mensajes)',
+      description:
+        'Auth: JWT (scoped). Respuesta: `{ totalOrders, pendingOrders, completedOrders, ' +
+        'totalRevenue, avgPerOrder, totalCustomers, periodMessages }`.',
+      params: {
+        type: 'object',
+        properties: { storeId: { type: 'string' } },
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          range: { type: 'string', description: 'today | week | month (default) | year' },
+        },
+      },
+    },
+  }, async (request: FastifyRequest) => {
     const { storeId } = request.params as { storeId: string };
     const { range } = request.query as { range?: string };
 
@@ -67,7 +84,17 @@ export async function statsRoutes(app: FastifyInstance) {
   });
 
   // GET /api/v1/stores/:storeId/stats/agent
-  app.get('/api/v1/stores/:storeId/stats/agent', async (request: FastifyRequest) => {
+  app.get('/api/v1/stores/:storeId/stats/agent', {
+    schema: {
+      summary: 'Reparto bot vs humano de los mensajes salientes',
+      description:
+        'Auth: JWT (scoped). Respuesta: `{ botMessages, agentMessages, totalMessages, botPct, agentPct }`.',
+      params: {
+        type: 'object',
+        properties: { storeId: { type: 'string' } },
+      },
+    },
+  }, async (request: FastifyRequest) => {
     const { storeId } = request.params as { storeId: string };
 
     const [botMessages, agentMessages, totalMessages] = await Promise.all([
@@ -89,7 +116,24 @@ export async function statsRoutes(app: FastifyInstance) {
   });
 
   // GET /api/v1/stores/:storeId/stats/charts — all chart data in one call
-  app.get('/api/v1/stores/:storeId/stats/charts', async (request: FastifyRequest) => {
+  app.get('/api/v1/stores/:storeId/stats/charts', {
+    schema: {
+      summary: 'Datos de todas las gráficas en una llamada',
+      description:
+        'Auth: JWT (scoped). Respuesta: `{ dailySales, weekdaySales, hourlyActivity, ' +
+        'ordersByStatus, topProducts, topCustomers }`.',
+      params: {
+        type: 'object',
+        properties: { storeId: { type: 'string' } },
+      },
+      querystring: {
+        type: 'object',
+        properties: {
+          range: { type: 'string', description: 'today | week | month (default) | year' },
+        },
+      },
+    },
+  }, async (request: FastifyRequest) => {
     const { storeId } = request.params as { storeId: string };
     const { range } = request.query as { range?: string };
 

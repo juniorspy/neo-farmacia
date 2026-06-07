@@ -29,7 +29,15 @@ export async function adminRoutes(
   // List pharmacies with their provisioning state
   app.get(
     '/api/v1/admin/pharmacies',
-    { preHandler: [app.authenticate] },
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        summary: 'Listar farmacias con su estado de provisioning',
+        description:
+          'Auth: JWT role=admin. Respuesta: array `{ store_id, name, owner_*, status, odoo_db, ' +
+          'created_at, job: { status, current_step_index, steps, last_error } | null }`.',
+      },
+    },
     async (request, reply) => {
       if (!requireSuperAdmin(request, reply)) return;
 
@@ -62,7 +70,14 @@ export async function adminRoutes(
   // Get a single pharmacy
   app.get(
     '/api/v1/admin/pharmacies/:storeId',
-    { preHandler: [app.authenticate] },
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        summary: 'Detalle de una farmacia + job de provisioning',
+        description: 'Auth: JWT role=admin. Respuesta: `{ store, job }`.',
+        params: { type: 'object', properties: { storeId: { type: 'string' } } },
+      },
+    },
     async (request, reply) => {
       if (!requireSuperAdmin(request, reply)) return;
       const { storeId } = request.params as { storeId: string };
@@ -76,7 +91,31 @@ export async function adminRoutes(
   // Create new pharmacy (starts provisioning)
   app.post(
     '/api/v1/admin/pharmacies',
-    { preHandler: [app.authenticate] },
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        summary: 'Crear farmacia — dispara el pipeline de provisioning (8 pasos)',
+        description:
+          'Auth: JWT role=admin. Crea DB Odoo aislada + usuario de servicio + catálogo clonado del ' +
+          'maestro + índice Meilisearch + admin del dashboard (~30s, seguible vía GET).\n\n' +
+          'Respuesta 201: `{ store_id, name, status, job_id }`. La contraseña NO se devuelve aquí ' +
+          '(vive en el paso email_credentials hasta marcarse entregada).',
+        body: {
+          type: 'object',
+          required: ['name', 'owner_name', 'owner_email'],
+          properties: {
+            name: { type: 'string' },
+            owner_name: { type: 'string' },
+            owner_email: { type: 'string', format: 'email' },
+            owner_phone: { type: 'string' },
+            timezone: { type: 'string', description: 'Default America/Santo_Domingo' },
+            currency: { type: 'string', description: 'Default DOP' },
+            country_code: { type: 'string', description: 'Default DO' },
+            lang: { type: 'string', description: 'Default es_DO' },
+          },
+        },
+      },
+    },
     async (request, reply) => {
       if (!requireSuperAdmin(request, reply)) return;
 
@@ -123,7 +162,19 @@ export async function adminRoutes(
   // Requires ?confirm=yes as a second safeguard against accidental deletes.
   app.delete(
     '/api/v1/admin/pharmacies/:storeId',
-    { preHandler: [app.authenticate] },
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        summary: 'Eliminar farmacia (DB Odoo + índice Meili + registros Mongo)',
+        description:
+          'Auth: JWT role=admin. DESTRUCTIVO e irreversible — requiere `?confirm=yes` como segundo seguro.',
+        params: { type: 'object', properties: { storeId: { type: 'string' } } },
+        querystring: {
+          type: 'object',
+          properties: { confirm: { type: 'string', description: 'Debe ser "yes"' } },
+        },
+      },
+    },
     async (request, reply) => {
       if (!requireSuperAdmin(request, reply)) return;
       const { storeId } = request.params as { storeId: string };
@@ -145,7 +196,16 @@ export async function adminRoutes(
   // Mark credentials as delivered — scrubs plaintext password from job data
   app.post(
     '/api/v1/admin/pharmacies/:storeId/credentials/mark-delivered',
-    { preHandler: [app.authenticate] },
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        summary: 'Marcar credenciales entregadas — borra la contraseña en texto plano',
+        description:
+          'Auth: JWT role=admin. Irreversible: tras esto, reparar el usuario de servicio Odoo ya no es ' +
+          'posible (re-provisionar es la vía). Sin body.',
+        params: { type: 'object', properties: { storeId: { type: 'string' } } },
+      },
+    },
     async (request, reply) => {
       if (!requireSuperAdmin(request, reply)) return;
       const { storeId } = request.params as { storeId: string };
@@ -158,7 +218,14 @@ export async function adminRoutes(
   // Retry a failed job
   app.post(
     '/api/v1/admin/pharmacies/:storeId/retry',
-    { preHandler: [app.authenticate] },
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        summary: 'Reintentar un job de provisioning fallido (desde el paso que falló)',
+        description: 'Auth: JWT role=admin. Sin body. Respuesta: `{ store_id, status }`.',
+        params: { type: 'object', properties: { storeId: { type: 'string' } } },
+      },
+    },
     async (request, reply) => {
       if (!requireSuperAdmin(request, reply)) return;
       const { storeId } = request.params as { storeId: string };
@@ -175,7 +242,16 @@ export async function adminRoutes(
   // super-admin marks it delivered — after that, re-provisioning is the path.
   app.post(
     '/api/v1/admin/pharmacies/:storeId/repair-odoo-service',
-    { preHandler: [app.authenticate] },
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        summary: 'Reparar usuario de servicio Odoo (farmacias pre-Stage 10 D1)',
+        description:
+          'Auth: JWT role=admin. Requiere que la contraseña admin siga en el job (409 si ya se marcó ' +
+          'entregada — re-provisionar es la vía). Sin body. Respuesta: `{ store_id, service_user_id }`.',
+        params: { type: 'object', properties: { storeId: { type: 'string' } } },
+      },
+    },
     async (request, reply) => {
       if (!requireSuperAdmin(request, reply)) return;
       const { storeId } = request.params as { storeId: string };

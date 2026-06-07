@@ -33,6 +33,16 @@ export async function whatsappRoutes(
   // ── LIST ──
   app.get(
     '/api/v1/stores/:storeId/whatsapp/connections',
+    {
+      schema: {
+        summary: 'Listar líneas WhatsApp de la farmacia',
+        description:
+          'Auth: JWT (scoped). Estado tal como está en Mongo (para el estado VIVO, GET de una conexión).\n\n' +
+          'Respuesta: array `{ id, label, instance_name, number, state, created_at, connected_at, ' +
+          'disconnected_at }` — `state`: qr | connecting | open | close | unknown.',
+        params: { type: 'object', properties: { storeId: { type: 'string' } } },
+      },
+    },
     async (request: FastifyRequest) => {
       const store = request.store;
       const list = await listConnectionsForStore(store.store_id);
@@ -52,6 +62,23 @@ export async function whatsappRoutes(
   // ── CREATE ──
   app.post(
     '/api/v1/stores/:storeId/whatsapp/connections',
+    {
+      schema: {
+        summary: 'Crear línea WhatsApp — instancia Evolution nueva + QR',
+        description:
+          'Auth: JWT (scoped). Cada línea es una instancia Evolution independiente ' +
+          '(ej. "Caja", "Delivery").\n\n' +
+          'Respuesta 201: `{ id, label, instance_name, number: null, state: "qr", qr_base64 }`.',
+        params: { type: 'object', properties: { storeId: { type: 'string' } } },
+        body: {
+          type: 'object',
+          required: ['label'],
+          properties: {
+            label: { type: 'string', maxLength: 60, description: 'Nombre visible de la línea' },
+          },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const store = request.store;
       const body = request.body as { label?: string };
@@ -105,6 +132,16 @@ export async function whatsappRoutes(
   // ── REFRESH QR ──
   app.get(
     '/api/v1/stores/:storeId/whatsapp/connections/:id/qr',
+    {
+      schema: {
+        summary: 'Refrescar el QR de vinculación',
+        description: 'Auth: JWT (scoped). Respuesta: `{ qr_base64 }`.',
+        params: {
+          type: 'object',
+          properties: { storeId: { type: 'string' }, id: { type: 'string' } },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { id } = request.params as { id: string };
       const conn = await WhatsappConnection.findOne({
@@ -124,6 +161,18 @@ export async function whatsappRoutes(
   // ── REFRESH STATE ──
   app.get(
     '/api/v1/stores/:storeId/whatsapp/connections/:id',
+    {
+      schema: {
+        summary: 'Estado VIVO de la conexión (consulta Evolution y persiste el drift)',
+        description:
+          'Auth: JWT (scoped). Respuesta: `{ id, label, instance_name, number, state, ' +
+          'connected_at, disconnected_at }`.',
+        params: {
+          type: 'object',
+          properties: { storeId: { type: 'string' }, id: { type: 'string' } },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { id } = request.params as { id: string };
       const conn = await WhatsappConnection.findOne({
@@ -151,6 +200,18 @@ export async function whatsappRoutes(
   //    wants to come back, they create a new connection and scan again.
   app.delete(
     '/api/v1/stores/:storeId/whatsapp/connections/:id',
+    {
+      schema: {
+        summary: 'Desconectar y eliminar la línea (logout + delete en Evolution + Mongo)',
+        description:
+          'Auth: JWT (scoped). Acción destructiva única — para volver, se crea una conexión nueva ' +
+          'y se escanea de nuevo. Respuesta: `{ deleted: true }`.',
+        params: {
+          type: 'object',
+          properties: { storeId: { type: 'string' }, id: { type: 'string' } },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { id } = request.params as { id: string };
       const conn = await WhatsappConnection.findOne({

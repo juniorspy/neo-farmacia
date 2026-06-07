@@ -50,6 +50,19 @@ export async function storesRoutes(app: FastifyInstance) {
   // GET /api/v1/stores/:storeId — basic store info + agent config
   app.get(
     '/api/v1/stores/:storeId',
+    {
+      schema: {
+        summary: 'Config de la farmacia (agente, voz, impresión)',
+        description:
+          'Auth: JWT (scoped — el farmacéutico ve solo sus stores; super-admin todas).\n\n' +
+          'Respuesta: `{ store_id, name, owner_*, timezone, currency, agent_config, ' +
+          'voice_config (con defaults), print_mode, status }`.',
+        params: {
+          type: 'object',
+          properties: { storeId: { type: 'string' } },
+        },
+      },
+    },
     async (request: FastifyRequest) => {
       const s = request.store;
       return {
@@ -75,6 +88,26 @@ export async function storesRoutes(app: FastifyInstance) {
   // PATCH /api/v1/stores/:storeId/print-config — pharmacy-owned printing mode
   app.patch(
     '/api/v1/stores/:storeId/print-config',
+    {
+      schema: {
+        summary: 'Modo de impresión de la farmacia (decisión del dueño)',
+        description:
+          'Auth: JWT (scoped). `manual` = botón por pedido · `auto` = imprime pedidos nuevos ' +
+          '(pestaña pedidos abierta + impresora BT) · `off` = imprime su POS (nivel 2).\n\n' +
+          'Respuesta: `{ ok, print_mode }`.',
+        params: {
+          type: 'object',
+          properties: { storeId: { type: 'string' } },
+        },
+        body: {
+          type: 'object',
+          required: ['print_mode'],
+          properties: {
+            print_mode: { type: 'string', enum: ['manual', 'auto', 'off'] },
+          },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { print_mode } = (request.body || {}) as { print_mode?: string };
       if (!print_mode || !['manual', 'auto', 'off'].includes(print_mode)) {
@@ -94,6 +127,30 @@ export async function storesRoutes(app: FastifyInstance) {
   // PATCH /api/v1/stores/:storeId/agent-config — edit agent persona/tone
   app.patch(
     '/api/v1/stores/:storeId/agent-config',
+    {
+      schema: {
+        summary: 'Editar persona del agente IA ("Mi Agente")',
+        description:
+          'Auth: JWT (scoped). Solo se actualizan los campos enviados. El webhook recoge ' +
+          'el cambio en el siguiente mensaje (cache invalidado).\n\n' +
+          'Respuesta: `{ ok, agent_config }`.',
+        params: {
+          type: 'object',
+          properties: { storeId: { type: 'string' } },
+        },
+        body: {
+          type: 'object',
+          properties: {
+            agent_name: { type: 'string', maxLength: 200 },
+            greeting_style: { type: 'string', enum: ['formal', 'casual', 'amigable'] },
+            signature: { type: 'string', maxLength: 200 },
+            business_hours: { type: 'string', maxLength: 200 },
+            delivery_info: { type: 'string', maxLength: 200 },
+            custom_notes: { type: 'string', maxLength: 500 },
+          },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const body = request.body as AgentConfigUpdate;
 
@@ -156,6 +213,37 @@ export async function storesRoutes(app: FastifyInstance) {
   // Voice provider/voice selection is a platform setting, not a pharmacist one.
   app.patch(
     '/api/v1/stores/:storeId/voice-config',
+    {
+      schema: {
+        summary: 'Config de voz de la farmacia (solo super-admin)',
+        description:
+          'Auth: JWT role=admin. Pipeline STT → LLM → TTS por farmacia. ' +
+          '`applyToAll: true` aplica los campos enviados a TODAS las farmacias.\n\n' +
+          'Respuesta: `{ ok, voice_config }` o `{ ok, applied_to_all, modified }`.',
+        params: {
+          type: 'object',
+          properties: { storeId: { type: 'string' } },
+        },
+        body: {
+          type: 'object',
+          properties: {
+            enabled: { type: 'boolean' },
+            language: { type: 'string', maxLength: 200 },
+            stt_provider: { type: 'string', enum: ['deepgram'] },
+            stt_model: { type: 'string', maxLength: 200 },
+            llm_provider: { type: 'string', enum: ['openai', 'anthropic'] },
+            llm_model: { type: 'string', maxLength: 200 },
+            tts_provider: { type: 'string', enum: ['openai', 'elevenlabs', 'cartesia', 'google'] },
+            tts_voice: { type: 'string', maxLength: 200 },
+            tts_stability: { type: 'number', minimum: 0, maximum: 1 },
+            tts_style: { type: 'number', minimum: 0, maximum: 1 },
+            greeting: { type: 'string', maxLength: 300 },
+            prompt_template: { type: 'string', maxLength: 6000 },
+            applyToAll: { type: 'boolean' },
+          },
+        },
+      },
+    },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const user = request.user as { role?: string } | undefined;
       if (user?.role !== 'admin') {

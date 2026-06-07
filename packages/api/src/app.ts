@@ -70,34 +70,37 @@ export async function buildApp(redis: Redis, config: AppConfig) {
   // OpenAPI live docs at /docs. Routes need no schema to appear (method +
   // path + tag, grouped by URL prefix below); request/response examples show
   // up as routes gain `schema` declarations. Must register BEFORE the routes.
-  await app.register(swagger, {
-    openapi: {
-      info: {
-        title: 'Neo Farmacia API',
-        description:
-          'Microservicio central: webhook WhatsApp, callbacks n8n, dashboard por farmacia (scoped por store_id), provisioning super-admin y llamadas de voz.',
-        version: '0.1.0',
-      },
-      components: {
-        securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
-            description:
-              'JWT del dashboard (POST /api/v1/auth/login). Las rutas n8n usan bearer con N8N_API_KEY.',
+  // DOCS_ENABLED=false hides the page entirely (route schemas keep validating).
+  if (config.docs.enabled) {
+    await app.register(swagger, {
+      openapi: {
+        info: {
+          title: 'Neo Farmacia API',
+          description:
+            'Microservicio central: webhook WhatsApp, callbacks n8n, dashboard por farmacia (scoped por store_id), provisioning super-admin y llamadas de voz.',
+          version: '0.1.0',
+        },
+        components: {
+          securitySchemes: {
+            bearerAuth: {
+              type: 'http',
+              scheme: 'bearer',
+              bearerFormat: 'JWT',
+              description:
+                'JWT del dashboard (POST /api/v1/auth/login). Las rutas n8n usan bearer con N8N_API_KEY.',
+            },
           },
         },
       },
-    },
-    transform: ({ schema, url }) => {
-      const s = (schema || {}) as Record<string, unknown>;
-      if (url.includes('/dev/')) s.hide = true; // seeds y utilidades dev fuera de /docs
-      if (!s.tags) s.tags = [tagForUrl(url)];
-      return { schema: s as typeof schema, url };
-    },
-  });
-  await app.register(swaggerUi, { routePrefix: '/docs' });
+      transform: ({ schema, url }) => {
+        const s = (schema || {}) as Record<string, unknown>;
+        if (url.includes('/dev/')) s.hide = true; // seeds y utilidades dev fuera de /docs
+        if (!s.tags) s.tags = [tagForUrl(url)];
+        return { schema: s as typeof schema, url };
+      },
+    });
+    await app.register(swaggerUi, { routePrefix: '/docs' });
+  }
 
   // JWT plugin — must register before routes that use app.authenticate
   await registerJwt(app, config);
@@ -120,11 +123,11 @@ export async function buildApp(redis: Redis, config: AppConfig) {
   });
 
   await app.register(async (instance) => {
-    await usersRoutes(instance);
+    await usersRoutes(instance, { config });
   });
 
   await app.register(async (instance) => {
-    await handoverRoutes(instance, { redis });
+    await handoverRoutes(instance, { redis, config });
   });
 
   // Dashboard API routes (protected)

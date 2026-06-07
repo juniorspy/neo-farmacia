@@ -3,15 +3,34 @@ import type Redis from 'ioredis';
 import type { AppConfig } from '../../config/env.js';
 import { searchProducts, createSaleOrder, findOrCreatePartner, getProductById } from '../../shared/odoo.js';
 import { logger } from '../../shared/logger.js';
+import { makeN8nGuard } from '../../shared/n8n-auth.js';
 
 export async function odooRoutes(
   app: FastifyInstance,
   opts: { redis: Redis; config: AppConfig },
 ) {
   const { redis, config } = opts;
+  const requireN8n = makeN8nGuard(config);
 
   // Search products — called by n8n Dialogue Agent
-  app.post('/api/v1/products/search', async (request: FastifyRequest, reply: FastifyReply) => {
+  app.post('/api/v1/products/search', {
+    schema: {
+      summary: 'Buscar productos en Odoo (n8n Dialogue Agent) — legacy DB principal',
+      description:
+        'Auth: `Bearer N8N_API_KEY`. Busca productos vendibles en el Odoo principal con caché Redis por query.\n\n' +
+        'Respuesta: array de productos Odoo `{ id, name, list_price, qty_available, ... }`.',
+      body: {
+        type: 'object',
+        required: ['query', 'storeId'],
+        properties: {
+          query: { type: 'string', description: 'Texto de búsqueda del cliente' },
+          storeId: { type: 'string' },
+          limit: { type: 'integer', description: 'Máx. resultados (default 10)' },
+        },
+      },
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!requireN8n(request, reply)) return;
     const { query, storeId, limit } = request.body as {
       query: string;
       storeId: string;
@@ -39,7 +58,17 @@ export async function odooRoutes(
   });
 
   // Get product by ID
-  app.get('/api/v1/products/:id', async (request: FastifyRequest, reply: FastifyReply) => {
+  app.get('/api/v1/products/:id', {
+    schema: {
+      summary: 'Producto por ID de Odoo — legacy DB principal',
+      description: 'Auth: `Bearer N8N_API_KEY`. 404 si no existe.',
+      params: {
+        type: 'object',
+        properties: { id: { type: 'integer', description: 'product.product id en Odoo' } },
+      },
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!requireN8n(request, reply)) return;
     const { id } = request.params as { id: string };
     const product = await getProductById(parseInt(id));
     if (!product) return reply.status(404).send({ error: 'Product not found' });
@@ -47,7 +76,38 @@ export async function odooRoutes(
   });
 
   // Create/update order — called by n8n Cart Agent
-  app.post('/api/v1/orders/update', async (request: FastifyRequest, reply: FastifyReply) => {
+  app.post('/api/v1/orders/update', {
+    schema: {
+      summary: 'Crear pedido en Odoo (n8n Cart Agent) — legacy DB principal',
+      description:
+        'Auth: `Bearer N8N_API_KEY`. Resuelve/crea el partner por nombre+teléfono y crea la sale.order.\n\n' +
+        'Respuesta: `{ success: true, orderId, partnerId }`.',
+      body: {
+        type: 'object',
+        required: ['storeId', 'items'],
+        properties: {
+          storeId: { type: 'string' },
+          chatId: { type: 'string' },
+          customerName: { type: 'string' },
+          customerPhone: { type: 'string' },
+          items: {
+            type: 'array',
+            minItems: 1,
+            items: {
+              type: 'object',
+              required: ['productId', 'quantity'],
+              properties: {
+                productId: { type: 'integer' },
+                quantity: { type: 'number' },
+                price: { type: 'number' },
+              },
+            },
+          },
+        },
+      },
+    },
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!requireN8n(request, reply)) return;
     const body = request.body as {
       storeId: string;
       chatId: string;

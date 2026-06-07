@@ -1,4 +1,3 @@
-import { timingSafeEqual } from 'crypto';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type Redis from 'ioredis';
 import type { AppConfig } from '../../config/env.js';
@@ -22,16 +21,7 @@ import {
   sendCustomerMessage as sendOutboundMessage,
   phoneFromChatId,
 } from '../whatsapp/outbound.service.js';
-
-/** Constant-time bearer check for the n8n create endpoint. */
-function bearerOk(authHeader: string | undefined, expected: string): boolean {
-  if (!authHeader || !expected) return false;
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-  const a = Buffer.from(token);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
-}
+import { n8nBearerOk as bearerOk } from '../../shared/n8n-auth.js';
 
 /**
  * Phase 2 — the customer call surface, authed ONLY by the one-time signed-link
@@ -133,7 +123,34 @@ export async function voiceCallRoutes(
   }
 
   // ── CREATE (n8n) — bearer-authed; returns the signed customer link ──
-  app.post('/api/v1/voice-calls', async (request, reply) => {
+  app.post('/api/v1/voice-calls', {
+    schema: {
+      summary: 'Crear llamada de voz (n8n) — devuelve link firmado del cliente',
+      description:
+        'Auth: `Bearer N8N_API_KEY`. Idempotente por `idempotency_key` (replay → sesión existente, ' +
+        '`duplicate: true`). Un slot de llamada por chat (409 si hay una activa). ' +
+        'Con `send_link: true` el API manda el link por WhatsApp él mismo — el nodo n8n queda en 1 llamada.\n\n' +
+        'Respuesta 201: `{ sessionId, link, link_sent, expiresAt }`.',
+      body: {
+        type: 'object',
+        required: ['storeId', 'chatId', 'idempotency_key'],
+        properties: {
+          storeId: { type: 'string' },
+          chatId: { type: 'string' },
+          idempotency_key: { type: 'string', description: 'Único por intención de llamada' },
+          reason: { type: 'string', description: 'Motivo (se trunca a 300)' },
+          summary: { type: 'string', description: 'Alias de reason (prioridad)' },
+          missing_fields: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Datos a confirmar en la llamada (máx 10)',
+          },
+          n8n_correlation_id: { type: 'string' },
+          send_link: { type: 'boolean', description: 'true = el API envía el link por WhatsApp' },
+        },
+      },
+    },
+  }, async (request, reply) => {
     if (!bearerOk(request.headers.authorization, config.n8n.apiKey)) {
       return reply.status(401).send({ error: 'unauthorized' });
     }
@@ -246,7 +263,20 @@ export async function voiceCallRoutes(
   //    The Python worker accumulates the conversation and posts it at call
   //    end. Stored on the session + condensed into the chat history so the
   //    pharmacist sees the call in the dashboard chat view.
-  app.post('/api/v1/voice-calls/:id/transcript', async (request, reply) => {
+  app.post('/api/v1/voice-calls/:id/transcript', {
+    schema: {
+      summary: 'Transcript de la llamada (worker Python, al cerrar)',
+      description:
+        'Auth: `Bearer N8N_API_KEY`. Body: `{ entries: [{ role, text, ts }], final?: boolean }` ' +
+        '(sin schema a propósito — tolerante con el worker). `final: true` cierra sesiones huérfanas ' +
+        '(mini-watchdog), libera el slot y deja el registro 📞 condensado en el chat (idempotente).\n\n' +
+        'Respuesta: `{ ok, appended, total }`.',
+      params: {
+        type: 'object',
+        properties: { id: { type: 'string', description: 'sessionId (Mongo ObjectId)' } },
+      },
+    },
+  }, async (request, reply) => {
     if (!bearerOk(request.headers.authorization, config.n8n.apiKey)) {
       return reply.status(401).send({ error: 'unauthorized' });
     }
@@ -326,7 +356,20 @@ export async function voiceCallRoutes(
   });
 
   // ── GET status (render the ring/answer page) ──
-  app.get('/api/v1/voice-calls/:id', async (request, reply) => {
+  app.get('/api/v1/voice-calls/:id', {
+    schema: {
+      summary: 'Estado de la llamada (página pública del cliente)',
+      description:
+        'Auth: token de link firmado `?t=` (NO JWT — el cliente no tiene sesión). ' +
+        '404 ante cualquier mismatch (no filtra existencia).\n\n' +
+        'Respuesta: `{ sessionId, status, reason, answererType, storeName, expiresAt }`.',
+      params: { type: 'object', properties: { id: { type: 'string' } } },
+      querystring: {
+        type: 'object',
+        properties: { t: { type: 'string', description: 'Token firmado del link (one-time)' } },
+      },
+    },
+  }, async (request, reply) => {
     const session = await authByToken(request, reply);
     if (!session) return;
     const store = await Store.findOne({ store_id: session.store_id }).select('name').lean<{ name: string } | null>();
@@ -334,7 +377,15 @@ export async function voiceCallRoutes(
   });
 
   // ── ANSWER (ringing → connecting), single-use ──
-  app.post('/api/v1/voice-calls/:id/answer', async (request, reply) => {
+  app.post('/api/v1/voice-calls/:id/answer', {
+    schema: {
+      summary: 'Contestar la llamada (ringing → connecting, single-use)',
+      description:
+        'Auth: token `?t=`. 410 si el link expiró; 409 si ya no es contestable (carrera). Sin body.',
+      params: { type: 'object', properties: { id: { type: 'string' } } },
+      querystring: { type: 'object', properties: { t: { type: 'string' } } },
+    },
+  }, async (request, reply) => {
     const session = await authByToken(request, reply);
     if (!session) return;
 
@@ -364,7 +415,14 @@ export async function voiceCallRoutes(
   });
 
   // ── REJECT (ringing → rejected) ──
-  app.post('/api/v1/voice-calls/:id/reject', async (request, reply) => {
+  app.post('/api/v1/voice-calls/:id/reject', {
+    schema: {
+      summary: 'Rechazar la llamada (ringing → rejected)',
+      description: 'Auth: token `?t=`. Libera el slot del chat. Sin body.',
+      params: { type: 'object', properties: { id: { type: 'string' } } },
+      querystring: { type: 'object', properties: { t: { type: 'string' } } },
+    },
+  }, async (request, reply) => {
     const session = await authByToken(request, reply);
     if (!session) return;
     const updated = await transitionStatus(String(session._id), session.store_id, 'ringing', 'rejected', {
@@ -377,7 +435,14 @@ export async function voiceCallRoutes(
   });
 
   // ── END (any live state → ended) ──
-  app.post('/api/v1/voice-calls/:id/end', async (request, reply) => {
+  app.post('/api/v1/voice-calls/:id/end', {
+    schema: {
+      summary: 'Colgar la llamada (cualquier estado vivo → ended)',
+      description: 'Auth: token `?t=`. Libera el slot del chat. Sin body.',
+      params: { type: 'object', properties: { id: { type: 'string' } } },
+      querystring: { type: 'object', properties: { t: { type: 'string' } } },
+    },
+  }, async (request, reply) => {
     const session = await authByToken(request, reply);
     if (!session) return;
     const updated = await transitionStatus(
@@ -393,7 +458,17 @@ export async function voiceCallRoutes(
   });
 
   // ── MINT LiveKit token (browser + Python agent worker join the same room) ──
-  app.get('/api/v1/voice-calls/:id/token', async (request, reply) => {
+  app.get('/api/v1/voice-calls/:id/token', {
+    schema: {
+      summary: 'Mint del token LiveKit (navegador del cliente, estado connecting)',
+      description:
+        'Auth: token `?t=`. Solo en `connecting` (409 si no). El token lleva en metadata la ' +
+        'config de voz de la farmacia + el prompt renderizado — el worker lee de ahí, cero prompts en código.\n\n' +
+        'Respuesta: `{ livekit_url, room, token }`.',
+      params: { type: 'object', properties: { id: { type: 'string' } } },
+      querystring: { type: 'object', properties: { t: { type: 'string' } } },
+    },
+  }, async (request, reply) => {
     const session = await authByToken(request, reply);
     if (!session) return;
 
@@ -479,7 +554,14 @@ export async function voiceCallRoutes(
   //    secrets) at boot; the voice-config UI grays out unavailable providers.
   const PROVIDERS_KEY = 'voice:providers';
 
-  app.post('/api/v1/voice-providers/report', async (request, reply) => {
+  app.post('/api/v1/voice-providers/report', {
+    schema: {
+      summary: 'Worker reporta qué providers de voz tiene configurados (al boot)',
+      description:
+        'Auth: `Bearer N8N_API_KEY`. Body: mapa `{ stt|llm|tts: { provider: boolean } }` ' +
+        '(solo booleans, nunca secretos). La UI de voice-config desactiva los no disponibles.',
+    },
+  }, async (request, reply) => {
     if (!bearerOk(request.headers.authorization, config.n8n.apiKey)) {
       return reply.status(401).send({ error: 'unauthorized' });
     }
@@ -491,7 +573,13 @@ export async function voiceCallRoutes(
 
   app.get(
     '/api/v1/voice-providers',
-    { preHandler: [app.authenticate] },
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        summary: 'Providers de voz disponibles según lo reportado por el worker',
+        description: 'Auth: JWT. Respuesta: `{ reported, providers }`.',
+      },
+    },
     async () => {
       const raw = await redis.get(PROVIDERS_KEY);
       return raw
