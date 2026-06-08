@@ -207,8 +207,12 @@ página para el IT del dueño.
   la MISMA DB Odoo → caen en `/orders` junto a WhatsApp y voz (un buzón por
   todos los canales). Pago contra entrega/en caja (regla #12, sin pasarela).
   Backend: módulo `storefront` (4 rutas públicas, precios server-side, rate
-  limit por IP). Pieza faltante: imágenes de producto (placeholder por ahora;
-  referencia: `product_3d_generator` del ecosistema colmado).
+  limit por IP). Imágenes: el catálogo maestro CAROL ya muestra fotos reales
+  (las ~110 de `public/products/`); para catálogos importados la captura la
+  hace la farmacia (NO buscar en internet — riesgo de foto errónea en un
+  medicamento). Mecanismo diseñado: `docs/plans/product-image-capture.md`
+  (escaneo de barcode → confirmar → foto → siguiente, guardado en Odoo
+  `image_1920`). Pendiente de construir.
 - 💡 **Tracking del pedido en mapa** (nota 2026-06-06): el cliente sigue su
   delivery en un mapa (link de tracking enviado por WhatsApp al despachar).
   Valor agregado del paquete; encaja con la notificación de despacho ya
