@@ -10,7 +10,9 @@ import logging
 from uuid import uuid4
 
 import httpx
-from livekit.agents import Agent, function_tool, RunContext
+from livekit.agents import Agent, function_tool, RunContext, get_job_context
+
+from agent.config import Config
 
 logger = logging.getLogger("farmacia-voice-agent")
 
@@ -88,3 +90,51 @@ class FarmaciaAgent(Agent):
             lines.append(f"- {nombre}: {precio:.0f} pesos{stock_str}")
 
         return "Productos encontrados:\n" + "\n".join(lines)
+
+    # ── Mid-call third-party consult (e.g. insurance approval) ──────────
+    # Only effective when the outbound SIP trunk is configured; otherwise it
+    # returns a graceful fallback so the conversation never stalls. The
+    # per-pharmacy prompt decides WHEN to use it (e.g. "si preguntan por
+    # cobertura del seguro, usa consultar_seguro").
+
+    @function_tool
+    async def consultar_seguro(
+        self,
+        context: RunContext,
+        medicamento: str,
+        afiliado_id: str = "",
+    ) -> str:
+        """Pone al cliente en espera, llama a su seguro y vuelve con la respuesta
+        sobre si un medicamento esta cubierto (autorizacion y copago).
+
+        Usa esto SOLO cuando el cliente pregunte si su seguro cubre un
+        medicamento y haga falta confirmarlo con la aseguradora. Antes de
+        llamar, asegurate de tener el numero de afiliado.
+
+        Args:
+            medicamento: nombre del medicamento a autorizar
+            afiliado_id: numero de afiliado/poliza del cliente
+        """
+        if not Config.sip_consult_enabled():
+            return ("Ahora mismo no puedo llamar al seguro. Dile al cliente que el "
+                    "farmaceutico confirma la cobertura por WhatsApp.")
+        if not afiliado_id:
+            return "Necesito el numero de afiliado del cliente antes de llamar al seguro. Pideselo."
+
+        # Lazy import so the telephony deps/paths only load when actually used.
+        from agent.consult import consult_insurance, summarize_for_customer
+
+        try:
+            result = await consult_insurance(
+                job_ctx=get_job_context(),
+                customer_session=context.session,
+                medicamento=medicamento,
+                afiliado_id=afiliado_id,
+                store_name=self.store.get("store_name", ""),
+            )
+        except Exception as e:
+            logger.error(f"consultar_seguro error: {type(e).__name__}: {e!r}")
+            return ("No pude completar la consulta con el seguro. Dile al cliente que lo "
+                    "confirmamos por WhatsApp.")
+
+        return summarize_for_customer(result)

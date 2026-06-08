@@ -138,14 +138,74 @@ La sub-llamada al seguro se transcribe y su resultado (aprobado/n.º
 autorización/copago) se adjunta a la sesión de voz y al pedido, visible en el
 panel — igual que el transcript de voz actual. Auditable.
 
-## Fases sugeridas
+## Mecanismo verificado (spike resuelto, 2026-06-07)
 
-1. **Spike (1 día)**: mecanismo de hold + segunda pierna en LiveKit Agents 1.3
-   (decide dos-rooms vs ruteo de tracks).
-2. **Nivel B**: herramienta `consultar_seguro` + persona "Agente Seguro" +
-   orquestación + reporte de resultado + registro. Demo end-to-end para el pitch.
-3. **Nivel C**: swap de la pierna seguro a LiveKit SIP + trunk; DTMF/IVR;
-   datos estructurados del afiliado.
+LiveKit ya documenta exactamente este patrón ("agent-assisted warm transfer").
+Adoptamos su mecánica pero MÁS simple: el agente consulta al tercero en privado
+y vuelve al cliente — NO se conecta cliente↔seguro (saltamos el
+`move_participant` final del warm transfer).
+
+- **Hold del cliente** (nativo, simple):
+  ```python
+  customer_session.input.set_audio_enabled(False)
+  customer_session.output.set_audio_enabled(False)
+  ```
+- **Sala de consulta privada**: un `rtc.Room()` nuevo con su token; el cliente
+  no oye nada de esa room.
+- **Marcar al tercero** vía SIP a esa room:
+  ```python
+  await job_ctx.api.sip.create_sip_participant(api.CreateSIPParticipantRequest(
+      trunk=SIPOutboundConfig(hostname=..., auth_username=..., auth_password=...),
+      sip_number=SIP_FROM_NUMBER, sip_call_to=THIRD_PARTY_NUMBER,
+      room_name=consult_room_name, participant_identity="Seguro",
+      wait_until_answered=True))
+  ```
+- **Negociador**: un segundo `AgentSession` en la sala de consulta con una
+  persona enfocada (instrucciones en código, no del admin: es una llamada
+  operativa interna) y una herramienta `registrar_resultado(aprobado,
+  autorizacion, copago, motivo)` que captura la decisión y termina.
+- **Volver**: off-hold y el resultado se devuelve al agente del cliente.
+
+Implementado (scaffold, **pendiente de prueba en vivo con el trunk**):
+- `packages/voice-agent/agent/consult.py` — `consult_insurance()` +
+  `_NegotiatorAgent` + `summarize_for_customer()`.
+- `agent/farmacia_agent.py` — herramienta `consultar_seguro` (gateada por
+  `Config.sip_consult_enabled()`; inerte sin trunk).
+- `agent/config.py` + `.env.example` — vars SIP.
+
+> El prompt por-farmacia decide CUÁNDO usar la herramienta (p.ej. "si preguntan
+> por cobertura del seguro, usa consultar_seguro"). Sin esa línea en el prompt,
+> la herramienta existe pero el agente no la invoca — opt-in por farmacia.
+
+## Checklist de setup (Telnyx + LiveKit SIP)
+
+Lo que TÚ debes provisionar antes de probar (es el gate real):
+
+1. **Telnyx**: crear cuenta → Voice → SIP Trunking → crear un trunk con auth
+   por **usuario/contraseña** (Credentials) → comprar un número (DID) →
+   habilitar **outbound**. Anotar: signaling address (`sip.telnyx.com`),
+   usuario, contraseña, y el número en E.164.
+2. **LiveKit**: dashboard → Telephony → SIP trunks → Create → JSON editor →
+   dirección **Outbound**, apuntando al `sip.telnyx.com` con esas credenciales.
+   (O `CreateSIPOutboundTrunk` por API.)
+3. **Número "seguro" controlado** para el demo: un softphone (Zoiper/Linphone)
+   o tu celular que conteste haciendo de aseguradora — `THIRD_PARTY_NUMBER`.
+4. **Env del voice-agent**: `SIP_TRUNK_HOSTNAME`, `SIP_AUTH_USERNAME`,
+   `SIP_AUTH_PASSWORD`, `SIP_FROM_NUMBER`, `THIRD_PARTY_NUMBER`.
+5. **Telnyx**: habilitar SIP REFER en el trunk solo si luego quieres transferir
+   de verdad (no hace falta para este patrón de consulta-y-vuelve).
+
+Guías: LiveKit SIP outbound trunk (`docs.livekit.io/sip/trunk-outbound/`) y la
+guía oficial Telnyx↔LiveKit.
+
+## Fases
+
+1. ✅ **Spike** — mecanismo verificado (arriba).
+2. ⚠️ **Nivel B/C scaffold** — código completo (2026-06-07), pendiente prueba
+   en vivo con el trunk. Mismo código sirve demo (número controlado) y
+   producción (número real).
+3. ⏳ **Pulido producción**: DTMF/IVR real, audio de espera, registro de la
+   sub-llamada en el panel, datos estructurados del afiliado, timeouts/retries.
 
 ## Referencias
 - Worker de voz: `packages/voice-agent/agent/main.py`,
