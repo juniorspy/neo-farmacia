@@ -6,7 +6,7 @@ Technical reference for Neo Farmacia. Explains how the system works, what's used
 
 1. [Architecture](./01-architecture.md) — System design, data flow, tenant isolation
 2. [Tech Stack](./02-stack.md) — Libraries and services used, and why
-3. [API Reference](./03-api-reference.md) — All HTTP endpoints, auth, schemas
+3. [API — convenciones](./03-api-reference.md) — auth, mapeos de estado, errores (la referencia VIVA de endpoints es el Swagger en `/docs`)
 4. [Data Models](./04-data-models.md) — MongoDB schemas, Odoo entities, Redis keys
 5. [Dashboard](./05-dashboard.md) — Frontend architecture, theming, state management
 6. [Printing](./06-printing.md) — Bluetooth thermal printer, ESC/POS
