@@ -131,6 +131,11 @@ class FarmaciaAgent(Agent):
                 medicamento=medicamento,
                 afiliado_id=afiliado_id,
                 store_name=self.store.get("store_name", ""),
+                # Admin-owned negotiator prompt (voice_config). No prompt text
+                # lives in this worker — the backend sends the template.
+                prompt_template=(self.store.get("voice_config") or {}).get(
+                    "consult_prompt_template", ""
+                ),
             )
         except Exception as e:
             logger.error(f"consultar_seguro error: {type(e).__name__}: {e!r}")

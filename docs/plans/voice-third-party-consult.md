@@ -152,26 +152,38 @@ y vuelve al cliente — NO se conecta cliente↔seguro (saltamos el
   ```
 - **Sala de consulta privada**: un `rtc.Room()` nuevo con su token; el cliente
   no oye nada de esa room.
-- **Marcar al tercero** vía SIP a esa room:
+- **Marcar al tercero** vía SIP a esa room. LiveKit soporta DOS modos
+  (verificado contra `docs.livekit.io/sip`); el worker usa Modo 1 si
+  `SIP_TRUNK_ID` está seteado, si no cae al Modo 2 inline:
   ```python
-  await job_ctx.api.sip.create_sip_participant(api.CreateSIPParticipantRequest(
+  # Modo 1 (recomendado): trunk outbound pre-creado en LiveKit (ST_…)
+  api.CreateSIPParticipantRequest(
+      sip_trunk_id=SIP_TRUNK_ID, sip_call_to=THIRD_PARTY_NUMBER,
+      room_name=consult_room_name, participant_identity="Seguro",
+      wait_until_answered=True)
+  # Modo 2 (inline): credenciales Telnyx por llamada
+  api.CreateSIPParticipantRequest(
       trunk=SIPOutboundConfig(hostname=..., auth_username=..., auth_password=...),
       sip_number=SIP_FROM_NUMBER, sip_call_to=THIRD_PARTY_NUMBER,
       room_name=consult_room_name, participant_identity="Seguro",
-      wait_until_answered=True))
+      wait_until_answered=True)
   ```
 - **Negociador**: un segundo `AgentSession` en la sala de consulta con una
-  persona enfocada (instrucciones en código, no del admin: es una llamada
-  operativa interna) y una herramienta `registrar_resultado(aprobado,
+  persona enfocada. Su prompt es **admin-owned** —
+  `Store.voice_config.consult_prompt_template`, editable en el panel igual que
+  el del agente principal; el worker lo renderiza por consulta con
+  `{store_name} {medicamento} {afiliado_id}` (cero texto hardcodeado en el
+  worker, regla del proyecto). Tiene una herramienta `registrar_resultado(aprobado,
   autorizacion, copago, motivo)` que captura la decisión y termina.
 - **Volver**: off-hold y el resultado se devuelve al agente del cliente.
 
 Implementado (scaffold, **pendiente de prueba en vivo con el trunk**):
 - `packages/voice-agent/agent/consult.py` — `consult_insurance()` +
-  `_NegotiatorAgent` + `summarize_for_customer()`.
+  `_NegotiatorAgent` + `summarize_for_customer()`. Marca al tercero por **Modo 1
+  (`SIP_TRUNK_ID`) o Modo 2 (inline)** según lo que esté configurado.
 - `agent/farmacia_agent.py` — herramienta `consultar_seguro` (gateada por
   `Config.sip_consult_enabled()`; inerte sin trunk).
-- `agent/config.py` + `.env.example` — vars SIP.
+- `agent/config.py` + `.env.example` — vars SIP (`SIP_TRUNK_ID` o el set inline).
 
 > El prompt por-farmacia decide CUÁNDO usar la herramienta (p.ej. "si preguntan
 > por cobertura del seguro, usa consultar_seguro"). Sin esa línea en el prompt,
@@ -190,13 +202,33 @@ Lo que TÚ debes provisionar antes de probar (es el gate real):
    (O `CreateSIPOutboundTrunk` por API.)
 3. **Número "seguro" controlado** para el demo: un softphone (Zoiper/Linphone)
    o tu celular que conteste haciendo de aseguradora — `THIRD_PARTY_NUMBER`.
-4. **Env del voice-agent**: `SIP_TRUNK_HOSTNAME`, `SIP_AUTH_USERNAME`,
-   `SIP_AUTH_PASSWORD`, `SIP_FROM_NUMBER`, `THIRD_PARTY_NUMBER`.
+4. **Env del voice-agent** (Dokploy). Modo 1 (recomendado, si el trunk se creó
+   en LiveKit): `SIP_TRUNK_ID` + `THIRD_PARTY_NUMBER`. Modo 2 (inline, solo
+   Telnyx): `SIP_TRUNK_HOSTNAME`, `SIP_AUTH_USERNAME`, `SIP_AUTH_PASSWORD`,
+   `SIP_FROM_NUMBER` + `THIRD_PARTY_NUMBER`.
 5. **Telnyx**: habilitar SIP REFER en el trunk solo si luego quieres transferir
    de verdad (no hace falta para este patrón de consulta-y-vuelve).
 
 Guías: LiveKit SIP outbound trunk (`docs.livekit.io/sip/trunk-outbound/`) y la
 guía oficial Telnyx↔LiveKit.
+
+## Estado de provisioning (verificado por API Telnyx, 2026-06-08)
+
+Datos no-secretos del trunk real (la `SIP_AUTH_PASSWORD` vive solo en Dokploy):
+
+- **Telnyx trunk** `Neo_farmacia` (credential connection) — activo; user SIP
+  `juniorjh16`; signaling `sip.telnyx.com`.
+- **DID** `+16465409450` (US) → `SIP_FROM_NUMBER`.
+- **Outbound voice profile** `neo-farmacia` — enabled, `service_plan=global`,
+  `max_destination_rate=$20/min`, atado al trunk.
+- **Modo elegido**: **2 (inline)** — el worker marca con las credenciales
+  Telnyx; NO hace falta crear un trunk en LiveKit. (`SIP_TRUNK_ID` queda como
+  alternativa si algún día se crea uno.)
+- ⚠️ **Whitelist de destinos = `US, CA, MX, PM`** → República Dominicana
+  (`DO`, los +1809/829/849) **NO está**. Añadir `DO` al perfil antes de llamar
+  a números de RD (seguro/clientes reales). Demo a número US funciona sin esto.
+- ⛔ **Balance = $0** al momento del registro → gate: fondear antes de la
+  primera llamada PSTN.
 
 ## Fases
 

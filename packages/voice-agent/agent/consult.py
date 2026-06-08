@@ -38,24 +38,39 @@ logger = logging.getLogger("farmacia-voice-agent")
 # returning the customer to the agent with a "no response" result.
 CONSULT_TIMEOUT_S = 150
 
+# Fallback ONLY for the degenerate case where the admin template arrives empty
+# (e.g. a token minted before consult_prompt_template existed). In normal
+# operation the prompt is admin-owned in Store.voice_config.consult_prompt_template
+# and always sent by the backend — no negotiator prompt should live in this worker.
+_FALLBACK_NEGOTIATOR_PROMPT = (
+    "Eres el asistente de {store_name} y estas LLAMANDO a la aseguradora del paciente "
+    "para autorizar un medicamento. Medicamento: {medicamento}. Numero de afiliado: "
+    "{afiliado_id}. Averigua si esta cubierto, el numero de autorizacion y el copago, y "
+    "en cuanto tengas la decision llama a registrar_resultado y despidete."
+)
+
+
+def _render_negotiator_prompt(template: str, *, store_name: str, medicamento: str,
+                              afiliado_id: str) -> str:
+    """Fill the admin-owned negotiator template with this consult's runtime
+    values. Safe token replacement (not str.format) so stray braces in the
+    admin text can't raise."""
+    text = (template or "").strip() or _FALLBACK_NEGOTIATOR_PROMPT
+    return (
+        text.replace("{store_name}", store_name or "una farmacia")
+        .replace("{medicamento}", medicamento or "el medicamento")
+        .replace("{afiliado_id}", afiliado_id or "(no provisto; pidelo si lo solicitan)")
+    )
+
 
 class _NegotiatorAgent(Agent):
     """Plays the pharmacy calling the third party. One job: get the decision and
-    call registrar_resultado. The instructions stay in code (not admin-owned)
-    because this is an internal operational call, not the customer persona."""
+    call registrar_resultado. Its instructions come from the admin-owned
+    template (Store.voice_config.consult_prompt_template), rendered by the
+    caller — no prompt text is hardcoded here."""
 
-    def __init__(self, store_name: str, medicamento: str, afiliado_id: str,
-                 done: asyncio.Event, result: dict):
-        super().__init__(instructions=(
-            f"Eres el asistente de {store_name or 'una farmacia'} y estas LLAMANDO a la "
-            f"aseguradora del paciente para AUTORIZAR un medicamento. Hablas espanol, claro y breve.\n"
-            f"Medicamento: {medicamento}.\n"
-            f"Numero de afiliado: {afiliado_id or '(no provisto; pidelo si lo solicitan)'}.\n\n"
-            "Saluda, di que llamas de la farmacia para autorizar ese medicamento, entrega el numero "
-            "de afiliado si lo piden, y averigua: si esta cubierto, el numero de autorizacion y el copago. "
-            "EN CUANTO tengas la decision, llama a la herramienta registrar_resultado con los datos y "
-            "despidete. No te extiendas: tu unico objetivo es traer la respuesta."
-        ))
+    def __init__(self, instructions: str, done: asyncio.Event, result: dict):
+        super().__init__(instructions=instructions)
         self._done = done
         self._result = result
 
@@ -93,6 +108,7 @@ async def consult_insurance(
     medicamento: str,
     afiliado_id: str,
     store_name: str,
+    prompt_template: str = "",
 ) -> dict:
     """Run the full consult-hold cycle. Returns a structured result dict:
     { aprobado: bool|None, autorizacion, copago, motivo, timeout?, error? }.
@@ -121,23 +137,40 @@ async def consult_insurance(
         await consult_room.connect(Config.LIVEKIT_URL, token)
 
         # 2. Dial the third party (controlled number for the demo) into the
-        #    private consult room via the Telnyx trunk.
-        await job_ctx.api.sip.create_sip_participant(api.CreateSIPParticipantRequest(
-            trunk=SIPOutboundConfig(
-                hostname=Config.SIP_TRUNK_HOSTNAME,
-                auth_username=Config.SIP_AUTH_USERNAME,
-                auth_password=Config.SIP_AUTH_PASSWORD,
-            ),
-            sip_number=Config.SIP_FROM_NUMBER,
-            sip_call_to=Config.THIRD_PARTY_NUMBER,
-            room_name=consult_room_name,
-            participant_identity="Seguro",
-            wait_until_answered=True,
-        ))
+        #    private consult room. Mode 1: a pre-created LiveKit outbound trunk
+        #    (SIP_TRUNK_ID) already holds the Telnyx creds + from-number. Mode 2:
+        #    pass the Telnyx creds inline. Both are valid LiveKit SIP patterns.
+        if Config.SIP_TRUNK_ID:
+            sip_req = api.CreateSIPParticipantRequest(
+                sip_trunk_id=Config.SIP_TRUNK_ID,
+                sip_call_to=Config.THIRD_PARTY_NUMBER,
+                room_name=consult_room_name,
+                participant_identity="Seguro",
+                wait_until_answered=True,
+            )
+        else:
+            sip_req = api.CreateSIPParticipantRequest(
+                trunk=SIPOutboundConfig(
+                    hostname=Config.SIP_TRUNK_HOSTNAME,
+                    auth_username=Config.SIP_AUTH_USERNAME,
+                    auth_password=Config.SIP_AUTH_PASSWORD,
+                ),
+                sip_number=Config.SIP_FROM_NUMBER,
+                sip_call_to=Config.THIRD_PARTY_NUMBER,
+                room_name=consult_room_name,
+                participant_identity="Seguro",
+                wait_until_answered=True,
+            )
+        await job_ctx.api.sip.create_sip_participant(sip_req)
 
-        # 3. Negotiator drives the third-party conversation.
+        # 3. Negotiator drives the third-party conversation. Its prompt is the
+        #    admin-owned template (voice_config), rendered with this consult's values.
         done = asyncio.Event()
-        negotiator = _NegotiatorAgent(store_name, medicamento, afiliado_id, done, result)
+        instructions = _render_negotiator_prompt(
+            prompt_template, store_name=store_name,
+            medicamento=medicamento, afiliado_id=afiliado_id,
+        )
+        negotiator = _NegotiatorAgent(instructions, done, result)
         nsession = AgentSession(
             stt=deepgram.STT(model="nova-3", language="es"),
             llm=openai.LLM(model="gpt-4o-mini", api_key=Config.OPENAI_API_KEY),

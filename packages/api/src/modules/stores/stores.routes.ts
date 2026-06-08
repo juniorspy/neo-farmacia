@@ -30,6 +30,7 @@ interface VoiceConfigUpdate {
   tts_style?: number;
   greeting?: string;
   prompt_template?: string;
+  consult_prompt_template?: string;
 }
 
 const MAX_STRING = 200;
@@ -239,6 +240,7 @@ export async function storesRoutes(app: FastifyInstance) {
             tts_style: { type: 'number', minimum: 0, maximum: 1 },
             greeting: { type: 'string', maxLength: 300 },
             prompt_template: { type: 'string', maxLength: 6000 },
+            consult_prompt_template: { type: 'string', maxLength: 4000 },
             applyToAll: { type: 'boolean' },
           },
         },
@@ -271,6 +273,9 @@ export async function storesRoutes(app: FastifyInstance) {
       if (body.prompt_template !== undefined && body.prompt_template.length > 6000) {
         return reply.status(400).send({ error: 'prompt_template too long (max 6000)' });
       }
+      if (body.consult_prompt_template !== undefined && body.consult_prompt_template.length > 4000) {
+        return reply.status(400).send({ error: 'consult_prompt_template too long (max 4000)' });
+      }
       for (const f of ['tts_stability', 'tts_style'] as const) {
         const v = body[f];
         if (v !== undefined && (typeof v !== 'number' || Number.isNaN(v) || v < 0 || v > 1)) {
@@ -293,6 +298,7 @@ export async function storesRoutes(app: FastifyInstance) {
         'tts_style',
         'greeting',
         'prompt_template',
+        'consult_prompt_template',
       ] as const) {
         if (body[f] !== undefined) update[`voice_config.${f}`] = body[f];
       }

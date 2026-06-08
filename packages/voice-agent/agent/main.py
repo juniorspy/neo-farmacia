@@ -81,6 +81,10 @@ DEFAULT_VOICE_CONFIG = {
     "tts_stability": 0.5,
     "tts_style": 0.2,
     "greeting": "",
+    # Negotiator (mid-call consult) prompt. Admin-owned; the backend always
+    # sends it. Empty here only as a fallback for tokens minted before the field
+    # existed — consult.py degrades to a minimal instruction in that case.
+    "consult_prompt_template": "",
 }
 
 

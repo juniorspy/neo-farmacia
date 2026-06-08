@@ -23,10 +23,13 @@ interface VoiceConfig {
   tts_style: number;
   greeting: string;
   prompt_template: string;
+  consult_prompt_template: string;
 }
 
 const PROMPT_VARS =
   "{store_name} {agent_name} {reason} {customer_name} {customer_phone} {recent_messages} {missing_fields} {language}";
+
+const CONSULT_PROMPT_VARS = "{store_name} {medicamento} {afiliado_id}";
 
 const TTS_PROVIDERS = ["openai", "elevenlabs", "cartesia", "google"];
 const LLM_PROVIDERS = ["openai", "anthropic"];
@@ -211,6 +214,20 @@ export function VoiceConfigSection({ storeId }: { storeId: string }) {
           </Field>
           <div className="text-[11px] text-slate-400">
             Variables disponibles (se rellenan por llamada con datos reales): <span className="font-mono">{PROMPT_VARS}</span>
+          </div>
+
+          <Field label="Prompt del negociador (llamada al seguro / tercero)">
+            <textarea
+              value={cfg.consult_prompt_template ?? ""}
+              onChange={(e) => set("consult_prompt_template", e.target.value)}
+              maxLength={4000}
+              rows={8}
+              className={`${INPUT} font-mono text-xs`}
+            />
+          </Field>
+          <div className="text-[11px] text-slate-400">
+            Lo que el agente dice cuando pone al cliente en espera y llama a su
+            seguro/tercero. Variables: <span className="font-mono">{CONSULT_PROMPT_VARS}</span>
           </div>
 
           <div className="text-[11px] text-slate-400">

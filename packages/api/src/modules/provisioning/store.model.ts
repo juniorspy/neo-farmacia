@@ -42,6 +42,12 @@ export interface IStore extends Document {
     // super-admin (no hardcoded prompt in code). The backend fills the
     // {variables} with real per-call data at token-mint time.
     prompt_template: string;
+    // System-prompt TEMPLATE for the NEGOTIATOR — the mid-call consult leg,
+    // i.e. the agent calling the insurer/third party on the customer's behalf.
+    // Admin-owned exactly like prompt_template (no hardcoded prompt in code);
+    // the worker renders {store_name} {medicamento} {afiliado_id} at the moment
+    // the consult fires.
+    consult_prompt_template: string;
   };
   // Per-pharmacy printing behavior, edited by the pharmacy itself in
   // /settings. 'manual' = print button on each order; 'auto' = print the
@@ -106,6 +112,16 @@ export const VOICE_CONFIG_DEFAULTS = {
     'Para buscar productos del catálogo usa la herramienta search_product.',
     'Al terminar, resume lo confirmado y di que el farmacéutico continúa por WhatsApp.',
   ].join('\n'),
+  // Default NEGOTIATOR prompt for the mid-call third-party consult (insurance).
+  // Admin-owned + editable in the UI; the worker renders these per consult:
+  // {store_name} {medicamento} {afiliado_id}
+  consult_prompt_template: [
+    'Eres el asistente de {store_name} y estás LLAMANDO a la aseguradora del paciente para AUTORIZAR un medicamento. Hablas español, claro y breve.',
+    'Medicamento: {medicamento}.',
+    'Número de afiliado: {afiliado_id}.',
+    '',
+    'Saluda, di que llamas de la farmacia para autorizar ese medicamento, entrega el número de afiliado si lo piden, y averigua: si está cubierto, el número de autorización y el copago. EN CUANTO tengas la decisión, llama a la herramienta registrar_resultado con los datos y despídete. No te extiendas: tu único objetivo es traer la respuesta.',
+  ].join('\n'),
 };
 
 const storeSchema = new Schema<IStore>({
@@ -144,6 +160,11 @@ const storeSchema = new Schema<IStore>({
       type: String,
       default: VOICE_CONFIG_DEFAULTS.prompt_template,
       maxlength: 6000,
+    },
+    consult_prompt_template: {
+      type: String,
+      default: VOICE_CONFIG_DEFAULTS.consult_prompt_template,
+      maxlength: 4000,
     },
   },
   print_mode: { type: String, enum: ['manual', 'auto', 'off'], default: 'manual' },
