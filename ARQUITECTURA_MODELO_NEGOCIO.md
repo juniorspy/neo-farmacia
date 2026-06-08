@@ -4,6 +4,7 @@
 **Alcance:** Neo Farmacia (monorepo `neo_farmacia`) y sus servicios relacionados
 **Método:** inspección de código, configuraciones, documentación (`docs/`) y planes de MVP
 **Documento hermano:** `neo_colmado/ARQUITECTURA_MODELO_NEGOCIO.md` (mismo modelo de negocio, lecciones heredadas)
+**Posicionamiento / narrativa de pitch:** `docs/positioning.md` (cómo lo contamos: NO un chatbot — "el OS de ventas para farmacias")
 
 **Leyenda de estado:**
 
