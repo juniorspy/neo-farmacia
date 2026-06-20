@@ -101,7 +101,8 @@ Store.voice_config = {
 ```
 
 Flow: **super-admin edits `voice_config`** → backend `GET /:id/token` reads it →
-**embeds it in the LiveKit token metadata** → the agent worker's `build_stt/build_llm/build_tts`
+**embeds it in the LiveKit token metadata** → the worker's `build_stt/build_llm/build_tts`
+(in `agent/pipeline.py`, shared by the customer agent and the mid-call consult negotiator)
 read it **per call**. No env edits, no redeploy, per-pharmacy. Global env values act only as the
 **default** when a store hasn't overridden them. API keys stay server-side (env), never per-store.
 

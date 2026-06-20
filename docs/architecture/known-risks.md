@@ -36,6 +36,11 @@ Identified during architecture review. Track resolution status here.
 **Mitigation**: Acceptable for 1-5 tenants with low-medium volume. If scaling beyond, move AI orchestration to microservice.
 **Status**: `accepted` — revisit if scaling past 5 tenants
 
+### 12. Voice agent per-turn latency
+**Risk**: The pipeline voice flow (STT → LLM → TTS) adds seconds of dead air per turn when the TTS does not stream. The 2026-06-08 live test confirmed OpenAI `tts-1` synthesizes the whole sentence before any audio plays → the agent feels broken.
+**Mitigation**: Streaming TTS (Cartesia `sonic`, native streaming) selected per-store in `voice_config`; `preemptive_generation=True` + tuned `min_endpointing_delay` on the AgentSession (both the customer leg and the consult negotiator); short-reply prompt. The worker logs `metrics_collected` (EOU / LLM TTFT / TTS TTFB) so the win is measurable. Pipeline builders are shared in `agent/pipeline.py`.
+**Status**: `implemented` (2026-06-20) — pending live measurement with Cartesia enabled (gate: `CARTESIA_API_KEY` in the voice-agent env + `tts_provider=cartesia` on the store).
+
 ## Medium
 
 ### 7. POS sync lag causes phantom inventory
