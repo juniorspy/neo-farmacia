@@ -27,10 +27,11 @@ from uuid import uuid4
 
 from livekit import api, rtc
 from livekit.agents import Agent, AgentSession, function_tool, RunContext
-from livekit.plugins import deepgram, openai, silero
+from livekit.plugins import silero
 from livekit.protocol.sip import SIPOutboundConfig
 
 from agent.config import Config
+from agent.pipeline import build_llm, build_stt, build_tts
 
 logger = logging.getLogger("farmacia-voice-agent")
 
@@ -109,10 +110,12 @@ async def consult_insurance(
     afiliado_id: str,
     store_name: str,
     prompt_template: str = "",
+    voice_config: dict | None = None,
 ) -> dict:
     """Run the full consult-hold cycle. Returns a structured result dict:
     { aprobado: bool|None, autorizacion, copago, motivo, timeout?, error? }.
     Always takes the customer off hold, even on failure."""
+    vc = voice_config or {}
     # 1. Hold the customer — they hear nothing of the third-party call.
     customer_session.input.set_audio_enabled(False)
     customer_session.output.set_audio_enabled(False)
@@ -171,11 +174,15 @@ async def consult_insurance(
             medicamento=medicamento, afiliado_id=afiliado_id,
         )
         negotiator = _NegotiatorAgent(instructions, done, result)
+        # Same builders as the customer leg → the negotiator gets the store's
+        # streaming TTS (cartesia) + latency tuning, not a hardcoded tts-1.
         nsession = AgentSession(
-            stt=deepgram.STT(model="nova-3", language="es"),
-            llm=openai.LLM(model="gpt-4o-mini", api_key=Config.OPENAI_API_KEY),
-            tts=openai.TTS(model="tts-1", voice="nova"),
+            stt=build_stt(vc),
+            llm=build_llm(vc),
+            tts=build_tts(vc),
             vad=silero.VAD.load(),
+            preemptive_generation=True,
+            min_endpointing_delay=0.3,
         )
         await nsession.start(room=consult_room, agent=negotiator)
         await nsession.generate_reply()  # negotiator opens the call

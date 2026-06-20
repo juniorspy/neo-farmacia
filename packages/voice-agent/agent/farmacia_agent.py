@@ -136,6 +136,9 @@ class FarmaciaAgent(Agent):
                 prompt_template=(self.store.get("voice_config") or {}).get(
                     "consult_prompt_template", ""
                 ),
+                # Build the negotiator pipeline from the same per-store config →
+                # streaming TTS + tuning on the insurance leg too.
+                voice_config=self.store.get("voice_config") or {},
             )
         except Exception as e:
             logger.error(f"consultar_seguro error: {type(e).__name__}: {e!r}")

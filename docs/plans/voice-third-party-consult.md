@@ -230,14 +230,41 @@ Datos no-secretos del trunk real (la `SIP_AUTH_PASSWORD` vive solo en Dokploy):
 - ⛔ **Balance = $0** al momento del registro → gate: fondear antes de la
   primera llamada PSTN.
 
+## Prueba en vivo (2026-06-08) — telefonía OK, latencia/UX por resolver
+
+Primera prueba e2e contra el trunk real (ver `docs/sessions/2026-06-08-01.md`):
+
+- ✅ **SIP outbound FUNCIONA**: el agente decidió llamar (`consultar_seguro` es
+  function-tool del LLM, no hardcodeado), el **número US sonó y fue contestado**.
+  Telnyx→LiveKit→SIP probado en vivo.
+- ✅ Prompt del negociador ya es **admin-owned** (`voice_config.consult_prompt_template`).
+- ❌ **El consult no regresó al cliente**: probable timeout 150s (negociador no
+  captó `registrar_resultado`) + test solo (no se puede ser cliente y aseguradora
+  a la vez). Falta confirmar con `consult result:` de logs (timeout vs off-hold).
+- ❌ **UX de hold**: silencio total hasta 150s, sin aviso.
+- 🔴 **Latencia descomunal por turno**: TTS OpenAI `streamed:false` (sintetiza la
+  frase completa antes de hablar) + endpointing + posible CPU del VPS.
+- 🐛 **Footgun de voz**: un `tts_voice` inválido (id de ElevenLabs en provider
+  openai) tumba la llamada con 400 — falta fallback defensivo en `build_tts`.
+
 ## Fases
 
 1. ✅ **Spike** — mecanismo verificado (arriba).
-2. ⚠️ **Nivel B/C scaffold** — código completo (2026-06-07), pendiente prueba
-   en vivo con el trunk. Mismo código sirve demo (número controlado) y
-   producción (número real).
-3. ⏳ **Pulido producción**: DTMF/IVR real, audio de espera, registro de la
-   sub-llamada en el panel, datos estructurados del afiliado, timeouts/retries.
+2. ✅ **Scaffold + telefonía e2e** — el SIP marca y conecta en vivo (2026-06-08).
+3. ⏳ **Pulido producción** (lo que sigue, priorizado):
+   - ✅ **Latencia (código, 2026-06-20)**: builders movidos a `agent/pipeline.py`
+     (compartidos cliente+negociador, DRY); el negociador ya NO usa `tts-1`
+     hardcodeado → stremea con la misma config del store. `AgentSession` con
+     `preemptive_generation=True` + `min_endpointing_delay=0.3` en ambas piernas.
+     Handler `metrics_collected` para medir EOU/LLM TTFT/TTS TTFB. `build_tts`
+     defensivo (voz openai inválida → `nova`). **Falta medir en vivo** + setear
+     `CARTESIA_API_KEY` y `tts_provider=cartesia` en el store. Migración a
+     **LiveKit Inference** queda como limpieza posterior (no baja latencia sola).
+   - **UX hold**: anuncio antes de mutear (`session.say`), `CONSULT_TIMEOUT_S` 150→~45s,
+     verificar off-hold restaura audio.
+   - **Registro de la sub-llamada** (transcript del seguro) en el panel; datos
+     estructurados del afiliado; DTMF/IVR real; grabación (Egress) opcional.
+   - Añadir **`DO`** al whitelist Telnyx si se llaman números de RD.
 
 ## Referencias
 - Worker de voz: `packages/voice-agent/agent/main.py`,
