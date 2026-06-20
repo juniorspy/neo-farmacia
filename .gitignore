@@ -34,3 +34,6 @@ volumes/
 *.pem
 *.key
 credentials/
+# Telnyx 2FA backup codes — keep OUT of the repo (move to a password manager)
+telnyx backup codes.txt
+*backup codes*

@@ -470,7 +470,7 @@ flowchart LR
 | Componente | Ubicación | Despliegue | Dominio |
 |---|---|---|---|
 | API Fastify | `packages/api` | Dokploy | `api.leofarmacia.com` ✅ |
-| Dashboard Next.js | `packages/dashboard` | Dokploy | `panel.leofarmacia.com` ✅ |
+| Dashboard Next.js | `packages/dashboard` | Dokploy | `app.leofarmacia.com` ✅ |
 | voice-agent Python | `packages/voice-agent` | Dokploy (servicio dedicado) + LiveKit Cloud | — ✅ |
 | Odoo 17 + Postgres | `docker-compose.yml` (repo) | Dokploy | `pos.leofarmacia.com` ✅ |
 | MongoDB / Redis | servicios de infra Dokploy | Dokploy | interno ✅ |
